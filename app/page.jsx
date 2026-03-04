@@ -229,9 +229,9 @@ function SectionHeader({ title, action, onAction }) {
 }
 
 /* ══════════════════════════════════════════════
-   HORIZONTAL SLIDER  (touch + mouse drag)
+   HORIZONTAL SLIDER  (touch + mouse drag, no negative margins)
 ══════════════════════════════════════════════ */
-function HScroll({ children, gap=12, px=12 }) {
+function HScroll({ children, gap=12 }) {
   const ref = useRef(null);
   const drag = useRef({ on:false, startX:0, sl:0 });
 
@@ -253,10 +253,9 @@ function HScroll({ children, gap=12, px=12 }) {
   return (
     <div ref={ref} onMouseDown={onMD} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU}
       style={{ overflowX:"auto", overflowY:"visible",
-        marginLeft:-px, marginRight:-px,
         WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none",
         cursor:"grab" }}>
-      <div style={{ display:"inline-flex", gap, paddingLeft:px, paddingRight:px, paddingBottom:4 }}>
+      <div style={{ display:"inline-flex", gap, paddingRight:14, paddingBottom:4 }}>
         {children}
       </div>
     </div>
@@ -352,13 +351,21 @@ function HeroBanner({ onNavigate }) {
 /* ══════════════════════════════════════════════
    PRODUCT CARD
 ══════════════════════════════════════════════ */
-function ProductCard({ p, onSelect, onWishlist, wishlisted, compact }) {
-  const w = compact ? 150 : 200;
+function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid }) {
+  // inGrid = fluid width (fills column); compact = small fixed; default = fixed 200px scroll card
+  const fixedW = compact ? 150 : 200;
+  const outerStyle = inGrid
+    ? { width:"100%", minWidth:0, cursor:"pointer" }
+    : { width:fixedW, flexShrink:0, cursor:"pointer" };
+  const imgStyle = inGrid
+    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }
+    : { position:"relative", width:fixedW, height:compact?200:260, background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 };
+
   return (
-    <div onClick={()=>onSelect(p)} className="pressable" style={{ width:w, flexShrink:0, cursor:"pointer" }}>
-      <div style={{ position:"relative", width:w, height:compact?200:260, background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }}>
+    <div onClick={()=>onSelect(p)} className="pressable" style={outerStyle}>
+      <div style={imgStyle}>
         <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <span style={{ fontSize:compact?22:28, fontWeight:300, color:"rgba(0,0,0,0.22)", textAlign:"center", padding:"0 12px", lineHeight:1.3, fontStyle:"italic" }}>{p.name}</span>
+          <span style={{ fontSize:compact?18:22, fontWeight:300, color:"rgba(0,0,0,0.22)", textAlign:"center", padding:"0 12px", lineHeight:1.3, fontStyle:"italic" }}>{p.name}</span>
         </div>
         {p.badge && (
           <div style={{ position:"absolute", top:10, left:10, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:10, fontWeight:700, padding:"4px 9px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>
@@ -738,23 +745,10 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
       </div>
 
       {/* Grid */}
-      <div style={{ display:"grid", gridTemplateColumns:grid?"1fr 1fr":"1fr", gap:grid?"20px 12px":"16px" }}>
+      <div style={{ display:"grid", gridTemplateColumns:grid?"1fr 1fr":"1fr", gap:grid?"16px 10px":"12px" }}>
         {filtered.map(p=>(
           grid ? (
-            <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-              <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }}>
-                <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ fontSize:20, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
-                </div>
-                {p.badge&&<div style={{ position:"absolute", top:10, left:10, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:99, textTransform:"uppercase" }}>{p.badge}</div>}
-                <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute", top:10, right:10, width:30,height:30,borderRadius:15,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                  <Icon name={wishlist.includes(p.id)?"heart-fill":"heart"} size={13} color={wishlist.includes(p.id)?T.red:T.gray4}/>
-                </button>
-              </div>
-              <p style={{ fontSize:13, fontWeight:600, marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</p>
-              <RatingStars rating={p.rating} size={10}/>
-              <PriceLine price={p.price} was={p.was}/>
-            </div>
+            <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
           ) : (
             <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.gray9, borderRadius:10, padding:12 }}>
               <div style={{ width:80, height:100, background:p.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -812,17 +806,9 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
       ) : (
         <>
           <p style={{ fontSize:14, color:T.gray4, marginBottom:20 }}>{res.length} result{res.length!==1?"s":""} for "{q}"</p>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px 12px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
             {res.map(p=>(
-              <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-                <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }}>
-                  <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
-                  </div>
-                </div>
-                <p style={{ fontSize:13, fontWeight:600, marginBottom:3 }}>{p.name}</p>
-                <PriceLine price={p.price} was={p.was}/>
-              </div>
+              <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
             ))}
           </div>
           {res.length===0&&(
@@ -851,9 +837,9 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist }) {
           <p style={{ fontSize:14, color:T.gray4 }}>Save items you love</p>
         </div>
       ) : (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px 12px" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
           {items.map(p=>(
-            <ProductCard key={p.id} p={p} onSelect={onSelect} onWishlist={onWishlist} wishlisted={true}/>
+            <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true}/>
           ))}
         </div>
       )}
@@ -1000,19 +986,7 @@ function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
         {items.map(p=>(
-          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-            <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
-              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
-              </div>
-              <div style={{ position:"absolute", top:8, left:8, background:T.black, color:T.white, fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:99, textTransform:"uppercase", letterSpacing:"0.06em" }}>New</div>
-              <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute", top:8, right:8, width:28,height:28,borderRadius:8,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                <Icon name={wishlist.includes(p.id)?"heart-fill":"heart"} size={12} color={wishlist.includes(p.id)?T.red:T.gray4}/>
-              </button>
-            </div>
-            <p style={{ fontSize:12, fontWeight:600, marginBottom:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</p>
-            <PriceLine price={p.price} was={p.was}/>
-          </div>
+          <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
         ))}
       </div>
       <div style={{ height:80 }}/>
@@ -1034,19 +1008,7 @@ function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
         {items.map(p=>(
-          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-            <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
-              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
-              </div>
-              <div style={{ position:"absolute", top:8, left:8, background:T.red, color:T.white, fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:99, textTransform:"uppercase" }}>Sale</div>
-              {p.was && <div style={{ position:"absolute", bottom:8, left:8, background:"rgba(255,255,255,0.9)", padding:"3px 8px", borderRadius:99 }}>
-                <span style={{ fontSize:11, fontWeight:700, color:T.red }}>{Math.round((1-p.price/p.was)*100)}% off</span>
-              </div>}
-            </div>
-            <p style={{ fontSize:12, fontWeight:600, marginBottom:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</p>
-            <PriceLine price={p.price} was={p.was}/>
-          </div>
+          <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
         ))}
       </div>
       <div style={{ height:80 }}/>
@@ -1343,8 +1305,8 @@ export default function Page() {
           wishlistCount={wishlist.length}
         />
 
-        <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"clip" }}>
-          <div style={{ maxWidth:600, margin:"0 auto", padding:"10px 12px 80px" }}>
+        <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
+          <div style={{ maxWidth:600, margin:"0 auto", padding:"10px 14px 80px" }}>
             {renderScreen()}
           </div>
         </div>
