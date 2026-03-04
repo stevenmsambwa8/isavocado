@@ -1,4 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+
+'use client'
+import { useState, useEffect, useMemo } from 
+"react";
 
 const FontLink = () => (
   <style>{`
