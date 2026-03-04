@@ -606,7 +606,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
 
       {/* Footer */}
       <div style={{ borderTop:`1px solid ${T.gray8}`, paddingTop:28, paddingBottom:120 }}>
-        <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>AVEN</p>
+        <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>MSAMBWA CLASSIC</p>
         <p style={{ fontSize:14, color:T.gray4, marginBottom:20, lineHeight:1.6 }}>Refined pieces for modern living.</p>
         <div style={{ display:"flex", flexWrap:"wrap", gap:16 }}>
           {["Our Story","Sustainability","Careers","Shipping","Returns","Privacy","Terms"].map(l=>(
@@ -920,7 +920,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
           {canGoBack
             ? <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>
             : <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
-                <span style={{ fontSize:22, fontWeight:900, letterSpacing:2, color:T.black }}>AVEN</span>
+                <span style={{ fontSize:22, fontWeight:900, letterSpacing:2, color:T.black }}>MSAMBWA CLASSIC</span>
               </button>
           }
         </div>
