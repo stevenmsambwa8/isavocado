@@ -20,20 +20,20 @@ export default function ListeningChart() {
   return (
     <div className="card">
       <div className="chart-header">
-        <p className="card-title">Listening Activity</p>
+        <p className="section-title">Listening Activity</p>
         <span className="chart-badge">This week</span>
       </div>
-      <ResponsiveContainer width="100%" height={180}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
           <defs>
             <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#1a1814" stopOpacity={0.12} />
+              <stop offset="5%" stopColor="#1a1814" stopOpacity={0.1} />
               <stop offset="95%" stopColor="#1a1814" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#e8e4de" vertical={false} />
-          <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#8c8680' }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: '#8c8680' }} axisLine={false} tickLine={false} />
+          <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#8c8680' }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: '#8c8680' }} axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#1a1814', strokeWidth: 1, strokeDasharray: '4 4' }} />
           <Area type="monotone" dataKey="minutes" stroke="#1a1814" strokeWidth={2} fill="url(#grad)" dot={false} activeDot={{ r: 4, fill: '#1a1814', strokeWidth: 0 }} />
         </AreaChart>
