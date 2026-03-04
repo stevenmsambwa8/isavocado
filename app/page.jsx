@@ -1,43 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useMemo } from "react";
+import './layout.css';
 
-/* ══════════════════════════════════════════════
-   GLOBAL STYLES
-══════════════════════════════════════════════ */
-const GlobalStyles = () => (
-  <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap');
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: #fff; }
-    body { font-family: 'Geist', -apple-system, sans-serif; color: #000; -webkit-font-smoothing: antialiased; }
-    * { -webkit-tap-highlight-color: transparent; }
-    ::-webkit-scrollbar { display: none; }
-    input, button, select, textarea { font-family: inherit; }
-
-    @keyframes fadeIn    { from{opacity:0}                     to{opacity:1} }
-    @keyframes fadeUp    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes slideUp   { from{transform:translateY(100%)}    to{transform:translateY(0)} }
-    @keyframes slideInR  { from{transform:translateX(100%)}    to{transform:translateX(0)} }
-    @keyframes slideInL  { from{transform:translateX(-100%)}   to{transform:translateX(0)} }
-    @keyframes scaleIn   { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
-    @keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-    @keyframes pulse     { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-
-    .skeleton {
-      background: linear-gradient(90deg,#f5f5f5 25%,#ebebeb 50%,#f5f5f5 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 12px;
-    }
-    .pressable { transition: transform 0.12s, opacity 0.12s; }
-    .pressable:active { transform: scale(0.97); opacity: 0.85; }
-    .pressable-sm:active { transform: scale(0.95); }
-  `}</style>
-);
-
-/* ══════════════════════════════════════════════
-   TOKENS
-══════════════════════════════════════════════ */
 const T = {
   white:   "#ffffff",
   black:   "#000000",
@@ -66,9 +30,6 @@ const shadow = {
   xxl: "0 24px 64px rgba(0,0,0,0.18)",
 };
 
-/* ══════════════════════════════════════════════
-   SVG ICONS  (pure inline — no deps)
-══════════════════════════════════════════════ */
 const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }) => {
   const s = { display:"inline-flex", alignItems:"center", justifyContent:"center", flexShrink:0 };
   const p = { fill:"none", stroke:color, strokeWidth, strokeLinecap:"round", strokeLinejoin:"round" };
@@ -114,9 +75,6 @@ const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }) => {
   );
 };
 
-/* ══════════════════════════════════════════════
-   DATA
-══════════════════════════════════════════════ */
 const PRODUCTS = [
   { id:1,  name:"Linen Overshirt",    cat:"Tops",        price:148, was:null, badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.8, reviews:124, desc:"Relaxed-fit overshirt in premium Belgian linen. Slightly oversized with a classic collar and chest pockets. The perfect layering piece.", material:"100% Belgian Linen", care:"Machine wash cold, tumble dry low", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
   { id:2,  name:"Merino Turtleneck",  cat:"Tops",        price:195, was:null, badge:"New",  new:true,  colors:["#F0ECE4","#1A1A18","#8C6B4A"], sizes:["XS","S","M","L"],     rating:4.9, reviews:89,  desc:"Ultra-fine merino wool turtleneck. Naturally temperature-regulating, buttery soft, and wrinkle-resistant.", material:"100% Extra-fine Merino", care:"Hand wash cold or dry clean", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
@@ -150,18 +108,12 @@ const ORDERS = [
 
 const WISHLIST_IDS = [1, 5, 8];
 
-/* ══════════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════════ */
 const $ = n => `$${Number(n).toFixed(0)}`;
 
 function statusColors(s) {
   return { Delivered:["#E8F5EC","#1A7A40"], "In Transit":["#E8F0FB","#1A52B0"], Processing:["#FFF3E8","#B06020"] }[s] || ["#F5F5F5","#666"];
 }
 
-/* ══════════════════════════════════════════════
-   ATOMS
-══════════════════════════════════════════════ */
 function StatusBadge({ status }) {
   const [bg,col] = statusColors(status);
   return <span style={{ fontSize:11, fontWeight:600, letterSpacing:"0.05em", textTransform:"uppercase", background:bg, color:col, padding:"5px 12px", borderRadius:99 }}>{status}</span>;
@@ -228,9 +180,6 @@ function SectionHeader({ title, action, onAction }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   HORIZONTAL SLIDER  (touch + mouse drag, no negative margins)
-══════════════════════════════════════════════ */
 function HScroll({ children, gap=12 }) {
   const ref = useRef(null);
   const drag = useRef({ on:false, startX:0, sl:0 });
@@ -262,16 +211,11 @@ function HScroll({ children, gap=12 }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   HERO BANNER SLIDER
-══════════════════════════════════════════════ */
 function HeroBanner({ onNavigate }) {
   const [idx, setIdx] = useState(0);
   const pausedRef = useRef(false);
   const containerRef = useRef(null);
   const touchStartX = useRef(null);
-
-  // auto-advance
   useEffect(() => {
     const t = setInterval(() => {
       if (!pausedRef.current) setIdx(i => (i + 1) % BANNERS.length);
@@ -291,8 +235,6 @@ function HeroBanner({ onNavigate }) {
     else if (dx > 40) prev();
     touchStartX.current = null;
   };
-
-  // use scroll-snap — most reliable on mobile, no width calculation needed
   const scrollRef = useRef(null);
   const isScrolling = useRef(false);
 
@@ -318,7 +260,6 @@ function HeroBanner({ onNavigate }) {
   return (
     <div ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
       style={{ position:"relative", borderRadius:10, overflow:"hidden", marginBottom:12 }}>
-      {/* Scrollable track with snap */}
       <div ref={scrollRef} onScroll={onScroll}
         style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory",
           WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none" }}>
@@ -336,7 +277,6 @@ function HeroBanner({ onNavigate }) {
           </div>
         ))}
       </div>
-      {/* Indicator dots */}
       <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
         {BANNERS.map((_,i) => (
           <button key={i} onClick={()=>go(i)}
@@ -348,11 +288,7 @@ function HeroBanner({ onNavigate }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   PRODUCT CARD
-══════════════════════════════════════════════ */
 function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid }) {
-  // inGrid = fluid width (fills column); compact = small fixed; default = fixed 200px scroll card
   const fixedW = compact ? 150 : 200;
   const outerStyle = inGrid
     ? { width:"100%", minWidth:0, cursor:"pointer" }
@@ -385,9 +321,6 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid
   );
 }
 
-/* ══════════════════════════════════════════════
-   CART DRAWER
-══════════════════════════════════════════════ */
 function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const free  = total >= 200;
@@ -395,17 +328,11 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
     <>
       <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:500, animation:"fadeIn 0.2s ease" }}/>
       <div style={{ position:"fixed", top:0, right:0, bottom:0, width:"min(440px,100vw)", background:T.white, zIndex:600, display:"flex", flexDirection:"column", animation:"slideInR 0.32s cubic-bezier(.4,0,.2,1)", borderRadius:"10px 0 0 10px", boxShadow:shadow.xxl }}>
-
-        {/* Handle bar */}
         <div style={{ width:40, height:4, borderRadius:2, background:T.gray7, margin:"14px auto 0" }}/>
-
-        {/* Header */}
         <div style={{ padding:"16px 20px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <span style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4 }}>My Bag</span>
           <IconBtn icon="close" onClick={onClose} size={36}/>
         </div>
-
-        {/* Free shipping bar */}
         <div style={{ margin:"0 20px 8px", background:T.gray9, borderRadius:8, padding:"12px 14px" }}>
           {free
             ? <p style={{ fontSize:13, fontWeight:600, color:T.green, display:"flex", alignItems:"center", gap:6 }}><Icon name="truck" size={15} color={T.green}/> You qualify for free shipping!</p>
@@ -417,8 +344,6 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
               </>
           }
         </div>
-
-        {/* Items */}
         <div style={{ flex:1, overflowY:"auto", padding:"0 20px" }}>
           {cart.length===0 ? (
             <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", gap:16, paddingBottom:80 }}>
@@ -456,8 +381,6 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
             </div>
           ))}
         </div>
-
-        {/* Footer */}
         {cart.length>0&&(
           <div style={{ padding:"16px 20px 28px", borderTop:`1px solid ${T.gray8}` }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
@@ -480,9 +403,6 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   PRODUCT DETAIL
-══════════════════════════════════════════════ */
 function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
   const [ci,setCi]   = useState(0);
   const [sz,setSz]   = useState(null);
@@ -499,18 +419,14 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      {/* Image */}
       <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"center" }}>
         {p.badge&&<div style={{ position:"absolute", top:14, left:14, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>}
         <span style={{ fontSize:56, fontWeight:300, color:"rgba(0,0,0,0.18)", textAlign:"center", padding:"0 24px", lineHeight:1.2, fontStyle:"italic" }}>{p.name}</span>
-        {/* Floating actions */}
         <div style={{ position:"absolute", top:14, right:14, display:"flex", flexDirection:"column", gap:10 }}>
           <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3}/>
           <IconBtn icon="share" onClick={()=>{}} size={40} bg="rgba(255,255,255,0.9)" color={T.gray3}/>
         </div>
       </div>
-
-      {/* Info */}
       <div style={{ marginBottom:20 }}>
         <p style={{ fontSize:13, fontWeight:500, color:T.gray4, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:6 }}>{p.cat}</p>
         <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:-0.5, marginBottom:10, lineHeight:1.2 }}>{p.name}</h1>
@@ -525,8 +441,6 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
       </div>
 
       <Divider my={20}/>
-
-      {/* Colors */}
       <div style={{ marginBottom:22 }}>
         <p style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:12, color:T.gray2 }}>Colour</p>
         <div style={{ display:"flex", gap:12 }}>
@@ -535,8 +449,6 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
           ))}
         </div>
       </div>
-
-      {/* Sizes */}
       <div style={{ marginBottom:24 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
           <p style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.gray2 }}>Size</p>
@@ -549,14 +461,10 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
         </div>
         {!sz&&<p style={{ fontSize:13, color:T.red, marginTop:8, fontWeight:500 }}>Please select a size</p>}
       </div>
-
-      {/* Add to bag */}
       <Btn full onClick={add} style={{ padding:"18px", borderRadius:8, fontSize:16, opacity:sz?1:0.55, marginBottom:12 }}>
         <Icon name="bag" size={18} color={T.white}/>
         {done?"Added to Bag ✓":"Add to Bag"}
       </Btn>
-
-      {/* Info chips */}
       <div style={{ display:"flex", gap:8, marginBottom:24, flexWrap:"wrap" }}>
         {[["truck","Free Shipping"],["returns","Free Returns"],["tag","Authenticity Guarantee"]].map(([icon,label])=>(
           <div key={label} style={{ display:"flex", alignItems:"center", gap:6, background:T.gray9, borderRadius:10, padding:"8px 12px" }}>
@@ -567,8 +475,6 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
       </div>
 
       <Divider my={4}/>
-
-      {/* Tabs */}
       <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${T.gray8}`, marginBottom:20 }}>
         {[["desc","Description"],["details","Details"],["care","Care"]].map(([key,label])=>(
           <button key={key} onClick={()=>setTab(key)} style={{ flex:1, padding:"14px 0", background:"none", border:"none", cursor:"pointer", fontSize:14, fontWeight:tab===key?700:400, color:tab===key?T.black:T.gray4, borderBottom:`2px solid ${tab===key?T.black:"transparent"}`, transition:"all 0.18s" }}>{label}</button>
@@ -582,8 +488,6 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
         </div>}
         {tab==="care"    && <p style={{ fontSize:15, color:T.gray2, lineHeight:1.75 }}>{p.care}</p>}
       </div>
-
-      {/* You may also like */}
       {related.length>0&&(
         <div>
           <SectionHeader title="You May Also Like"/>
@@ -598,9 +502,6 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   SCREENS
-══════════════════════════════════════════════ */
 function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
   const newIn    = products.filter(p=>p.new).slice(0,8);
   const trending = [...products].sort((a,b)=>b.reviews-a.reviews).slice(0,8);
@@ -610,8 +511,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
   return (
     <div style={{ animation:"fadeIn 0.3s ease" }}>
       <HeroBanner onNavigate={onNavigate}/>
-
-      {/* Categories */}
       <div style={{ marginBottom:32, marginTop:8 }}>
         <SectionHeader title="Browse" action="See All" onAction={()=>onNavigate("shop")}/>
         <HScroll gap={10}>
@@ -623,8 +522,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           ))}
         </HScroll>
       </div>
-
-      {/* Quick page links */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24 }}>
         {[
           { label:"New Arrivals", sub:"SS26 drops", screen:"new-arrivals", grad:"linear-gradient(135deg,#1C1C1E,#3A3A3C)", dark:true },
@@ -648,8 +545,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           ))}
         </HScroll>
       </div>
-
-      {/* Promo strip */}
       <div style={{ display:"flex", gap:10, marginBottom:32 }}>
         {[{icon:"truck",label:"Free Shipping",sub:"Orders over $200"},{icon:"returns",label:"Free Returns",sub:"Within 30 days"},{icon:"scan",label:"Authenticity",sub:"Guaranteed"}].map(item=>(
           <div key={item.label} style={{ flex:1, background:T.gray9, borderRadius:10, padding:"14px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:6, textAlign:"center" }}>
@@ -659,8 +554,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           </div>
         ))}
       </div>
-
-      {/* Trending slider */}
       <div style={{ marginBottom:32 }}>
         <SectionHeader title="Trending Now 🔥" action="View All" onAction={()=>onNavigate("shop")}/>
         <HScroll>
@@ -669,8 +562,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           ))}
         </HScroll>
       </div>
-
-      {/* Full width promo card */}
       <div style={{ background:T.black, borderRadius:10, padding:"36px 28px", marginBottom:32, position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", right:-30, top:-30, width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }}/>
         <p style={{ fontSize:12, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:10 }}>Limited Time</p>
@@ -678,8 +569,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
         <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)", marginBottom:22 }}>Select styles. While stocks last.</p>
         <Btn onClick={()=>onNavigate("shop")} style={{ background:T.white, color:T.black, borderRadius:8 }} size="sm">Shop Sale</Btn>
       </div>
-
-      {/* Sale slider */}
       {onSale.length>0&&(
         <div style={{ marginBottom:32 }}>
           <SectionHeader title="On Sale" action="View All" onAction={()=>onNavigate("shop")}/>
@@ -690,8 +579,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           </HScroll>
         </div>
       )}
-
-      {/* Footer */}
       <div style={{ borderTop:`1px solid ${T.gray8}`, paddingTop:24, paddingBottom:100 }}>
         <div style={{ marginBottom:12 }}><Logo height={14} color={T.gray4}/></div>
         <p style={{ fontSize:13, color:T.gray5, marginBottom:18, lineHeight:1.5 }}>Refined pieces for modern living.</p>
@@ -721,12 +608,9 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      {/* Category chips */}
       <HScroll gap={8} px={16}>
         {CATS.map(c=><Chip key={c} label={c} active={cat===c} onClick={()=>setCat(c)}/>)}
       </HScroll>
-
-      {/* Sort + view toggle */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", margin:"16px 0 20px" }}>
         <span style={{ fontSize:14, color:T.gray4 }}>{filtered.length} items</span>
         <div style={{ display:"flex", gap:10, alignItems:"center" }}>
@@ -743,8 +627,6 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
           </button>
         </div>
       </div>
-
-      {/* Grid */}
       <div style={{ display:"grid", gridTemplateColumns:grid?"1fr 1fr":"1fr", gap:grid?"16px 10px":"12px" }}>
         {filtered.map(p=>(
           grid ? (
@@ -776,7 +658,6 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      {/* Search bar */}
       <div style={{ position:"relative", marginBottom:22 }}>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search AVEN…"
           style={{ width:"100%", padding:"15px 20px 15px 48px", fontSize:16, background:T.gray9, border:"none", borderRadius:8, outline:"none", color:T.black, boxSizing:"border-box" }}/>
@@ -862,7 +743,6 @@ function OrdersScreen() {
         </div>
         <p style={{ fontSize:14, color:T.gray3 }}>{sel.items.join(", ")}</p>
       </div>
-      {/* Timeline */}
       <div style={{ background:T.white, borderRadius:10, padding:20, border:`1px solid ${T.gray8}`, marginBottom:20 }}>
         <p style={{ fontSize:16, fontWeight:700, marginBottom:20 }}>Tracking</p>
         <div style={{ position:"relative", paddingLeft:32 }}>
@@ -928,7 +808,6 @@ function AccountScreen({ onNavigate }) {
   ];
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      {/* Profile card */}
       <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)", borderRadius:10, padding:"28px 22px", marginBottom:24, display:"flex", alignItems:"center", gap:18 }}>
         <div style={{ width:64, height:64, borderRadius:32, background:"rgba(255,255,255,0.15)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <Icon name="person" size={28} color="rgba(255,255,255,0.7)"/>
@@ -938,8 +817,6 @@ function AccountScreen({ onNavigate }) {
           <p style={{ fontSize:13, color:"rgba(255,255,255,0.5)", marginTop:3 }}>AVEN Premium Member</p>
         </div>
       </div>
-
-      {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:24 }}>
         {[["3","Orders"],["4","Wishlist"],["$862","Spent"]].map(([v,l])=>(
           <div key={l} style={{ background:T.gray9, borderRadius:10, padding:"16px 12px", textAlign:"center" }}>
@@ -948,8 +825,6 @@ function AccountScreen({ onNavigate }) {
           </div>
         ))}
       </div>
-
-      {/* Menu rows */}
       <div style={{ background:T.gray9, borderRadius:10, overflow:"hidden" }}>
         {rows.map((row,i)=>(
           <div key={row.label}>
@@ -972,9 +847,6 @@ function AccountScreen({ onNavigate }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   NEW ARRIVALS PAGE
-══════════════════════════════════════════════ */
 function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
   const items = products.filter(p=>p.new);
   return (
@@ -994,9 +866,6 @@ function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   SALE PAGE
-══════════════════════════════════════════════ */
 function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
   const items = products.filter(p=>p.badge==="Sale");
   return (
@@ -1016,9 +885,6 @@ function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   LOOKBOOK PAGE
-══════════════════════════════════════════════ */
 const LOOKS = [
   { id:1, title:"Morning Light", desc:"Effortless layers for golden hour starts.", products:[1,7,12], grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
   { id:2, title:"Urban Edge",    desc:"Polished silhouettes for the city commute.", products:[6,3,12], grad:"linear-gradient(160deg,#D8D0C8,#C4BAB0)" },
@@ -1087,9 +953,6 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   SUSTAINABILITY PAGE
-══════════════════════════════════════════════ */
 function SustainabilityScreen() {
   const pillars = [
     { icon:"sparkle", title:"Responsible Materials", body:"We source only certified organic, recycled, and sustainably-farmed fibres. Every fabric is traceable from field to finished garment." },
@@ -1126,37 +989,22 @@ function SustainabilityScreen() {
   );
 }
 
-/* ══════════════════════════════════════════════
-   BRAND LOGO  (SVG wordmark)
-══════════════════════════════════════════════ */
 function Logo({ color = "#000", height = 18 }) {
   return (
-    <svg height={height} viewBox="0 0 220 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display:"block" }}>
-      {/* M */}
+    <svg height={height} viewBox="0 0 220 32" fill="none" xmlns="http:
       <path d="M2 28V4h3.5l6.5 14L18.5 4H22v24h-3.5V11l-5.5 12h-2L5.5 11V28H2z" fill={color}/>
-      {/* S */}
       <path d="M28 22.5c1.2 1.2 2.8 2 5 2 2 0 3.4-.9 3.4-2.4 0-1.3-.8-2-3.2-2.8-3.2-1-5.2-2.3-5.2-5.1 0-2.9 2.4-4.9 5.8-4.9 2.2 0 4 .7 5.3 1.8l-1.8 2.4c-1-.9-2.2-1.4-3.6-1.4-1.8 0-2.8.9-2.8 2.1 0 1.3.9 1.9 3.4 2.7 3.2 1 5 2.4 5 5.2 0 3-2.4 5.2-6.4 5.2-2.6 0-4.8-.9-6.4-2.4l1.5-2.4z" fill={color}/>
-      {/* A */}
       <path d="M48 28l7-18.5h3.5L65.5 28H62l-1.6-4.5h-7.8L51 28h-3zm5.5-7.2h5.8l-2.9-8-2.9 8z" fill={color}/>
-      {/* M */}
       <path d="M70 28V9.5h3.5l6.5 14 6.5-14H90V28h-3.5V16l-5.5 12h-2L73.5 16V28H70z" fill={color}/>
-      {/* B */}
       <path d="M96 28V9.5h7c3.4 0 5.5 1.8 5.5 4.5 0 1.8-.9 3.1-2.3 3.8 1.8.6 3 2.1 3 4.2 0 3.2-2.3 6-7.2 6H96zm3.4-10.8h3.4c1.8 0 2.8-.9 2.8-2.3 0-1.4-1-2.2-2.8-2.2h-3.4v4.5zm0 8h4c2.2 0 3.4-1.1 3.4-3 0-1.8-1.2-2.8-3.4-2.8h-4v5.8z" fill={color}/>
-      {/* W */}
       <path d="M113 9.5h3.6l3.9 14 4-14h3.2l4 14 3.9-14h3.6L134 28h-3.5l-3.9-13.5L122.7 28h-3.5L113 9.5z" fill={color}/>
-      {/* A */}
       <path d="M140 28l7-18.5h3.5L157.5 28H154l-1.6-4.5h-7.8L143 28h-3zm5.5-7.2h5.8l-2.9-8-2.9 8z" fill={color}/>
-      {/* thin separator */}
       <rect x="162" y="9" width="1" height="20" fill={color} opacity="0.2"/>
-      {/* C */}
       <path d="M172 18.8c0-5.6 3.8-9.8 9-9.8 3 0 5.2 1.2 6.8 3.2l-2.4 2c-1.1-1.4-2.6-2.2-4.4-2.2-3.2 0-5.4 2.6-5.4 6.8 0 4.2 2.2 6.8 5.4 6.8 1.8 0 3.3-.8 4.4-2.2l2.4 2c-1.6 2-3.8 3.2-6.8 3.2-5.2 0-9-4.2-9-9.8z" fill={color}/>
     </svg>
   );
 }
 
-/* ══════════════════════════════════════════════
-   TOP HEADER (Shopify-style icons)
-══════════════════════════════════════════════ */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount }) {
   const screenTitles = { home:"", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"", "new-arrivals":"New Arrivals", sale:"Sale", lookbook:"Lookbook", sustainability:"Sustainability" };
   const title = screenTitles[screen] || "";
@@ -1164,7 +1012,6 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
   return (
     <header style={{ background:"rgba(255,255,255,0.94)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:`1px solid ${T.gray8}`, position:"sticky", top:0, zIndex:200, userSelect:"none" }}>
       <div style={{ height:56, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px" }}>
-        {/* Left */}
         <div style={{ display:"flex", alignItems:"center", gap:4, minWidth:80 }}>
           {canGoBack
             ? <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>
@@ -1173,13 +1020,9 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
               </button>
           }
         </div>
-
-        {/* Center */}
         <span style={{ fontSize:17, fontWeight:700, letterSpacing:-0.3, position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
           {canGoBack ? title : ""}
         </span>
-
-        {/* Right icons */}
         <div style={{ display:"flex", alignItems:"center", gap:6, minWidth:80, justifyContent:"flex-end" }}>
           {screen!=="search"  && <IconBtn icon="search"  onClick={()=>onNavigate("search")}   size={36} bg="transparent"/>}
           {screen!=="wishlist"&& <IconBtn icon="heart"   onClick={()=>onNavigate("wishlist")} size={36} bg="transparent" badge={wishlistCount>0?wishlistCount:0}/>}
@@ -1190,9 +1033,6 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
   );
 }
 
-/* ══════════════════════════════════════════════
-   BOTTOM NAV
-══════════════════════════════════════════════ */
 function BottomNav({ screen, onNavigate }) {
   const tabs = [
     { s:"home",     icon:"home",    label:"Home" },
@@ -1223,9 +1063,6 @@ function BottomNav({ screen, onNavigate }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   ROOT APP
-══════════════════════════════════════════════ */
 export default function Page() {
   const [history,  setHistory]  = useState([{screen:"home"}]);
   const [cart,     setCart]     = useState([]);
@@ -1245,15 +1082,11 @@ export default function Page() {
     setHistory(prev => prev.length>1 ? prev.slice(0,-1) : prev);
     setTimeout(()=>{ const el=document.getElementById("__main"); if(el) el.scrollTop=0; },10);
   };
-
-  /* Physical + browser back */
   useEffect(()=>{
     const h = () => { if(cartOpen){ setCartOpen(false); return; } goBack(); };
     window.addEventListener("popstate", h);
     return () => window.removeEventListener("popstate", h);
   }, [history, cartOpen]);
-
-  /* Cart */
   const addToCart = p => {
     setCart(prev=>{
       const key=`${p.id}-${p.sz}`;
@@ -1267,8 +1100,6 @@ export default function Page() {
   const removeFromCart = item => setCart(prev=>prev.filter(i=>!(i.id===item.id&&i.sz===item.sz)));
   const updateQty      = (item,qty) => { if(qty<1){removeFromCart(item);return;} setCart(prev=>prev.map(i=>i.id===item.id&&i.sz===item.sz?{...i,qty}:i)); };
   const cartCount      = cart.reduce((s,i)=>s+i.qty,0);
-
-  /* Wishlist */
   const toggleWishlist = id => setWishlist(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
 
   const sp = { onSelect:p=>navigate("product",p), onWishlist:toggleWishlist, wishlist };
@@ -1293,8 +1124,7 @@ export default function Page() {
 
   return (
     <>
-      <GlobalStyles/>
-      <div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"'Geist',-apple-system,sans-serif", overflow:"hidden" }}>
+<div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"'Geist',-apple-system,sans-serif", overflow:"hidden" }}>
         <Header
           screen={current.screen}
           cartCount={cartCount}
