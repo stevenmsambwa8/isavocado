@@ -231,40 +231,32 @@ function SectionHeader({ title, action, onAction }) {
 /* ══════════════════════════════════════════════
    HORIZONTAL SLIDER  (touch + mouse drag)
 ══════════════════════════════════════════════ */
-function HScroll({ children, gap=12, px=16 }) {
+function HScroll({ children, gap=12, px=12 }) {
   const ref = useRef(null);
-  const drag = useRef({ active:false, startX:0, scrollLeft:0 });
+  const drag = useRef({ on:false, startX:0, sl:0 });
 
-  const onMouseDown = e => {
+  const onMD = e => {
     const el = ref.current; if(!el) return;
-    drag.current = { active:true, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft };
-    el.style.cursor = "grabbing";
+    drag.current = { on:true, startX:e.clientX, sl:el.scrollLeft };
+    el.style.cursor = "grabbing"; el.style.userSelect = "none";
   };
-  const onMouseMove = e => {
-    if(!drag.current.active || !ref.current) return;
+  const onMM = e => {
+    if(!drag.current.on || !ref.current) return;
     e.preventDefault();
-    const x = e.pageX - ref.current.offsetLeft;
-    ref.current.scrollLeft = drag.current.scrollLeft - (x - drag.current.startX);
+    ref.current.scrollLeft = drag.current.sl - (e.clientX - drag.current.startX);
   };
-  const onMouseUp = () => {
-    drag.current.active = false;
-    if(ref.current) ref.current.style.cursor = "grab";
+  const onMU = () => {
+    drag.current.on = false;
+    if(ref.current){ ref.current.style.cursor = "grab"; ref.current.style.userSelect = ""; }
   };
 
   return (
-    <div
-      ref={ref}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
-      style={{
-        overflowX:"auto", marginLeft:-px, marginRight:-px, paddingLeft:px, paddingRight:px,
+    <div ref={ref} onMouseDown={onMD} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU}
+      style={{ overflowX:"auto", overflowY:"visible",
+        marginLeft:-px, marginRight:-px,
         WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none",
-        cursor:"grab", userSelect:"none",
-      }}
-    >
-      <div style={{ display:"flex", gap, paddingBottom:4, width:"max-content" }}>
+        cursor:"grab" }}>
+      <div style={{ display:"inline-flex", gap, paddingLeft:px, paddingRight:px, paddingBottom:4 }}>
         {children}
       </div>
     </div>
@@ -272,56 +264,85 @@ function HScroll({ children, gap=12, px=16 }) {
 }
 
 /* ══════════════════════════════════════════════
-   HERO BANNER SLIDER  (CSS transform — no scroll jank)
+   HERO BANNER SLIDER
 ══════════════════════════════════════════════ */
 function HeroBanner({ onNavigate }) {
   const [idx, setIdx] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const touchStart = useRef(null);
+  const pausedRef = useRef(false);
+  const containerRef = useRef(null);
+  const touchStartX = useRef(null);
 
+  // auto-advance
   useEffect(() => {
-    if (paused) return;
-    const t = setInterval(() => setIdx(i => (i + 1) % BANNERS.length), 3800);
+    const t = setInterval(() => {
+      if (!pausedRef.current) setIdx(i => (i + 1) % BANNERS.length);
+    }, 3800);
     return () => clearInterval(t);
-  }, [paused]);
+  }, []);
 
-  const prev = () => { setPaused(true); setIdx(i => (i - 1 + BANNERS.length) % BANNERS.length); };
-  const next = () => { setPaused(true); setIdx(i => (i + 1) % BANNERS.length); };
+  const go = i => { pausedRef.current = true; setIdx(i); };
+  const prev = () => go((idx - 1 + BANNERS.length) % BANNERS.length);
+  const next = () => go((idx + 1) % BANNERS.length);
 
-  const onTouchStart = e => { touchStart.current = e.touches[0].clientX; setPaused(true); };
+  const onTouchStart = e => { touchStartX.current = e.touches[0].clientX; pausedRef.current = true; };
   const onTouchEnd   = e => {
-    if (touchStart.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStart.current;
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
     if (dx < -40) next();
     else if (dx > 40) prev();
-    touchStart.current = null;
+    touchStartX.current = null;
+  };
+
+  // use scroll-snap — most reliable on mobile, no width calculation needed
+  const scrollRef = useRef(null);
+  const isScrolling = useRef(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    if (w === 0) return;
+    isScrolling.current = true;
+    el.scrollTo({ left: idx * w, behavior: "smooth" });
+    const t = setTimeout(() => { isScrolling.current = false; }, 500);
+    return () => clearTimeout(t);
+  }, [idx]);
+
+  const onScroll = () => {
+    if (isScrolling.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const i = Math.round(el.scrollLeft / el.offsetWidth);
+    if (i !== idx) setIdx(i);
   };
 
   return (
-    <div
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      style={{ position:"relative", borderRadius:10, overflow:"hidden", marginBottom:8 }}
-    >
-      {/* Track */}
-      <div style={{
-        display:"flex",
-        transform:`translateX(-${idx * 100}%)`,
-        transition:"transform 0.45s cubic-bezier(0.4,0,0.2,1)",
-        willChange:"transform",
-      }}>
+    <div ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
+      style={{ position:"relative", borderRadius:10, overflow:"hidden", marginBottom:12 }}>
+      {/* Scrollable track with snap */}
+      <div ref={scrollRef} onScroll={onScroll}
+        style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory",
+          WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none" }}>
         {BANNERS.map(b => (
-          <div key={b.id} style={{ flexShrink:0, width:"100%", background:b.grad, padding:"40px 24px 32px", minHeight:200, display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
-            <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:b.textDark?"rgba(0,0,0,0.4)":"rgba(255,255,255,0.5)", marginBottom:8 }}>{b.sub}</p>
-            <h2 style={{ fontSize:32, fontWeight:800, letterSpacing:-0.8, color:b.textDark?T.black:T.white, marginBottom:18, lineHeight:1.05 }}>{b.title}</h2>
-            <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start", background:b.textDark?T.black:T.white, color:b.textDark?T.white:T.black, border:"none", cursor:"pointer", padding:"11px 22px", borderRadius:99, fontSize:13, fontWeight:700 }}>{b.cta}</button>
+          <div key={b.id} style={{ flexShrink:0, minWidth:"100%", scrollSnapAlign:"start",
+            background:b.grad, padding:"44px 22px 36px", minHeight:220,
+            display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+            <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase",
+              color:b.textDark?"rgba(0,0,0,0.38)":"rgba(255,255,255,0.5)", marginBottom:8 }}>{b.sub}</p>
+            <h2 style={{ fontSize:34, fontWeight:800, letterSpacing:-1, lineHeight:1.05, marginBottom:20,
+              color:b.textDark?T.black:T.white }}>{b.title}</h2>
+            <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start",
+              background:b.textDark?T.black:T.white, color:b.textDark?T.white:T.black,
+              border:"none", cursor:"pointer", padding:"11px 22px", borderRadius:99, fontSize:13, fontWeight:700 }}>{b.cta}</button>
           </div>
         ))}
       </div>
-      {/* Dots */}
-      <div style={{ position:"absolute", bottom:12, right:14, display:"flex", gap:5 }}>
+      {/* Indicator dots */}
+      <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
         {BANNERS.map((_,i) => (
-          <button key={i} onClick={()=>{ setPaused(true); setIdx(i); }} style={{ width:i===idx?18:5, height:5, borderRadius:3, background:i===idx?"rgba(0,0,0,0.55)":"rgba(0,0,0,0.2)", border:"none", cursor:"pointer", transition:"width 0.3s, background 0.3s", padding:0 }}/>
+          <button key={i} onClick={()=>go(i)}
+            style={{ width:i===idx?20:6, height:6, borderRadius:3, padding:0, border:"none", cursor:"pointer",
+              background:i===idx?"rgba(0,0,0,0.6)":"rgba(0,0,0,0.18)", transition:"width 0.3s ease, background 0.3s ease" }}/>
         ))}
       </div>
     </div>
@@ -343,7 +364,7 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact }) {
           <div style={{ position:"absolute", top:10, left:10, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:10, fontWeight:700, padding:"4px 9px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>
         )}
         <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} className="pressable-sm"
-          style={{ position:"absolute", top:10, right:10, width:32, height:32, borderRadius:10, background:"rgba(255,255,255,0.88)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          style={{ position:"absolute", top:10, right:10, width:32, height:32, borderRadius:99, background:"rgba(255,255,255,0.92)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 1px 4px rgba(0,0,0,0.12)" }}>
           <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray4}/>
         </button>
       </div>
@@ -366,7 +387,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
   return (
     <>
       <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:500, animation:"fadeIn 0.2s ease" }}/>
-      <div style={{ position:"fixed", top:0, right:0, bottom:0, width:"min(440px,100vw)", background:T.white, zIndex:600, display:"flex", flexDirection:"column", animation:"slideInR 0.32s cubic-bezier(.4,0,.2,1)", borderRadius:"20px 0 0 20px", boxShadow:shadow.xxl }}>
+      <div style={{ position:"fixed", top:0, right:0, bottom:0, width:"min(440px,100vw)", background:T.white, zIndex:600, display:"flex", flexDirection:"column", animation:"slideInR 0.32s cubic-bezier(.4,0,.2,1)", borderRadius:"10px 0 0 10px", boxShadow:shadow.xxl }}>
 
         {/* Handle bar */}
         <div style={{ width:40, height:4, borderRadius:2, background:T.gray7, margin:"14px auto 0" }}/>
@@ -664,12 +685,13 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
       )}
 
       {/* Footer */}
-      <div style={{ borderTop:`1px solid ${T.gray8}`, paddingTop:28, paddingBottom:120 }}>
-        <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>MSAMBWA CLASSIC</p>
-        <p style={{ fontSize:14, color:T.gray4, marginBottom:20, lineHeight:1.6 }}>Refined pieces for modern living.</p>
-        <div style={{ display:"flex", flexWrap:"wrap", gap:16 }}>
-          {[["Our Story","sustainability"],["Sustainability","sustainability"],["Lookbook","lookbook"],["Sale","sale"],["New Arrivals","new-arrivals"],["Returns",null],["Privacy",null]].map(([l,s])=>(
-            <span key={l} onClick={s?()=>onNavigate(s):undefined} style={{ fontSize:13, color:T.gray4, cursor:s?"pointer":"default" }}>{l}</span>
+      <div style={{ borderTop:`1px solid ${T.gray8}`, paddingTop:24, paddingBottom:100 }}>
+        <div style={{ marginBottom:12 }}><Logo height={14} color={T.gray4}/></div>
+        <p style={{ fontSize:13, color:T.gray5, marginBottom:18, lineHeight:1.5 }}>Refined pieces for modern living.</p>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:"10px 20px" }}>
+          {[["Our Story","sustainability"],["Lookbook","lookbook"],["Sale","sale"],["New Arrivals","new-arrivals"],["Returns",null],["Privacy",null]].map(([l,s])=>(
+            <span key={l} onClick={s?()=>onNavigate(s):undefined}
+              style={{ fontSize:12, color:T.gray5, cursor:s?"pointer":"default", textDecoration:s?"underline":"none", textDecorationColor:T.gray7 }}>{l}</span>
           ))}
         </div>
       </div>
@@ -1305,7 +1327,7 @@ export default function Page() {
     return <HomeScreen products={PRODUCTS} onNavigate={navigate} {...sp}/>;
   };
 
-  const screenTitles = { home:"Home", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"Product" };
+  const screenTitles = { home:"", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"", "new-arrivals":"New Arrivals", sale:"Sale", lookbook:"Lookbook", sustainability:"Sustainability" };
 
   return (
     <>
@@ -1321,8 +1343,8 @@ export default function Page() {
           wishlistCount={wishlist.length}
         />
 
-        <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
-          <div style={{ maxWidth:600, margin:"0 auto", padding:"12px 12px 80px" }}>
+        <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"clip" }}>
+          <div style={{ maxWidth:600, margin:"0 auto", padding:"10px 12px 80px" }}>
             {renderScreen()}
           </div>
         </div>
