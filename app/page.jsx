@@ -1,6 +1,33 @@
 'use client'
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
 import './layout.css';
+
+const LANGS = {
+  en:"English", sw:"Swahili", fr:"Français", de:"Deutsch",
+  es:"Español", pt:"Português", ar:"العربية", zh:"中文",
+  ja:"日本語", ko:"한국어", hi:"हिन्दी", ru:"Русский",
+  it:"Italiano", nl:"Nederlands",
+};
+
+const TR = {
+  en:{ home:"Home",shop:"Shop",search:"Search",saved:"Saved",account:"Account",wishlist:"Wishlist",myBag:t.myBag,checkout:t.checkout,addToBag:t.addToBag,addedToBag:t.addedToBag,sizeGuide:t.sizeGuide,selectSize:t.selectSize,colour:t.colour,size:"Size",description:"Description",details:"Details",care:"Care",youMayLike:t.youMayLike,freeShipping:"Free Shipping",freeReturns:"Free Returns",authenticityGuarantee:"Authenticity Guarantee",ordersOver:"Orders over $200",within30:"Within 30 days",guaranteed:"Guaranteed",newIn:t.newIn,trendingNow:t.trendingNow,onSale:t.onSale,viewAll:t.viewAll,seeAll:t.seeAll,browse:t.browse,savedItems:t.savedItems,noSaved:t.noSaved,saveItemsYouLove:t.saveItemsYouLove,material:t.material,shipping:t.shipping,subtotal:t.subtotal,total:t.total,emptyBag:t.emptyBag,continueShopping:t.continueShopping,freeShippingQualify:t.freeShippingQualify,addMore:"Add",moreForFreeShipping:t.moreForFreeShipping,recentSearches:t.recentSearches,trending:t.trending,noResults:t.noResults,tryDifferent:t.tryDifferent,results:"result",resultsPlural:"results",forQuery:"for",newArrivals:t.newArrivals,justDropped:t.justDropped,ss26:"SS26 Collection",newPieces:"new pieces",limitedTime:t.limitedTime,upTo40:"Up to 40% off",styles:"styles",lookbook:t.lookbook,ss26Edits:"SS26 — Curated edits for the season",shopTheLook:t.shopTheLook,allLooks:t.allLooks,sustainability:"Sustainability",ourCommitment:t.ourCommitment,betterFashion:t.betterFashion,orders:"Orders",trackOrder:"Track order",orderTotal:"Order Total",tracking:"Tracking",orderPlaced:"Order placed",myOrders:"My Orders",addresses:"Addresses",paymentMethods:"Payment Methods",referFriend:"Refer a Friend",notifications:"Notifications",settings:"Settings",premiumMember:t.premiumMember,ourStory:t.ourStory,returns:"Returns",privacy:"Privacy",refinedPieces:t.refinedPieces,limitedTimeOffer:t.limitedTimeOffer,upTo40Sale:t.upTo40Sale,selectStyles:t.selectStyles,shopSale:t.shopSale,exploreBtn:"Explore",shopNow:"Shop Now",shopSaleBtn:"Shop Sale",language:"Language" },
+  sw:{ home:"Nyumbani",shop:"Duka",search:"Tafuta",saved:"Zilizohifadhiwa",account:"Akaunti",wishlist:"Orodha ya Matakwa",myBag:"Mkoba Wangu",checkout:"Lipia →",addToBag:"Weka Mkobani",addedToBag:"Imeongezwa ✓",sizeGuide:"Mwongozo wa Ukubwa",selectSize:"Tafadhali chagua ukubwa",colour:"Rangi",size:"Ukubwa",description:"Maelezo",details:"Maelezo ya Kina",care:"Utunzaji",youMayLike:"Unaweza Kupenda Pia",freeShipping:"Usafirishaji Bure",freeReturns:"Kurudisha Bure",authenticityGuarantee:"Dhamana ya Uhalisi",ordersOver:"Maagizo zaidi ya $200",within30:"Ndani ya siku 30",guaranteed:"Imehakikishwa",newIn:"Vipya ✦",trendingNow:"Inayoongoza Sasa 🔥",onSale:"Punguzo",viewAll:"Ona Yote",seeAll:"Ona Yote",browse:"Vinjari",savedItems:"vitu vilivyohifadhiwa",noSaved:"Orodha yako ya matakwa iko tupu",saveItemsYouLove:"Hifadhi vitu unavyopenda",material:"Nyenzo",shipping:"Usafirishaji",subtotal:"Jumla ndogo",total:"Jumla",emptyBag:"Mkoba wako uko tupu",continueShopping:"Endelea Kununua",freeShippingQualify:"Unastahili usafirishaji bure!",addMore:"Ongeza",moreForFreeShipping:"zaidi kwa usafirishaji bure",recentSearches:"Utafutaji wa Hivi Karibuni",trending:"Inayoongoza",noResults:"Hakuna matokeo",tryDifferent:"Jaribu neno tofauti la utafutaji",results:"matokeo",resultsPlural:"matokeo",forQuery:"kwa",newArrivals:"Bidhaa Mpya",justDropped:"Imewasili tu",ss26:"Mkusanyiko SS26",newPieces:"vipande vipya",limitedTime:"Muda mfupi",upTo40:"Hadi punguzo la 40%",styles:"mitindo",lookbook:"Kitabu cha Mitindo",ss26Edits:"SS26 — Makusanyo yaliyochaguliwa kwa msimu",shopTheLook:"Nunua Mtindo Huu",allLooks:"Mitindo Yote",sustainability:"Uendelevu",ourCommitment:"Ahadi yetu",betterFashion:"Mitindo Bora",orders:"Maagizo",trackOrder:"Fuatilia agizo",orderTotal:"Jumla ya Agizo",tracking:"Ufuatiliaji",orderPlaced:"Agizo limewekwa",myOrders:"Maagizo Yangu",addresses:"Anwani",paymentMethods:"Njia za Malipo",referFriend:"Mualike Rafiki",notifications:"Arifa",settings:"Mipangilio",premiumMember:"Mwanachama wa MSAMBWA Premium",ourStory:"Hadithi Yetu",returns:"Kurudisha",privacy:"Faragha",refinedPieces:"Vipande vilivyosafishwa kwa maisha ya kisasa.",limitedTimeOffer:"Muda Mfupi",upTo40Sale:"Hadi 40% Punguzo",selectStyles:"Mitindo iliyochaguliwa. Wakati hifadhi inapoisha.",shopSale:"Nunua Punguzo",exploreBtn:"Gundua",shopNow:"Nunua Sasa",shopSaleBtn:"Nunua Punguzo",language:"Lugha" },
+  fr:{ home:"Accueil",shop:"Boutique",search:"Rechercher",saved:"Sauvegardés",account:"Compte",wishlist:"Liste de souhaits",myBag:"Mon Panier",checkout:"Commander →",addToBag:"Ajouter au panier",addedToBag:"Ajouté ✓",sizeGuide:"Guide des tailles",selectSize:"Veuillez choisir une taille",colour:"Couleur",size:"Taille",description:"Description",details:"Détails",care:"Entretien",youMayLike:"Vous aimerez aussi",freeShipping:"Livraison gratuite",freeReturns:"Retours gratuits",authenticityGuarantee:"Garantie d'authenticité",ordersOver:"Commandes > 200$",within30:"Sous 30 jours",guaranteed:"Garanti",newIn:"Nouveautés ✦",trendingNow:"Tendances 🔥",onSale:"En solde",viewAll:"Tout voir",seeAll:"Tout voir",browse:"Explorer",savedItems:"articles sauvegardés",noSaved:"Votre liste est vide",saveItemsYouLove:"Sauvegardez vos coups de cœur",material:"Matière",shipping:"Livraison",subtotal:"Sous-total",total:"Total",emptyBag:"Votre panier est vide",continueShopping:"Continuer mes achats",freeShippingQualify:"Livraison gratuite incluse !",addMore:"Ajoutez",moreForFreeShipping:"de plus pour la livraison gratuite",recentSearches:"Recherches récentes",trending:"Tendances",noResults:"Aucun résultat",tryDifferent:"Essayez un autre terme",results:"résultat",resultsPlural:"résultats",forQuery:"pour",newArrivals:"Nouveautés",justDropped:"Vient d'arriver",ss26:"Collection SS26",newPieces:"nouvelles pièces",limitedTime:"Durée limitée",upTo40:"Jusqu'à -40%",styles:"styles",lookbook:t.lookbook,ss26Edits:"SS26 — Sélections de la saison",shopTheLook:"Acheter le look",allLooks:"Tous les looks",sustainability:"Durabilité",ourCommitment:"Notre engagement",betterFashion:"Une mode meilleure",orders:"Commandes",trackOrder:"Suivre la commande",orderTotal:"Total commande",tracking:"Suivi",orderPlaced:"Commande passée",myOrders:"Mes commandes",addresses:"Adresses",paymentMethods:"Paiements",referFriend:"Parrainer un ami",notifications:"Notifications",settings:"Paramètres",premiumMember:"Membre Premium MSAMBWA",ourStory:"Notre histoire",returns:"Retours",privacy:"Confidentialité",refinedPieces:"Des pièces raffinées pour la vie moderne.",limitedTimeOffer:"Offre limitée",upTo40Sale:"Jusqu'à -40%",selectStyles:"Styles sélectionnés. Jusqu'à épuisement.",shopSale:"Acheter les soldes",exploreBtn:"Explorer",shopNow:"Acheter",shopSaleBtn:"Voir les soldes",language:"Langue" },
+  de:{ home:"Startseite",shop:"Shop",search:"Suchen",saved:"Gespeichert",account:"Konto",wishlist:"Wunschliste",myBag:"Mein Warenkorb",checkout:"Zur Kasse →",addToBag:"In den Warenkorb",addedToBag:"Hinzugefügt ✓",sizeGuide:"Größentabelle",selectSize:"Bitte wählen Sie eine Größe",colour:"Farbe",size:"Größe",description:"Beschreibung",details:"Details",care:"Pflege",youMayLike:"Das könnte Ihnen gefallen",freeShipping:"Kostenloser Versand",freeReturns:"Kostenlose Rücksendung",authenticityGuarantee:"Echtheitszertifikat",ordersOver:"Bestellungen über 200$",within30:"Innerhalb von 30 Tagen",guaranteed:"Garantiert",newIn:"Neuheiten ✦",trendingNow:"Trends 🔥",onSale:t.onSale,viewAll:"Alle anzeigen",seeAll:"Alle anzeigen",browse:"Stöbern",savedItems:"gespeicherte Artikel",noSaved:"Ihre Wunschliste ist leer",saveItemsYouLove:"Speichern Sie Ihre Lieblingsartikel",material:"Material",shipping:"Versand",subtotal:"Zwischensumme",total:"Gesamt",emptyBag:"Ihr Warenkorb ist leer",continueShopping:"Weiter einkaufen",freeShippingQualify:"Kostenloser Versand inklusive!",addMore:"Fügen Sie",moreForFreeShipping:"hinzu für kostenlosen Versand",recentSearches:"Letzte Suchen",trending:"Trends",noResults:"Keine Ergebnisse",tryDifferent:"Versuchen Sie einen anderen Suchbegriff",results:"Ergebnis",resultsPlural:"Ergebnisse",forQuery:"für",newArrivals:"Neuankömmlinge",justDropped:"Gerade eingetroffen",ss26:"SS26 Kollektion",newPieces:"neue Teile",limitedTime:"Begrenzte Zeit",upTo40:"Bis zu -40%",styles:"Styles",lookbook:t.lookbook,ss26Edits:"SS26 — Kuratierte Editionen",shopTheLook:"Den Look shoppen",allLooks:"Alle Looks",sustainability:"Nachhaltigkeit",ourCommitment:"Unser Versprechen",betterFashion:"Bessere Mode",orders:"Bestellungen",trackOrder:"Bestellung verfolgen",orderTotal:"Bestellsumme",tracking:"Verfolgung",orderPlaced:"Bestellung aufgegeben",myOrders:"Meine Bestellungen",addresses:"Adressen",paymentMethods:"Zahlungsmethoden",referFriend:"Freunde werben",notifications:"Benachrichtigungen",settings:"Einstellungen",premiumMember:"MSAMBWA Premium Mitglied",ourStory:"Unsere Geschichte",returns:"Rücksendungen",privacy:"Datenschutz",refinedPieces:"Raffinierte Stücke für das moderne Leben.",limitedTimeOffer:"Zeitlich begrenzt",upTo40Sale:"Bis zu -40%",selectStyles:"Ausgewählte Styles. Solange Vorrat.",shopSale:"Sale shoppen",exploreBtn:"Entdecken",shopNow:"Jetzt shoppen",shopSaleBtn:"Sale ansehen",language:"Sprache" },
+  es:{ home:"Inicio",shop:"Tienda",search:"Buscar",saved:"Guardados",account:"Cuenta",wishlist:"Lista de deseos",myBag:"Mi bolsa",checkout:"Pagar →",addToBag:"Añadir a la bolsa",addedToBag:"Añadido ✓",sizeGuide:"Guía de tallas",selectSize:"Por favor selecciona una talla",colour:"Color",size:"Talla",description:"Descripción",details:"Detalles",care:"Cuidado",youMayLike:"También te puede gustar",freeShipping:"Envío gratis",freeReturns:"Devoluciones gratuitas",authenticityGuarantee:"Garantía de autenticidad",ordersOver:"Pedidos > $200",within30:"En 30 días",guaranteed:"Garantizado",newIn:"Novedades ✦",trendingNow:"Tendencias 🔥",onSale:"Rebajas",viewAll:"Ver todo",seeAll:"Ver todo",browse:"Explorar",savedItems:"artículos guardados",noSaved:"Tu lista de deseos está vacía",saveItemsYouLove:"Guarda lo que te encanta",material:"Material",shipping:"Envío",subtotal:"Subtotal",total:"Total",emptyBag:"Tu bolsa está vacía",continueShopping:"Seguir comprando",freeShippingQualify:"¡Envío gratuito incluido!",addMore:"Añade",moreForFreeShipping:"más para envío gratis",recentSearches:"Búsquedas recientes",trending:"Tendencias",noResults:"Sin resultados",tryDifferent:"Prueba otro término",results:"resultado",resultsPlural:"resultados",forQuery:"para",newArrivals:"Novedades",justDropped:"Recién llegado",ss26:"Colección SS26",newPieces:"nuevas piezas",limitedTime:"Tiempo limitado",upTo40:"Hasta -40%",styles:"estilos",lookbook:t.lookbook,ss26Edits:"SS26 — Selecciones de temporada",shopTheLook:"Comprar el look",allLooks:"Todos los looks",sustainability:"Sostenibilidad",ourCommitment:"Nuestro compromiso",betterFashion:"Moda mejor",orders:"Pedidos",trackOrder:"Rastrear pedido",orderTotal:"Total pedido",tracking:"Seguimiento",orderPlaced:"Pedido realizado",myOrders:"Mis pedidos",addresses:"Direcciones",paymentMethods:"Pagos",referFriend:"Recomendar amigo",notifications:"Notificaciones",settings:"Ajustes",premiumMember:"Miembro Premium MSAMBWA",ourStory:"Nuestra historia",returns:"Devoluciones",privacy:"Privacidad",refinedPieces:"Piezas refinadas para la vida moderna.",limitedTimeOffer:"Oferta limitada",upTo40Sale:"Hasta -40%",selectStyles:"Estilos seleccionados. Hasta agotar existencias.",shopSale:"Ver rebajas",exploreBtn:"Explorar",shopNow:"Comprar ahora",shopSaleBtn:"Ver rebajas",language:"Idioma" },
+  pt:{ home:"Início",shop:"Loja",search:"Pesquisar",saved:"Guardados",account:"Conta",wishlist:"Lista de desejos",myBag:"Minha bolsa",checkout:"Finalizar →",addToBag:"Adicionar à bolsa",addedToBag:"Adicionado ✓",sizeGuide:"Guia de tamanhos",selectSize:"Selecione um tamanho",colour:"Cor",size:"Tamanho",description:"Descrição",details:"Detalhes",care:"Cuidados",youMayLike:"Você também pode gostar",freeShipping:"Frete grátis",freeReturns:"Devoluções gratuitas",authenticityGuarantee:"Garantia de autenticidade",ordersOver:"Pedidos acima de $200",within30:"Em 30 dias",guaranteed:"Garantido",newIn:"Novidades ✦",trendingNow:"Tendências 🔥",onSale:"Promoção",viewAll:"Ver tudo",seeAll:"Ver tudo",browse:"Explorar",savedItems:"itens guardados",noSaved:"Sua lista está vazia",saveItemsYouLove:"Guarde o que você ama",material:"Material",shipping:"Frete",subtotal:"Subtotal",total:"Total",emptyBag:"Sua bolsa está vazia",continueShopping:"Continuar comprando",freeShippingQualify:"Frete grátis incluído!",addMore:"Adicione",moreForFreeShipping:"para frete grátis",recentSearches:"Pesquisas recentes",trending:"Tendências",noResults:"Sem resultados",tryDifferent:"Tente outro termo",results:"resultado",resultsPlural:"resultados",forQuery:"para",newArrivals:"Novidades",justDropped:"Recém chegado",ss26:"Coleção SS26",newPieces:"novas peças",limitedTime:"Tempo limitado",upTo40:"Até -40%",styles:"estilos",lookbook:t.lookbook,ss26Edits:"SS26 — Seleções da temporada",shopTheLook:"Comprar o look",allLooks:"Todos os looks",sustainability:"Sustentabilidade",ourCommitment:"Nosso compromisso",betterFashion:"Moda melhor",orders:"Pedidos",trackOrder:"Rastrear pedido",orderTotal:"Total do pedido",tracking:"Rastreamento",orderPlaced:"Pedido realizado",myOrders:"Meus pedidos",addresses:"Endereços",paymentMethods:"Pagamentos",referFriend:"Indicar amigo",notifications:"Notificações",settings:"Configurações",premiumMember:"Membro Premium MSAMBWA",ourStory:"Nossa história",returns:"Devoluções",privacy:"Privacidade",refinedPieces:"Peças refinadas para a vida moderna.",limitedTimeOffer:"Oferta limitada",upTo40Sale:"Até -40%",selectStyles:"Estilos selecionados. Enquanto durar o estoque.",shopSale:"Ver promoções",exploreBtn:"Explorar",shopNow:"Comprar agora",shopSaleBtn:"Ver promoções",language:"Idioma" },
+  ar:{ home:"الرئيسية",shop:"المتجر",search:"بحث",saved:"المحفوظة",account:"الحساب",wishlist:"قائمة الأمنيات",myBag:"حقيبتي",checkout:"الدفع →",addToBag:"أضف للحقيبة",addedToBag:"تمت الإضافة ✓",sizeGuide:"دليل المقاسات",selectSize:"يرجى اختيار مقاس",colour:"اللون",size:"المقاس",description:"الوصف",details:"التفاصيل",care:"العناية",youMayLike:"قد يعجبك أيضاً",freeShipping:"شحن مجاني",freeReturns:"إرجاع مجاني",authenticityGuarantee:"ضمان الأصالة",ordersOver:"طلبات فوق $200",within30:"خلال 30 يوماً",guaranteed:"مضمون",newIn:"جديد ✦",trendingNow:"الأكثر رواجاً 🔥",onSale:"تخفيضات",viewAll:"عرض الكل",seeAll:"عرض الكل",browse:"تصفح",savedItems:"عناصر محفوظة",noSaved:"قائمة أمنياتك فارغة",saveItemsYouLove:"احفظ ما تحب",material:"المادة",shipping:"الشحن",subtotal:"المجموع الفرعي",total:"الإجمالي",emptyBag:"حقيبتك فارغة",continueShopping:"مواصلة التسوق",freeShippingQualify:"مؤهل للشحن المجاني!",addMore:"أضف",moreForFreeShipping:"للحصول على شحن مجاني",recentSearches:"عمليات البحث الأخيرة",trending:"الأكثر رواجاً",noResults:"لا توجد نتائج",tryDifferent:"جرب مصطلحاً مختلفاً",results:"نتيجة",resultsPlural:"نتائج",forQuery:"لـ",newArrivals:"وصل حديثاً",justDropped:"وصل للتو",ss26:"مجموعة SS26",newPieces:"قطع جديدة",limitedTime:"وقت محدود",upTo40:"حتى 40% خصم",styles:"أنماط",lookbook:"كتاب الأزياء",ss26Edits:"SS26 — تشكيلات منتقاة",shopTheLook:"تسوق هذا الإطلالة",allLooks:"جميع الإطلالات",sustainability:"الاستدامة",ourCommitment:"التزامنا",betterFashion:"أزياء أفضل",orders:"الطلبات",trackOrder:"تتبع الطلب",orderTotal:"إجمالي الطلب",tracking:"التتبع",orderPlaced:"تم تقديم الطلب",myOrders:"طلباتي",addresses:"العناوين",paymentMethods:"طرق الدفع",referFriend:"أحل صديقاً",notifications:"الإشعارات",settings:"الإعدادات",premiumMember:"عضو MSAMBWA المميز",ourStory:"قصتنا",returns:"الإرجاع",privacy:"الخصوصية",refinedPieces:"قطع راقية للحياة العصرية.",limitedTimeOffer:"عرض محدود",upTo40Sale:"حتى 40% خصم",selectStyles:"أنماط مختارة. حتى نفاد الكمية.",shopSale:"تسوق التخفيضات",exploreBtn:"استكشف",shopNow:"تسوق الآن",shopSaleBtn:"تسوق التخفيضات",language:"اللغة" },
+  zh:{ home:"首页",shop:"商店",search:"搜索",saved:"已保存",account:"账户",wishlist:"心愿单",myBag:"我的购物袋",checkout:"去结账 →",addToBag:"加入购物袋",addedToBag:"已加入 ✓",sizeGuide:"尺码指南",selectSize:"请选择尺码",colour:"颜色",size:"尺码",description:"描述",details:"详情",care:"护理",youMayLike:"您可能还喜欢",freeShipping:"免费配送",freeReturns:"免费退货",authenticityGuarantee:"正品保证",ordersOver:"订单满$200",within30:"30天内",guaranteed:"已保证",newIn:"新品 ✦",trendingNow:"热门 🔥",onSale:"特卖",viewAll:"查看全部",seeAll:"查看全部",browse:"浏览",savedItems:"件已保存",noSaved:"您的心愿单为空",saveItemsYouLove:"保存您喜欢的商品",material:"材质",shipping:"配送",subtotal:"小计",total:"合计",emptyBag:"购物袋为空",continueShopping:"继续购物",freeShippingQualify:"您已享受免费配送！",addMore:"再加",moreForFreeShipping:"享受免费配送",recentSearches:"最近搜索",trending:"热门",noResults:"无结果",tryDifferent:"请尝试其他搜索词",results:"个结果",resultsPlural:"个结果",forQuery:"关于",newArrivals:"新品到货",justDropped:"刚刚上架",ss26:"SS26系列",newPieces:"件新品",limitedTime:"限时",upTo40:"低至六折",styles:"款",lookbook:"时尚手册",ss26Edits:"SS26 — 本季精选",shopTheLook:"购买本套搭配",allLooks:"全部造型",sustainability:"可持续发展",ourCommitment:"我们的承诺",betterFashion:"更好的时尚",orders:"订单",trackOrder:"追踪订单",orderTotal:"订单总计",tracking:"追踪",orderPlaced:"已下单",myOrders:"我的订单",addresses:"地址",paymentMethods:"支付方式",referFriend:"推荐好友",notifications:"通知",settings:"设置",premiumMember:"MSAMBWA高级会员",ourStory:"我们的故事",returns:"退货",privacy:"隐私",refinedPieces:"精致单品，现代生活。",limitedTimeOffer:"限时优惠",upTo40Sale:"低至六折",selectStyles:"精选款式，售完即止。",shopSale:"购买特卖",exploreBtn:"探索",shopNow:"立即购买",shopSaleBtn:"查看特卖",language:"语言" },
+  ja:{ home:"ホーム",shop:"ショップ",search:"検索",saved:"保存済み",account:"アカウント",wishlist:"ウィッシュリスト",myBag:"マイバッグ",checkout:"注文する →",addToBag:"バッグに追加",addedToBag:"追加されました ✓",sizeGuide:"サイズガイド",selectSize:"サイズを選択してください",colour:"カラー",size:"サイズ",description:"商品説明",details:"詳細",care:"お手入れ",youMayLike:"あなたへのおすすめ",freeShipping:"送料無料",freeReturns:"返品無料",authenticityGuarantee:"正規品保証",ordersOver:"$200以上のご注文",within30:"30日以内",guaranteed:"保証済み",newIn:"新着 ✦",trendingNow:"トレンド 🔥",onSale:"セール",viewAll:"すべて見る",seeAll:"すべて見る",browse:"ブラウズ",savedItems:"件保存済み",noSaved:"ウィッシュリストは空です",saveItemsYouLove:"お気に入りを保存しよう",material:"素材",shipping:"配送",subtotal:"小計",total:"合計",emptyBag:"バッグは空です",continueShopping:"ショッピングを続ける",freeShippingQualify:"送料無料の対象です！",addMore:"あと",moreForFreeShipping:"で送料無料",recentSearches:"最近の検索",trending:"トレンド",noResults:"結果なし",tryDifferent:"別のキーワードを試してください",results:"件の結果",resultsPlural:"件の結果",forQuery:"の",newArrivals:"新着アイテム",justDropped:"入荷したばかり",ss26:"SS26コレクション",newPieces:"点の新アイテム",limitedTime:"期間限定",upTo40:"最大40%OFF",styles:"スタイル",lookbook:"ルックブック",ss26Edits:"SS26 — 今季のセレクション",shopTheLook:"このコーデを買う",allLooks:"すべてのルック",sustainability:"サステナビリティ",ourCommitment:"私たちの約束",betterFashion:"より良いファッション",orders:"注文",trackOrder:"注文を追跡",orderTotal:"注文合計",tracking:"追跡",orderPlaced:"注文完了",myOrders:"私の注文",addresses:"住所",paymentMethods:"お支払い方法",referFriend:"友達を紹介",notifications:"通知",settings:"設定",premiumMember:"MSAMBWAプレミアム会員",ourStory:"ブランドストーリー",returns:"返品",privacy:"プライバシー",refinedPieces:"現代の生活のための洗練されたアイテム。",limitedTimeOffer:"期間限定",upTo40Sale:"最大40%OFF",selectStyles:"セレクトスタイル。在庫限り。",shopSale:"セールを見る",exploreBtn:"探索する",shopNow:"今すぐ購入",shopSaleBtn:"セールを見る",language:"言語" },
+  ko:{ home:"홈",shop:"쇼핑",search:"검색",saved:"저장됨",account:"계정",wishlist:"위시리스트",myBag:"내 가방",checkout:"결제하기 →",addToBag:"가방에 추가",addedToBag:"추가됨 ✓",sizeGuide:"사이즈 가이드",selectSize:"사이즈를 선택해 주세요",colour:"색상",size:"사이즈",description:"상품 설명",details:"상세 정보",care:"관리 방법",youMayLike:"이런 상품도 좋아하실 거예요",freeShipping:"무료 배송",freeReturns:"무료 반품",authenticityGuarantee:"정품 보증",ordersOver:"$200 이상 주문",within30:"30일 이내",guaranteed:"보증됨",newIn:"신상품 ✦",trendingNow:"인기 상품 🔥",onSale:"세일",viewAll:"전체 보기",seeAll:"전체 보기",browse:"탐색",savedItems:"개 저장됨",noSaved:"위시리스트가 비어 있습니다",saveItemsYouLove:"좋아하는 상품을 저장하세요",material:"소재",shipping:"배송",subtotal:"소계",total:"합계",emptyBag:"가방이 비어 있습니다",continueShopping:"쇼핑 계속하기",freeShippingQualify:"무료 배송 대상입니다!",addMore:"추가로",moreForFreeShipping:"더 담으면 무료 배송",recentSearches:"최근 검색어",trending:"인기",noResults:"검색 결과 없음",tryDifferent:"다른 검색어를 시도해 보세요",results:"개 결과",resultsPlural:"개 결과",forQuery:"",newArrivals:"신상품",justDropped:"방금 입고",ss26:"SS26 컬렉션",newPieces:"개 신상품",limitedTime:"한정 기간",upTo40:"최대 40% 할인",styles:"스타일",lookbook:"룩북",ss26Edits:"SS26 — 이번 시즌 큐레이션",shopTheLook:"이 룩 쇼핑하기",allLooks:"모든 룩",sustainability:"지속 가능성",ourCommitment:"우리의 약속",betterFashion:"더 나은 패션",orders:"주문",trackOrder:"주문 추적",orderTotal:"주문 합계",tracking:"추적",orderPlaced:"주문 완료",myOrders:"내 주문",addresses:"주소",paymentMethods:"결제 방법",referFriend:"친구 추천",notifications:"알림",settings:"설정",premiumMember:"MSAMBWA 프리미엄 회원",ourStory:"브랜드 스토리",returns:"반품",privacy:"개인정보",refinedPieces:"현대적인 삶을 위한 세련된 제품.",limitedTimeOffer:"한정 오퍼",upTo40Sale:"최대 40% 할인",selectStyles:"엄선된 스타일. 재고 소진 시까지.",shopSale:"세일 보기",exploreBtn:"탐색",shopNow:"지금 구매",shopSaleBtn:"세일 보기",language:"언어" },
+  hi:{ home:"होम",shop:"दुकान",search:"खोजें",saved:"सहेजे गए",account:"खाता",wishlist:"इच्छा सूची",myBag:"मेरा बैग",checkout:"चेकआउट →",addToBag:"बैग में जोड़ें",addedToBag:"जोड़ा गया ✓",sizeGuide:"साइज़ गाइड",selectSize:"कृपया साइज़ चुनें",colour:"रंग",size:"साइज़",description:"विवरण",details:"विस्तृत जानकारी",care:"देखभाल",youMayLike:"आपको यह भी पसंद आ सकता है",freeShipping:"मुफ़्त शिपिंग",freeReturns:"मुफ़्त वापसी",authenticityGuarantee:"प्रामाणिकता गारंटी",ordersOver:"$200 से अधिक के ऑर्डर",within30:"30 दिनों के भीतर",guaranteed:"गारंटीड",newIn:"नया आया ✦",trendingNow:"ट्रेंडिंग 🔥",onSale:"बिक्री पर",viewAll:"सभी देखें",seeAll:"सभी देखें",browse:"ब्राउज़ करें",savedItems:"आइटम सहेजे गए",noSaved:"आपकी इच्छा सूची खाली है",saveItemsYouLove:"जो पसंद हो उसे सहेजें",material:"सामग्री",shipping:"शिपिंग",subtotal:"उप-योग",total:"कुल",emptyBag:"आपका बैग खाली है",continueShopping:"खरीदारी जारी रखें",freeShippingQualify:"मुफ़्त शिपिंग के योग्य!",addMore:"और जोड़ें",moreForFreeShipping:"मुफ़्त शिपिंग के लिए",recentSearches:"हाल की खोजें",trending:"ट्रेंडिंग",noResults:"कोई परिणाम नहीं",tryDifferent:"कोई अन्य शब्द आज़माएं",results:"परिणाम",resultsPlural:"परिणाम",forQuery:"के लिए",newArrivals:"नई आमद",justDropped:"अभी आया",ss26:"SS26 कलेक्शन",newPieces:"नए पीस",limitedTime:"सीमित समय",upTo40:"40% तक छूट",styles:"स्टाइल",lookbook:"लुकबुक",ss26Edits:"SS26 — सीज़न के क्यूरेटेड संपादन",shopTheLook:"यह लुक खरीदें",allLooks:"सभी लुक",sustainability:"स्थिरता",ourCommitment:"हमारी प्रतिबद्धता",betterFashion:"बेहतर फ़ैशन",orders:"ऑर्डर",trackOrder:"ऑर्डर ट्रैक करें",orderTotal:"ऑर्डर कुल",tracking:"ट्रैकिंग",orderPlaced:"ऑर्डर दिया गया",myOrders:"मेरे ऑर्डर",addresses:"पते",paymentMethods:"भुगतान के तरीके",referFriend:"दोस्त को रेफर करें",notifications:"सूचनाएं",settings:"सेटिंग्स",premiumMember:"MSAMBWA प्रीमियम सदस्य",ourStory:"हमारी कहानी",returns:"वापसी",privacy:"गोपनीयता",refinedPieces:"आधुनिक जीवन के लिए परिष्कृत वस्त्र।",limitedTimeOffer:"सीमित समय का ऑफर",upTo40Sale:"40% तक छूट",selectStyles:"चुनिंदा स्टाइल। स्टॉक रहने तक।",shopSale:"सेल देखें",exploreBtn:"एक्सप्लोर करें",shopNow:"अभी खरीदें",shopSaleBtn:"सेल देखें",language:"भाषा" },
+  ru:{ home:"Главная",shop:"Магазин",search:"Поиск",saved:"Сохранённые",account:"Аккаунт",wishlist:"Список желаний",myBag:"Моя сумка",checkout:"Оформить →",addToBag:"В сумку",addedToBag:"Добавлено ✓",sizeGuide:"Таблица размеров",selectSize:"Пожалуйста, выберите размер",colour:"Цвет",size:"Размер",description:"Описание",details:"Детали",care:"Уход",youMayLike:"Вам также может понравиться",freeShipping:"Бесплатная доставка",freeReturns:"Бесплатный возврат",authenticityGuarantee:"Гарантия подлинности",ordersOver:"Заказы от $200",within30:"В течение 30 дней",guaranteed:"Гарантировано",newIn:"Новинки ✦",trendingNow:"В тренде 🔥",onSale:"Скидки",viewAll:"Смотреть всё",seeAll:"Смотреть всё",browse:"Просмотр",savedItems:"сохранённых товаров",noSaved:"Ваш список желаний пуст",saveItemsYouLove:"Сохраняйте понравившееся",material:"Материал",shipping:"Доставка",subtotal:"Промежуточный итог",total:"Итого",emptyBag:"Ваша сумка пуста",continueShopping:"Продолжить покупки",freeShippingQualify:"Бесплатная доставка включена!",addMore:"Добавьте",moreForFreeShipping:"для бесплатной доставки",recentSearches:"Недавние поиски",trending:"В тренде",noResults:"Нет результатов",tryDifferent:"Попробуйте другой запрос",results:"результат",resultsPlural:"результатов",forQuery:"по запросу",newArrivals:"Новые поступления",justDropped:"Только что поступило",ss26:"Коллекция SS26",newPieces:"новых изделий",limitedTime:"Ограниченное время",upTo40:"До -40%",styles:"стилей",lookbook:"Лукбук",ss26Edits:"SS26 — Кураторские подборки",shopTheLook:"Купить образ",allLooks:"Все образы",sustainability:"Устойчивость",ourCommitment:"Наши обязательства",betterFashion:"Лучшая мода",orders:"Заказы",trackOrder:"Отследить заказ",orderTotal:"Итого по заказу",tracking:"Отслеживание",orderPlaced:"Заказ оформлен",myOrders:"Мои заказы",addresses:"Адреса",paymentMethods:"Способы оплаты",referFriend:"Пригласить друга",notifications:"Уведомления",settings:"Настройки",premiumMember:"Премиум-участник MSAMBWA",ourStory:"Наша история",returns:"Возврат",privacy:"Конфиденциальность",refinedPieces:"Изысканные вещи для современной жизни.",limitedTimeOffer:"Ограниченное предложение",upTo40Sale:"До -40%",selectStyles:"Избранные стили. Пока есть в наличии.",shopSale:"Смотреть скидки",exploreBtn:"Исследовать",shopNow:"Купить сейчас",shopSaleBtn:"Смотреть скидки",language:"Язык" },
+  it:{ home:"Home",shop:"Negozio",search:"Cerca",saved:"Salvati",account:"Account",wishlist:"Lista desideri",myBag:"La mia borsa",checkout:"Acquista →",addToBag:"Aggiungi alla borsa",addedToBag:"Aggiunto ✓",sizeGuide:"Guida alle taglie",selectSize:"Seleziona una taglia",colour:"Colore",size:"Taglia",description:"Descrizione",details:"Dettagli",care:"Cura",youMayLike:"Potrebbe piacerti anche",freeShipping:"Spedizione gratuita",freeReturns:"Resi gratuiti",authenticityGuarantee:"Garanzia di autenticità",ordersOver:"Ordini oltre $200",within30:"Entro 30 giorni",guaranteed:"Garantito",newIn:"Novità ✦",trendingNow:"Tendenze 🔥",onSale:"Saldi",viewAll:"Vedi tutto",seeAll:"Vedi tutto",browse:"Esplora",savedItems:"articoli salvati",noSaved:"La tua lista è vuota",saveItemsYouLove:"Salva ciò che ami",material:"Materiale",shipping:"Spedizione",subtotal:"Subtotale",total:"Totale",emptyBag:"La tua borsa è vuota",continueShopping:"Continua gli acquisti",freeShippingQualify:"Spedizione gratuita inclusa!",addMore:"Aggiungi",moreForFreeShipping:"per la spedizione gratuita",recentSearches:"Ricerche recenti",trending:"Tendenze",noResults:"Nessun risultato",tryDifferent:"Prova un altro termine",results:"risultato",resultsPlural:"risultati",forQuery:"per",newArrivals:"Nuovi arrivi",justDropped:"Appena arrivato",ss26:"Collezione SS26",newPieces:"nuovi pezzi",limitedTime:"Tempo limitato",upTo40:"Fino al -40%",styles:"stili",lookbook:t.lookbook,ss26Edits:"SS26 — Selezioni stagionali",shopTheLook:"Acquista il look",allLooks:"Tutti i look",sustainability:"Sostenibilità",ourCommitment:"Il nostro impegno",betterFashion:"Moda migliore",orders:"Ordini",trackOrder:"Traccia ordine",orderTotal:"Totale ordine",tracking:"Tracciamento",orderPlaced:"Ordine effettuato",myOrders:"I miei ordini",addresses:"Indirizzi",paymentMethods:"Pagamenti",referFriend:"Invita un amico",notifications:"Notifiche",settings:"Impostazioni",premiumMember:"Membro Premium MSAMBWA",ourStory:"La nostra storia",returns:"Resi",privacy:"Privacy",refinedPieces:"Pezzi raffinati per la vita moderna.",limitedTimeOffer:"Offerta limitata",upTo40Sale:"Fino al -40%",selectStyles:"Stili selezionati. Fino ad esaurimento.",shopSale:"Vai ai saldi",exploreBtn:"Esplora",shopNow:"Acquista ora",shopSaleBtn:"Vai ai saldi",language:"Lingua" },
+  nl:{ home:"Home",shop:"Winkel",search:"Zoeken",saved:"Opgeslagen",account:"Account",wishlist:"Verlanglijst",myBag:"Mijn tas",checkout:"Afrekenen →",addToBag:"In tas",addedToBag:"Toegevoegd ✓",sizeGuide:"Maatgids",selectSize:"Kies een maat",colour:"Kleur",size:"Maat",description:"Beschrijving",details:"Details",care:"Verzorging",youMayLike:"Misschien vind je dit ook leuk",freeShipping:"Gratis verzending",freeReturns:"Gratis retour",authenticityGuarantee:"Echtheidsgarantie",ordersOver:"Bestellingen boven $200",within30:"Binnen 30 dagen",guaranteed:"Gegarandeerd",newIn:"Nieuw ✦",trendingNow:"Trending 🔥",onSale:"Sale",viewAll:"Alles bekijken",seeAll:"Alles bekijken",browse:"Bladeren",savedItems:"opgeslagen items",noSaved:"Je verlanglijst is leeg",saveItemsYouLove:"Sla op wat je mooi vindt",material:"Materiaal",shipping:"Verzending",subtotal:"Subtotaal",total:"Totaal",emptyBag:"Je tas is leeg",continueShopping:"Doorgaan met winkelen",freeShippingQualify:"Gratis verzending inbegrepen!",addMore:"Voeg",moreForFreeShipping:"toe voor gratis verzending",recentSearches:"Recente zoekopdrachten",trending:"Trending",noResults:"Geen resultaten",tryDifferent:"Probeer een andere zoekterm",results:"resultaat",resultsPlural:"resultaten",forQuery:"voor",newArrivals:"Nieuw binnen",justDropped:"Zojuist binnen",ss26:"SS26 Collectie",newPieces:"nieuwe stukken",limitedTime:"Beperkte tijd",upTo40:"Tot -40%",styles:"stijlen",lookbook:t.lookbook,ss26Edits:"SS26 — Gecureerde selecties",shopTheLook:"Shop de look",allLooks:"Alle looks",sustainability:"Duurzaamheid",ourCommitment:"Onze belofte",betterFashion:"Betere mode",orders:"Bestellingen",trackOrder:"Bestelling volgen",orderTotal:"Bestelingstotaal",tracking:"Volgen",orderPlaced:"Bestelling geplaatst",myOrders:"Mijn bestellingen",addresses:"Adressen",paymentMethods:"Betaalmethoden",referFriend:"Vriend doorverwijzen",notifications:"Meldingen",settings:"Instellingen",premiumMember:"MSAMBWA Premium lid",ourStory:"Ons verhaal",returns:"Retours",privacy:"Privacy",refinedPieces:"Verfijnde stukken voor het moderne leven.",limitedTimeOffer:"Beperkte aanbieding",upTo40Sale:"Tot -40%",selectStyles:"Geselecteerde stijlen. Zolang de voorraad strekt.",shopSale:"Bekijk sale",exploreBtn:"Ontdekken",shopNow:"Nu kopen",shopSaleBtn:"Bekijk sale",language:"Taal" },
+};
+
+const LangCtx = createContext({ lang:"en", t:TR.en, setLang:()=>{} });
+const useLang = () => useContext(LangCtx);
 
 const T = {
   white:   "#ffffff",
@@ -322,6 +349,7 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid
 }
 
 function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
+  const { t } = useLang();
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const free  = total >= 200;
   return (
@@ -337,7 +365,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
           {free
             ? <p style={{ fontSize:13, fontWeight:600, color:T.green, display:"flex", alignItems:"center", gap:6 }}><Icon name="truck" size={15} color={T.green}/> You qualify for free shipping!</p>
             : <>
-                <p style={{ fontSize:13, color:T.gray3, marginBottom:7 }}>Add <strong style={{color:T.black}}>{$(200-total)}</strong> more for free shipping</p>
+                <p style={{ fontSize:13, color:T.gray3, marginBottom:7 }}>{t.addMore} <strong style={{color:T.black}}>{$(200-total)}</strong> {t.moreForFreeShipping}</p>
                 <div style={{ height:4, background:T.gray8, borderRadius:2 }}>
                   <div style={{ height:"100%", width:`${Math.min((total/200)*100,100)}%`, background:T.black, borderRadius:2, transition:"width 0.4s" }}/>
                 </div>
@@ -404,6 +432,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
 }
 
 function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
+  const { t } = useLang();
   const [ci,setCi]   = useState(0);
   const [sz,setSz]   = useState(null);
   const [done,setDone] = useState(false);
@@ -466,7 +495,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
         {done?"Added to Bag ✓":"Add to Bag"}
       </Btn>
       <div style={{ display:"flex", gap:8, marginBottom:24, flexWrap:"wrap" }}>
-        {[["truck","Free Shipping"],["returns","Free Returns"],["tag","Authenticity Guarantee"]].map(([icon,label])=>(
+        {[["truck",t.freeShipping],["returns",t.freeReturns],["tag",t.authenticityGuarantee]].map(([icon,label])=>(
           <div key={label} style={{ display:"flex", alignItems:"center", gap:6, background:T.gray9, borderRadius:10, padding:"8px 12px" }}>
             <Icon name={icon} size={14} color={T.gray3}/>
             <span style={{ fontSize:12, fontWeight:500, color:T.gray2 }}>{label}</span>
@@ -476,7 +505,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
 
       <Divider my={4}/>
       <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${T.gray8}`, marginBottom:20 }}>
-        {[["desc","Description"],["details","Details"],["care","Care"]].map(([key,label])=>(
+        {[["desc",t.description],["details",t.details],["care",t.care]].map(([key,label])=>(
           <button key={key} onClick={()=>setTab(key)} style={{ flex:1, padding:"14px 0", background:"none", border:"none", cursor:"pointer", fontSize:14, fontWeight:tab===key?700:400, color:tab===key?T.black:T.gray4, borderBottom:`2px solid ${tab===key?T.black:"transparent"}`, transition:"all 0.18s" }}>{label}</button>
         ))}
       </div>
@@ -503,6 +532,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
 }
 
 function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
+  const { t } = useLang();
   const newIn    = products.filter(p=>p.new).slice(0,8);
   const trending = [...products].sort((a,b)=>b.reviews-a.reviews).slice(0,8);
   const onSale   = products.filter(p=>p.badge==="Sale").slice(0,6);
@@ -526,7 +556,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
         {[
           { label:"New Arrivals", sub:"SS26 drops", screen:"new-arrivals", grad:"linear-gradient(135deg,#1C1C1E,#3A3A3C)", dark:true },
           { label:"Sale",         sub:"Up to 40% off", screen:"sale", grad:"linear-gradient(135deg,#FF3B30,#C0392B)", dark:true },
-          { label:"Lookbook",     sub:"Styled edits",  screen:"lookbook", grad:"linear-gradient(135deg,#EDE8E0,#D4C8B5)", dark:false },
+          { label:t.lookbook,     sub:"Styled edits",  screen:"lookbook", grad:"linear-gradient(135deg,#EDE8E0,#D4C8B5)", dark:false },
           { label:"Sustainability",sub:"Our values",   screen:"sustainability", grad:"linear-gradient(135deg,#2E4A2E,#1A2E1A)", dark:true },
         ].map(item=>(
           <button key={item.screen} onClick={()=>onNavigate(item.screen)} className="pressable-sm"
@@ -546,7 +576,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
         </HScroll>
       </div>
       <div style={{ display:"flex", gap:10, marginBottom:32 }}>
-        {[{icon:"truck",label:"Free Shipping",sub:"Orders over $200"},{icon:"returns",label:"Free Returns",sub:"Within 30 days"},{icon:"scan",label:"Authenticity",sub:"Guaranteed"}].map(item=>(
+        {[{icon:"truck",label:t.freeShipping,sub:t.ordersOver},{icon:"returns",label:t.freeReturns,sub:t.within30},{icon:"scan",label:t.authenticityGuarantee,sub:t.guaranteed}].map(item=>(
           <div key={item.label} style={{ flex:1, background:T.gray9, borderRadius:10, padding:"14px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:6, textAlign:"center" }}>
             <Icon name={item.icon} size={22} color={T.black}/>
             <p style={{ fontSize:11, fontWeight:700, color:T.black }}>{item.label}</p>
@@ -579,11 +609,11 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           </HScroll>
         </div>
       )}
-      <div style={{ borderTop:`1px solid ${T.gray8}`, paddingTop:24, paddingBottom:100 }}>
+      <div style={{ borderTop:`1px solid ${T.gray8}`, paddingTop:24, paddingBottom:20 }}>
         <div style={{ marginBottom:12 }}><Logo height={14} color={T.gray4}/></div>
         <p style={{ fontSize:13, color:T.gray5, marginBottom:18, lineHeight:1.5 }}>Refined pieces for modern living.</p>
         <div style={{ display:"flex", flexWrap:"wrap", gap:"10px 20px" }}>
-          {[["Our Story","sustainability"],["Lookbook","lookbook"],["Sale","sale"],["New Arrivals","new-arrivals"],["Returns",null],["Privacy",null]].map(([l,s])=>(
+          {[[t.ourStory,"sustainability"],[t.lookbook,"lookbook"],[t.onSale,"sale"],[t.newArrivals,"new-arrivals"],[t.returns,null],[t.privacy,null]].map(([l,s])=>(
             <span key={l} onClick={s?()=>onNavigate(s):undefined}
               style={{ fontSize:12, color:T.gray5, cursor:s?"pointer":"default", textDecoration:s?"underline":"none", textDecorationColor:T.gray7 }}>{l}</span>
           ))}
@@ -594,6 +624,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
 }
 
 function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
+  const { t } = useLang();
   const [cat,setCat]   = useState("All");
   const [sort,setSort] = useState("featured");
   const [grid,setGrid] = useState(true);
@@ -616,7 +647,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
         <div style={{ display:"flex", gap:10, alignItems:"center" }}>
           <select value={sort} onChange={e=>setSort(e.target.value)}
             style={{ fontSize:13, color:T.black, background:T.gray9, border:"none", padding:"8px 14px", borderRadius:99, cursor:"pointer", outline:"none", fontWeight:500 }}>
-            <option value="featured">Featured</option>
+            <option value="featured">{t.browse}</option>
             <option value="new">New In</option>
             <option value="low">Lowest Price</option>
             <option value="high">Highest Price</option>
@@ -646,12 +677,12 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
           )
         ))}
       </div>
-      <div style={{ height:120 }}/>
     </div>
   );
 }
 
 function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
+  const { t } = useLang();
   const [q,setQ]       = useState("");
   const [recent]       = useState(["Cashmere","Linen","Silk dress","Trench coat"]);
   const res = useMemo(()=>q.trim().length<2?[]:products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.cat.toLowerCase().includes(q.toLowerCase())),[q]);
@@ -659,7 +690,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ position:"relative", marginBottom:22 }}>
-        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search AVEN…"
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search+"…"}
           style={{ width:"100%", padding:"15px 20px 15px 48px", fontSize:16, background:T.gray9, border:"none", borderRadius:8, outline:"none", color:T.black, boxSizing:"border-box" }}/>
         <span style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)" }}>
           <Icon name="search" size={19} color={T.gray4}/>
@@ -701,12 +732,12 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
           )}
         </>
       )}
-      <div style={{ height:100 }}/>
     </div>
   );
 }
 
 function WishlistScreen({ products, wishlist, onSelect, onWishlist }) {
+  const { t } = useLang();
   const items = products.filter(p=>wishlist.includes(p.id));
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
@@ -724,7 +755,6 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist }) {
           ))}
         </div>
       )}
-      <div style={{ height:100 }}/>
     </div>
   );
 }
@@ -764,7 +794,6 @@ function OrdersScreen() {
           <span style={{ fontSize:16, fontWeight:800 }}>{$(sel.total)}</span>
         </div>
       </div>
-      <div style={{ height:100 }}/>
     </div>
   );
 
@@ -791,20 +820,20 @@ function OrdersScreen() {
           </button>
         ))}
       </div>
-      <div style={{ height:100 }}/>
     </div>
   );
 }
 
 function AccountScreen({ onNavigate }) {
+  const { t } = useLang();
   const rows = [
-    { icon:"box",      label:"My Orders",        sub:"3 orders",               go:"orders" },
-    { icon:"heart",    label:"Wishlist",          sub:"4 saved items",          go:"wishlist" },
-    { icon:"location", label:"Addresses",         sub:"2 saved addresses",      go:null },
-    { icon:"card",     label:"Payment Methods",   sub:"Visa ····4242",          go:null },
-    { icon:"gift",     label:"Refer a Friend",    sub:"Give $20, get $20",      go:null },
-    { icon:"bell",     label:"Notifications",     sub:"Manage alerts",          go:null },
-    { icon:"settings", label:"Settings",          sub:"Account preferences",    go:null },
+    { icon:"box",      label:t.myOrders,          sub:"3 orders",               go:"orders" },
+    { icon:"heart",    label:t.wishlist,           sub:"4 saved items",          go:"wishlist" },
+    { icon:"location", label:t.addresses,          sub:"2 saved addresses",      go:null },
+    { icon:"card",     label:t.paymentMethods,     sub:"Visa ····4242",          go:null },
+    { icon:"gift",     label:t.referFriend,        sub:"Give $20, get $20",      go:null },
+    { icon:"bell",     label:t.notifications,      sub:"Manage alerts",          go:null },
+    { icon:"settings", label:t.settings,           sub:"Account preferences",    go:null },
   ];
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
@@ -842,45 +871,44 @@ function AccountScreen({ onNavigate }) {
           </div>
         ))}
       </div>
-      <div style={{ height:120 }}/>
     </div>
   );
 }
 
 function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
+  const { t } = useLang();
   const items = products.filter(p=>p.new);
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ background:"linear-gradient(135deg,#1C1C1E 0%,#3A3A3C 100%)", borderRadius:10, padding:"28px 22px", marginBottom:20 }}>
         <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:8 }}>Just dropped</p>
         <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:4 }}>New Arrivals</h2>
-        <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)" }}>SS26 Collection · {items.length} new pieces</p>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)" }}>{t.ss26} · {items.length} {t.newPieces}</p>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
         {items.map(p=>(
           <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
         ))}
       </div>
-      <div style={{ height:80 }}/>
     </div>
   );
 }
 
 function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
+  const { t } = useLang();
   const items = products.filter(p=>p.badge==="Sale");
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ background:"linear-gradient(135deg,#FF3B30 0%,#C0392B 100%)", borderRadius:10, padding:"28px 22px", marginBottom:20 }}>
         <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.55)", marginBottom:8 }}>Limited time</p>
         <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:4 }}>Sale</h2>
-        <p style={{ fontSize:14, color:"rgba(255,255,255,0.65)" }}>Up to 40% off · {items.length} styles</p>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,0.65)" }}>{t.upTo40} · {items.length} {t.styles}</p>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
         {items.map(p=>(
           <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
         ))}
       </div>
-      <div style={{ height:80 }}/>
     </div>
   );
 }
@@ -893,6 +921,7 @@ const LOOKS = [
 ];
 
 function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
+  const { t } = useLang();
   const [activeLook, setActiveLook] = useState(null);
   const look = activeLook ? LOOKS.find(l=>l.id===activeLook) : null;
   const lookProducts = look ? look.products.map(id=>products.find(p=>p.id===id)).filter(Boolean) : [];
@@ -925,7 +954,6 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
           </div>
         ))}
       </div>
-      <div style={{ height:80 }}/>
     </div>
   );
 
@@ -948,12 +976,12 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
           </button>
         ))}
       </div>
-      <div style={{ height:80 }}/>
     </div>
   );
 }
 
 function SustainabilityScreen() {
+  const { t } = useLang();
   const pillars = [
     { icon:"sparkle", title:"Responsible Materials", body:"We source only certified organic, recycled, and sustainably-farmed fibres. Every fabric is traceable from field to finished garment." },
     { icon:"trending", title:"Carbon Neutral by 2028", body:"We've mapped our full supply chain emissions and are investing in verified offset programmes while reducing at source." },
@@ -984,7 +1012,6 @@ function SustainabilityScreen() {
         <p style={{ fontSize:16, fontWeight:800, color:"#1A5C1A", marginBottom:4 }}>2025 Impact Report</p>
         <p style={{ fontSize:13, color:"#2E7A2E", lineHeight:1.6 }}>78% of materials certified sustainable · 42% emissions reduction since 2022 · 12,000+ garments returned & rehomed</p>
       </div>
-      <div style={{ height:80 }}/>
     </div>
   );
 }
@@ -1005,20 +1032,69 @@ function Logo({ color = "#000", height = 18 }) {
   );
 }
 
-function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount }) {
-  const screenTitles = { home:"", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"", "new-arrivals":"New Arrivals", sale:"Sale", lookbook:"Lookbook", sustainability:"Sustainability" };
+function LanguageSwitcher({ lang, setLang }) {
+  const [open, setOpen] = useState(false);
+  const t = useLang().t;
+  return (
+    <div style={{ position:"relative" }}>
+      <button onClick={()=>setOpen(o=>!o)} className="pressable-sm"
+        style={{ display:"flex", alignItems:"center", gap:5, background:T.gray9, border:"none",
+          borderRadius:99, padding:"6px 12px 6px 10px", cursor:"pointer", fontSize:13, fontWeight:600 }}>
+        <span style={{ fontSize:15 }}>
+          {lang==="en"?"🇬🇧":lang==="sw"?"🇹🇿":lang==="fr"?"🇫🇷":lang==="de"?"🇩🇪":
+           lang==="es"?"🇪🇸":lang==="pt"?"🇧🇷":lang==="ar"?"🇸🇦":lang==="zh"?"🇨🇳":
+           lang==="ja"?"🇯🇵":lang==="ko"?"🇰🇷":lang==="hi"?"🇮🇳":lang==="ru"?"🇷🇺":
+           lang==="it"?"🇮🇹":"🇳🇱"}
+        </span>
+        <span style={{ color:T.gray2 }}>{LANGS[lang]}</span>
+      </button>
+      {open && (
+        <>
+          <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:299 }}/>
+          <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.white,
+            borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.15)", zIndex:300,
+            minWidth:170, overflow:"hidden", border:`1px solid ${T.gray8}` }}>
+            {Object.entries(LANGS).map(([code, name]) => (
+              <button key={code} onClick={()=>{ setLang(code); setOpen(false); }}
+                style={{ width:"100%", display:"flex", alignItems:"center", gap:10,
+                  padding:"11px 16px", background:lang===code?T.gray9:T.white,
+                  border:"none", cursor:"pointer", fontSize:14,
+                  fontWeight:lang===code?700:400, color:T.black, textAlign:"left" }}>
+                <span style={{ fontSize:16 }}>
+                  {code==="en"?"🇬🇧":code==="sw"?"🇹🇿":code==="fr"?"🇫🇷":code==="de"?"🇩🇪":
+                   code==="es"?"🇪🇸":code==="pt"?"🇧🇷":code==="ar"?"🇸🇦":code==="zh"?"🇨🇳":
+                   code==="ja"?"🇯🇵":code==="ko"?"🇰🇷":code==="hi"?"🇮🇳":code==="ru"?"🇷🇺":
+                   code==="it"?"🇮🇹":"🇳🇱"}
+                </span>
+                {name}
+                {lang===code && <span style={{ marginLeft:"auto", color:T.black }}>✓</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount, lang, setLang }) {
+  const { t } = useLang();
+  const screenTitles = { home:"", shop:t.shop, search:t.search, wishlist:t.wishlist, account:t.account, orders:t.orders, product:"", "new-arrivals":t.newArrivals, sale:t.onSale, lookbook:t.lookbook, sustainability:t.sustainability };
   const title = screenTitles[screen] || "";
 
   return (
     <header style={{ background:"rgba(255,255,255,0.94)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:`1px solid ${T.gray8}`, position:"sticky", top:0, zIndex:200, userSelect:"none" }}>
-      <div style={{ height:56, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px" }}>
+      {!canGoBack && (
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 16px 0", borderBottom:`1px solid ${T.gray8}` }}>
+          <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 0" }}>
+            <Logo height={13}/>
+          </button>
+          <LanguageSwitcher lang={lang} setLang={setLang}/>
+        </div>
+      )}
+      <div style={{ height:52, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:4, minWidth:80 }}>
-          {canGoBack
-            ? <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>
-            : <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
-                <Logo height={16}/>
-              </button>
-          }
+          {canGoBack && <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>}
         </div>
         <span style={{ fontSize:17, fontWeight:700, letterSpacing:-0.3, position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
           {canGoBack ? title : ""}
@@ -1034,12 +1110,13 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
 }
 
 function BottomNav({ screen, onNavigate }) {
+  const { t } = useLang();
   const tabs = [
-    { s:"home",     icon:"home",    label:"Home" },
-    { s:"shop",     icon:"grid",    label:"Shop" },
-    { s:"search",   icon:"search",  label:"Search" },
-    { s:"wishlist", icon:"heart",   label:"Saved" },
-    { s:"account",  icon:"person",  label:"Account" },
+    { s:"home",     icon:"home",    label:t.home },
+    { s:"shop",     icon:"grid",    label:t.shop },
+    { s:"search",   icon:"search",  label:t.search },
+    { s:"wishlist", icon:"heart",   label:t.saved },
+    { s:"account",  icon:"person",  label:t.account },
   ];
   const mainScreens = ["home","shop","search","wishlist","account"];
   const active = mainScreens.includes(screen) ? screen : "shop";
@@ -1120,11 +1197,12 @@ export default function Page() {
     return <HomeScreen products={PRODUCTS} onNavigate={navigate} {...sp}/>;
   };
 
-  const screenTitles = { home:"", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"", "new-arrivals":"New Arrivals", sale:"Sale", lookbook:"Lookbook", sustainability:"Sustainability" };
+  const [lang, setLang] = useState("en");
+  const t = TR[lang] || TR.en;
 
   return (
-    <>
-<div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"'Geist',-apple-system,sans-serif", overflow:"hidden" }}>
+    <LangCtx.Provider value={{ lang, t, setLang }}>
+      <div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"'Geist',-apple-system,sans-serif", overflow:"hidden" }}>
         <Header
           screen={current.screen}
           cartCount={cartCount}
@@ -1133,6 +1211,8 @@ export default function Page() {
           canGoBack={canGoBack}
           onBack={goBack}
           wishlistCount={wishlist.length}
+          lang={lang}
+          setLang={setLang}
         />
 
         <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
@@ -1153,6 +1233,6 @@ export default function Page() {
           />
         )}
       </div>
-    </>
+    </LangCtx.Provider>
   );
 }
