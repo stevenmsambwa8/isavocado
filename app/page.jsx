@@ -6,10 +6,10 @@ import { useState, useEffect, useRef, useMemo } from "react";
 ══════════════════════════════════════════════ */
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; background: #fff; }
-    body { font-family: -apple-system, 'SF Pro Display', 'Inter', sans-serif; color: #000; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Geist', -apple-system, sans-serif; color: #000; -webkit-font-smoothing: antialiased; }
     * { -webkit-tap-highlight-color: transparent; }
     ::-webkit-scrollbar { display: none; }
     input, button, select, textarea { font-family: inherit; }
@@ -195,7 +195,7 @@ function Chip({ label, active, onClick }) {
 }
 
 function Btn({ children, onClick, variant="black", full, size="md", style:sx={} }) {
-  const base = { border:"none", cursor:"pointer", fontWeight:600, fontSize:size==="sm"?13:15, borderRadius:14, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.18s", padding: size==="sm"?"11px 20px":"15px 28px" };
+  const base = { border:"none", cursor:"pointer", fontWeight:600, fontSize:size==="sm"?13:15, borderRadius:8, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.18s", padding: size==="sm"?"11px 20px":"15px 28px" };
   const v = {
     black:  { background:T.black, color:T.white },
     white:  { background:T.white, color:T.black, border:`1.5px solid ${T.gray7}` },
@@ -229,12 +229,42 @@ function SectionHeader({ title, action, onAction }) {
 }
 
 /* ══════════════════════════════════════════════
-   HORIZONTAL SLIDER
+   HORIZONTAL SLIDER  (touch + mouse drag)
 ══════════════════════════════════════════════ */
 function HScroll({ children, gap=12, px=16 }) {
+  const ref = useRef(null);
+  const drag = useRef({ active:false, startX:0, scrollLeft:0 });
+
+  const onMouseDown = e => {
+    const el = ref.current; if(!el) return;
+    drag.current = { active:true, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft };
+    el.style.cursor = "grabbing";
+  };
+  const onMouseMove = e => {
+    if(!drag.current.active || !ref.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    ref.current.scrollLeft = drag.current.scrollLeft - (x - drag.current.startX);
+  };
+  const onMouseUp = () => {
+    drag.current.active = false;
+    if(ref.current) ref.current.style.cursor = "grab";
+  };
+
   return (
-    <div style={{ overflowX:"auto", marginLeft:-px, marginRight:-px, paddingLeft:px, paddingRight:px }}>
-      <div style={{ display:"flex", gap, paddingBottom:4 }}>
+    <div
+      ref={ref}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      style={{
+        overflowX:"auto", marginLeft:-px, marginRight:-px, paddingLeft:px, paddingRight:px,
+        WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none",
+        cursor:"grab", userSelect:"none",
+      }}
+    >
+      <div style={{ display:"flex", gap, paddingBottom:4, width:"max-content" }}>
         {children}
       </div>
     </div>
@@ -242,42 +272,56 @@ function HScroll({ children, gap=12, px=16 }) {
 }
 
 /* ══════════════════════════════════════════════
-   HERO BANNER SLIDER
+   HERO BANNER SLIDER  (CSS transform — no scroll jank)
 ══════════════════════════════════════════════ */
 function HeroBanner({ onNavigate }) {
   const [idx, setIdx] = useState(0);
-  const ref = useRef(null);
+  const [paused, setPaused] = useState(false);
+  const touchStart = useRef(null);
 
   useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i+1) % BANNERS.length), 4000);
+    if (paused) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % BANNERS.length), 3800);
     return () => clearInterval(t);
-  }, []);
+  }, [paused]);
 
-  useEffect(() => {
-    if (ref.current) ref.current.scrollTo({ left: idx * ref.current.offsetWidth, behavior:"smooth" });
-  }, [idx]);
+  const prev = () => { setPaused(true); setIdx(i => (i - 1 + BANNERS.length) % BANNERS.length); };
+  const next = () => { setPaused(true); setIdx(i => (i + 1) % BANNERS.length); };
 
-  const onScroll = () => {
-    if (!ref.current) return;
-    const i = Math.round(ref.current.scrollLeft / ref.current.offsetWidth);
-    setIdx(i);
+  const onTouchStart = e => { touchStart.current = e.touches[0].clientX; setPaused(true); };
+  const onTouchEnd   = e => {
+    if (touchStart.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStart.current;
+    if (dx < -40) next();
+    else if (dx > 40) prev();
+    touchStart.current = null;
   };
 
   return (
-    <div style={{ position:"relative", borderRadius:20, overflow:"hidden", marginBottom:8 }}>
-      <div ref={ref} onScroll={onScroll} style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollBehavior:"smooth" }}>
+    <div
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={{ position:"relative", borderRadius:10, overflow:"hidden", marginBottom:8 }}
+    >
+      {/* Track */}
+      <div style={{
+        display:"flex",
+        transform:`translateX(-${idx * 100}%)`,
+        transition:"transform 0.45s cubic-bezier(0.4,0,0.2,1)",
+        willChange:"transform",
+      }}>
         {BANNERS.map(b => (
-          <div key={b.id} style={{ flexShrink:0, width:"100%", scrollSnapAlign:"start", background:b.grad, padding:"40px 28px 36px", minHeight:200, display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
-            <p style={{ fontSize:13, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:b.textDark?"rgba(0,0,0,0.45)":"rgba(255,255,255,0.55)", marginBottom:8 }}>{b.sub}</p>
-            <h2 style={{ fontSize:34, fontWeight:800, letterSpacing:-0.8, color:b.textDark?T.black:T.white, marginBottom:20, lineHeight:1.05 }}>{b.title}</h2>
-            <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start", background:b.textDark?T.black:T.white, color:b.textDark?T.white:T.black, border:"none", cursor:"pointer", padding:"12px 24px", borderRadius:99, fontSize:14, fontWeight:700 }}>{b.cta}</button>
+          <div key={b.id} style={{ flexShrink:0, width:"100%", background:b.grad, padding:"40px 24px 32px", minHeight:200, display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+            <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:b.textDark?"rgba(0,0,0,0.4)":"rgba(255,255,255,0.5)", marginBottom:8 }}>{b.sub}</p>
+            <h2 style={{ fontSize:32, fontWeight:800, letterSpacing:-0.8, color:b.textDark?T.black:T.white, marginBottom:18, lineHeight:1.05 }}>{b.title}</h2>
+            <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start", background:b.textDark?T.black:T.white, color:b.textDark?T.white:T.black, border:"none", cursor:"pointer", padding:"11px 22px", borderRadius:99, fontSize:13, fontWeight:700 }}>{b.cta}</button>
           </div>
         ))}
       </div>
       {/* Dots */}
-      <div style={{ position:"absolute", bottom:14, right:16, display:"flex", gap:6 }}>
+      <div style={{ position:"absolute", bottom:12, right:14, display:"flex", gap:5 }}>
         {BANNERS.map((_,i) => (
-          <button key={i} onClick={()=>setIdx(i)} style={{ width:i===idx?20:6, height:6, borderRadius:3, background:i===idx?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.4)", border:"none", cursor:"pointer", transition:"width 0.3s, background 0.3s", padding:0 }}/>
+          <button key={i} onClick={()=>{ setPaused(true); setIdx(i); }} style={{ width:i===idx?18:5, height:5, borderRadius:3, background:i===idx?"rgba(0,0,0,0.55)":"rgba(0,0,0,0.2)", border:"none", cursor:"pointer", transition:"width 0.3s, background 0.3s", padding:0 }}/>
         ))}
       </div>
     </div>
@@ -291,7 +335,7 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact }) {
   const w = compact ? 150 : 200;
   return (
     <div onClick={()=>onSelect(p)} className="pressable" style={{ width:w, flexShrink:0, cursor:"pointer" }}>
-      <div style={{ position:"relative", width:w, height:compact?200:260, background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:10 }}>
+      <div style={{ position:"relative", width:w, height:compact?200:260, background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }}>
         <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
           <span style={{ fontSize:compact?22:28, fontWeight:300, color:"rgba(0,0,0,0.22)", textAlign:"center", padding:"0 12px", lineHeight:1.3, fontStyle:"italic" }}>{p.name}</span>
         </div>
@@ -299,7 +343,7 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact }) {
           <div style={{ position:"absolute", top:10, left:10, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:10, fontWeight:700, padding:"4px 9px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>
         )}
         <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} className="pressable-sm"
-          style={{ position:"absolute", top:10, right:10, width:32, height:32, borderRadius:16, background:"rgba(255,255,255,0.88)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          style={{ position:"absolute", top:10, right:10, width:32, height:32, borderRadius:10, background:"rgba(255,255,255,0.88)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray4}/>
         </button>
       </div>
@@ -334,7 +378,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
         </div>
 
         {/* Free shipping bar */}
-        <div style={{ margin:"0 20px 8px", background:T.gray9, borderRadius:12, padding:"12px 14px" }}>
+        <div style={{ margin:"0 20px 8px", background:T.gray9, borderRadius:8, padding:"12px 14px" }}>
           {free
             ? <p style={{ fontSize:13, fontWeight:600, color:T.green, display:"flex", alignItems:"center", gap:6 }}><Icon name="truck" size={15} color={T.green}/> You qualify for free shipping!</p>
             : <>
@@ -357,7 +401,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
           ) : cart.map((item,i)=>(
             <div key={`${item.id}-${item.sz}`}>
               <div style={{ padding:"16px 0", display:"flex", gap:14 }}>
-                <div style={{ width:80, height:100, background:item.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:80, height:100, background:item.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.25)" }}>{item.name[0]}</span>
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
@@ -400,7 +444,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
               <span style={{ fontSize:18, fontWeight:700 }}>Total</span>
               <span style={{ fontSize:18, fontWeight:700 }}>{$(free?total:total+12)}</span>
             </div>
-            <Btn full style={{ borderRadius:14, padding:"16px", fontSize:16 }}>Checkout →</Btn>
+            <Btn full style={{ borderRadius:8, padding:"16px", fontSize:16 }}>Checkout →</Btn>
           </div>
         )}
       </div>
@@ -428,7 +472,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       {/* Image */}
-      <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:p.grad, borderRadius:20, overflow:"hidden", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"center" }}>
         {p.badge&&<div style={{ position:"absolute", top:14, left:14, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>}
         <span style={{ fontSize:56, fontWeight:300, color:"rgba(0,0,0,0.18)", textAlign:"center", padding:"0 24px", lineHeight:1.2, fontStyle:"italic" }}>{p.name}</span>
         {/* Floating actions */}
@@ -472,14 +516,14 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
         </div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
           {p.sizes.map(s=>(
-            <button key={s} onClick={()=>setSz(s)} style={{ minWidth:52, height:44, padding:"0 12px", background:sz===s?T.black:T.white, color:sz===s?T.white:T.gray2, border:`1.5px solid ${sz===s?T.black:T.gray7}`, borderRadius:12, cursor:"pointer", fontSize:14, fontWeight:600, transition:"all 0.15s" }}>{s}</button>
+            <button key={s} onClick={()=>setSz(s)} style={{ minWidth:52, height:44, padding:"0 12px", background:sz===s?T.black:T.white, color:sz===s?T.white:T.gray2, border:`1.5px solid ${sz===s?T.black:T.gray7}`, borderRadius:8, cursor:"pointer", fontSize:14, fontWeight:600, transition:"all 0.15s" }}>{s}</button>
           ))}
         </div>
         {!sz&&<p style={{ fontSize:13, color:T.red, marginTop:8, fontWeight:500 }}>Please select a size</p>}
       </div>
 
       {/* Add to bag */}
-      <Btn full onClick={add} style={{ padding:"18px", borderRadius:14, fontSize:16, opacity:sz?1:0.55, marginBottom:12 }}>
+      <Btn full onClick={add} style={{ padding:"18px", borderRadius:8, fontSize:16, opacity:sz?1:0.55, marginBottom:12 }}>
         <Icon name="bag" size={18} color={T.white}/>
         {done?"Added to Bag ✓":"Add to Bag"}
       </Btn>
@@ -545,14 +589,29 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
         <HScroll gap={10}>
           {CATS.slice(1).map((cat,i)=>(
             <button key={cat} onClick={()=>onNavigate("shop")} className="pressable-sm"
-              style={{ flexShrink:0, width:100, height:100, background:catGrads[i], borderRadius:18, border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
+              style={{ flexShrink:0, width:100, height:100, background:catGrads[i], borderRadius:10, border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ fontSize:11, fontWeight:700, color:T.gray2, textTransform:"uppercase", letterSpacing:"0.06em" }}>{cat}</span>
             </button>
           ))}
         </HScroll>
       </div>
 
-      {/* New In slider */}
+      {/* Quick page links */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24 }}>
+        {[
+          { label:"New Arrivals", sub:"SS26 drops", screen:"new-arrivals", grad:"linear-gradient(135deg,#1C1C1E,#3A3A3C)", dark:true },
+          { label:"Sale",         sub:"Up to 40% off", screen:"sale", grad:"linear-gradient(135deg,#FF3B30,#C0392B)", dark:true },
+          { label:"Lookbook",     sub:"Styled edits",  screen:"lookbook", grad:"linear-gradient(135deg,#EDE8E0,#D4C8B5)", dark:false },
+          { label:"Sustainability",sub:"Our values",   screen:"sustainability", grad:"linear-gradient(135deg,#2E4A2E,#1A2E1A)", dark:true },
+        ].map(item=>(
+          <button key={item.screen} onClick={()=>onNavigate(item.screen)} className="pressable-sm"
+            style={{ background:item.grad, borderRadius:10, padding:"18px 16px", border:"none", cursor:"pointer", textAlign:"left" }}>
+            <p style={{ fontSize:15, fontWeight:800, color:item.dark?T.white:T.black, letterSpacing:-0.3, marginBottom:2 }}>{item.label}</p>
+            <p style={{ fontSize:12, color:item.dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.45)" }}>{item.sub}</p>
+          </button>
+        ))}
+      </div>
+
       <div style={{ marginBottom:32 }}>
         <SectionHeader title="New In ✦" action="View All" onAction={()=>onNavigate("shop")}/>
         <HScroll>
@@ -565,7 +624,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
       {/* Promo strip */}
       <div style={{ display:"flex", gap:10, marginBottom:32 }}>
         {[{icon:"truck",label:"Free Shipping",sub:"Orders over $200"},{icon:"returns",label:"Free Returns",sub:"Within 30 days"},{icon:"scan",label:"Authenticity",sub:"Guaranteed"}].map(item=>(
-          <div key={item.label} style={{ flex:1, background:T.gray9, borderRadius:16, padding:"14px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:6, textAlign:"center" }}>
+          <div key={item.label} style={{ flex:1, background:T.gray9, borderRadius:10, padding:"14px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:6, textAlign:"center" }}>
             <Icon name={item.icon} size={22} color={T.black}/>
             <p style={{ fontSize:11, fontWeight:700, color:T.black }}>{item.label}</p>
             <p style={{ fontSize:10, color:T.gray4 }}>{item.sub}</p>
@@ -584,12 +643,12 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
       </div>
 
       {/* Full width promo card */}
-      <div style={{ background:T.black, borderRadius:20, padding:"36px 28px", marginBottom:32, position:"relative", overflow:"hidden" }}>
+      <div style={{ background:T.black, borderRadius:10, padding:"36px 28px", marginBottom:32, position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", right:-30, top:-30, width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }}/>
         <p style={{ fontSize:12, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:10 }}>Limited Time</p>
         <p style={{ fontSize:28, fontWeight:800, color:T.white, letterSpacing:-0.5, lineHeight:1.1, marginBottom:8 }}>Up to 40% off Sale</p>
         <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)", marginBottom:22 }}>Select styles. While stocks last.</p>
-        <Btn onClick={()=>onNavigate("shop")} style={{ background:T.white, color:T.black, borderRadius:12 }} size="sm">Shop Sale</Btn>
+        <Btn onClick={()=>onNavigate("shop")} style={{ background:T.white, color:T.black, borderRadius:8 }} size="sm">Shop Sale</Btn>
       </div>
 
       {/* Sale slider */}
@@ -609,8 +668,8 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
         <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>MSAMBWA CLASSIC</p>
         <p style={{ fontSize:14, color:T.gray4, marginBottom:20, lineHeight:1.6 }}>Refined pieces for modern living.</p>
         <div style={{ display:"flex", flexWrap:"wrap", gap:16 }}>
-          {["Our Story","Sustainability","Careers","Shipping","Returns","Privacy","Terms"].map(l=>(
-            <span key={l} style={{ fontSize:13, color:T.gray4, cursor:"pointer" }}>{l}</span>
+          {[["Our Story","sustainability"],["Sustainability","sustainability"],["Lookbook","lookbook"],["Sale","sale"],["New Arrivals","new-arrivals"],["Returns",null],["Privacy",null]].map(([l,s])=>(
+            <span key={l} onClick={s?()=>onNavigate(s):undefined} style={{ fontSize:13, color:T.gray4, cursor:s?"pointer":"default" }}>{l}</span>
           ))}
         </div>
       </div>
@@ -661,7 +720,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
         {filtered.map(p=>(
           grid ? (
             <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-              <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:10 }}>
+              <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }}>
                 <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <span style={{ fontSize:20, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
                 </div>
@@ -675,8 +734,8 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
               <PriceLine price={p.price} was={p.was}/>
             </div>
           ) : (
-            <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.gray9, borderRadius:16, padding:12 }}>
-              <div style={{ width:80, height:100, background:p.grad, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.gray9, borderRadius:10, padding:12 }}>
+              <div style={{ width:80, height:100, background:p.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.22)" }}>{p.name[0]}</span>
               </div>
               <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
@@ -704,7 +763,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
       {/* Search bar */}
       <div style={{ position:"relative", marginBottom:22 }}>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search AVEN…"
-          style={{ width:"100%", padding:"15px 20px 15px 48px", fontSize:16, background:T.gray9, border:"none", borderRadius:14, outline:"none", color:T.black, boxSizing:"border-box" }}/>
+          style={{ width:"100%", padding:"15px 20px 15px 48px", fontSize:16, background:T.gray9, border:"none", borderRadius:8, outline:"none", color:T.black, boxSizing:"border-box" }}/>
         <span style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)" }}>
           <Icon name="search" size={19} color={T.gray4}/>
         </span>
@@ -734,7 +793,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px 12px" }}>
             {res.map(p=>(
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-                <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:10 }}>
+                <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }}>
                   <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
                   </div>
@@ -785,7 +844,7 @@ function OrdersScreen() {
   const [sel,setSel] = useState(null);
   if(sel) return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:T.gray9, borderRadius:18, padding:20, marginBottom:20 }}>
+      <div style={{ background:T.gray9, borderRadius:10, padding:20, marginBottom:20 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <div>
             <p style={{ fontSize:18, fontWeight:800, letterSpacing:-0.3, marginBottom:4 }}>{sel.id}</p>
@@ -796,7 +855,7 @@ function OrdersScreen() {
         <p style={{ fontSize:14, color:T.gray3 }}>{sel.items.join(", ")}</p>
       </div>
       {/* Timeline */}
-      <div style={{ background:T.white, borderRadius:18, padding:20, border:`1px solid ${T.gray8}`, marginBottom:20 }}>
+      <div style={{ background:T.white, borderRadius:10, padding:20, border:`1px solid ${T.gray8}`, marginBottom:20 }}>
         <p style={{ fontSize:16, fontWeight:700, marginBottom:20 }}>Tracking</p>
         <div style={{ position:"relative", paddingLeft:32 }}>
           <div style={{ position:"absolute", left:10, top:8, bottom:8, width:2, background:T.gray8, borderRadius:1 }}/>
@@ -811,7 +870,7 @@ function OrdersScreen() {
           ))}
         </div>
       </div>
-      <div style={{ background:T.gray9, borderRadius:18, padding:20 }}>
+      <div style={{ background:T.gray9, borderRadius:10, padding:20 }}>
         <div style={{ display:"flex", justifyContent:"space-between" }}>
           <span style={{ fontSize:16, fontWeight:600 }}>Order Total</span>
           <span style={{ fontSize:16, fontWeight:800 }}>{$(sel.total)}</span>
@@ -825,7 +884,7 @@ function OrdersScreen() {
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {ORDERS.map(o=>(
-          <button key={o.id} onClick={()=>setSel(o)} className="pressable" style={{ background:T.gray9, borderRadius:18, padding:20, border:"none", cursor:"pointer", textAlign:"left", width:"100%" }}>
+          <button key={o.id} onClick={()=>setSel(o)} className="pressable" style={{ background:T.gray9, borderRadius:10, padding:20, border:"none", cursor:"pointer", textAlign:"left", width:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
               <div>
                 <p style={{ fontSize:16, fontWeight:700, letterSpacing:-0.2, marginBottom:3 }}>{o.id}</p>
@@ -862,7 +921,7 @@ function AccountScreen({ onNavigate }) {
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       {/* Profile card */}
-      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)", borderRadius:20, padding:"28px 22px", marginBottom:24, display:"flex", alignItems:"center", gap:18 }}>
+      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)", borderRadius:10, padding:"28px 22px", marginBottom:24, display:"flex", alignItems:"center", gap:18 }}>
         <div style={{ width:64, height:64, borderRadius:32, background:"rgba(255,255,255,0.15)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <Icon name="person" size={28} color="rgba(255,255,255,0.7)"/>
         </div>
@@ -875,7 +934,7 @@ function AccountScreen({ onNavigate }) {
       {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:24 }}>
         {[["3","Orders"],["4","Wishlist"],["$862","Spent"]].map(([v,l])=>(
-          <div key={l} style={{ background:T.gray9, borderRadius:16, padding:"16px 12px", textAlign:"center" }}>
+          <div key={l} style={{ background:T.gray9, borderRadius:10, padding:"16px 12px", textAlign:"center" }}>
             <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5 }}>{v}</p>
             <p style={{ fontSize:12, color:T.gray4, marginTop:3 }}>{l}</p>
           </div>
@@ -883,11 +942,11 @@ function AccountScreen({ onNavigate }) {
       </div>
 
       {/* Menu rows */}
-      <div style={{ background:T.gray9, borderRadius:18, overflow:"hidden" }}>
+      <div style={{ background:T.gray9, borderRadius:10, overflow:"hidden" }}>
         {rows.map((row,i)=>(
           <div key={row.label}>
             <button onClick={()=>row.go&&onNavigate(row.go)} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"16px 18px", background:"none", border:"none", cursor:row.go?"pointer":"default", textAlign:"left" }}>
-              <div style={{ width:38, height:38, borderRadius:12, background:T.white, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:shadow.xs }}>
+              <div style={{ width:38, height:38, borderRadius:8, background:T.white, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:shadow.xs }}>
                 <Icon name={row.icon} size={18} color={T.black}/>
               </div>
               <div style={{ flex:1 }}>
@@ -906,10 +965,216 @@ function AccountScreen({ onNavigate }) {
 }
 
 /* ══════════════════════════════════════════════
+   NEW ARRIVALS PAGE
+══════════════════════════════════════════════ */
+function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
+  const items = products.filter(p=>p.new);
+  return (
+    <div style={{ animation:"fadeIn 0.25s ease" }}>
+      <div style={{ background:"linear-gradient(135deg,#1C1C1E 0%,#3A3A3C 100%)", borderRadius:10, padding:"28px 22px", marginBottom:20 }}>
+        <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:8 }}>Just dropped</p>
+        <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:4 }}>New Arrivals</h2>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)" }}>SS26 Collection · {items.length} new pieces</p>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
+        {items.map(p=>(
+          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
+            <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
+              </div>
+              <div style={{ position:"absolute", top:8, left:8, background:T.black, color:T.white, fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:99, textTransform:"uppercase", letterSpacing:"0.06em" }}>New</div>
+              <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute", top:8, right:8, width:28,height:28,borderRadius:8,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                <Icon name={wishlist.includes(p.id)?"heart-fill":"heart"} size={12} color={wishlist.includes(p.id)?T.red:T.gray4}/>
+              </button>
+            </div>
+            <p style={{ fontSize:12, fontWeight:600, marginBottom:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</p>
+            <PriceLine price={p.price} was={p.was}/>
+          </div>
+        ))}
+      </div>
+      <div style={{ height:80 }}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   SALE PAGE
+══════════════════════════════════════════════ */
+function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
+  const items = products.filter(p=>p.badge==="Sale");
+  return (
+    <div style={{ animation:"fadeIn 0.25s ease" }}>
+      <div style={{ background:"linear-gradient(135deg,#FF3B30 0%,#C0392B 100%)", borderRadius:10, padding:"28px 22px", marginBottom:20 }}>
+        <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.55)", marginBottom:8 }}>Limited time</p>
+        <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:4 }}>Sale</h2>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,0.65)" }}>Up to 40% off · {items.length} styles</p>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px 10px" }}>
+        {items.map(p=>(
+          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
+            <div style={{ position:"relative", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.2)", textAlign:"center", padding:"0 10px" }}>{p.name}</span>
+              </div>
+              <div style={{ position:"absolute", top:8, left:8, background:T.red, color:T.white, fontSize:9, fontWeight:700, padding:"3px 8px", borderRadius:99, textTransform:"uppercase" }}>Sale</div>
+              {p.was && <div style={{ position:"absolute", bottom:8, left:8, background:"rgba(255,255,255,0.9)", padding:"3px 8px", borderRadius:99 }}>
+                <span style={{ fontSize:11, fontWeight:700, color:T.red }}>{Math.round((1-p.price/p.was)*100)}% off</span>
+              </div>}
+            </div>
+            <p style={{ fontSize:12, fontWeight:600, marginBottom:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</p>
+            <PriceLine price={p.price} was={p.was}/>
+          </div>
+        ))}
+      </div>
+      <div style={{ height:80 }}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   LOOKBOOK PAGE
+══════════════════════════════════════════════ */
+const LOOKS = [
+  { id:1, title:"Morning Light", desc:"Effortless layers for golden hour starts.", products:[1,7,12], grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
+  { id:2, title:"Urban Edge",    desc:"Polished silhouettes for the city commute.", products:[6,3,12], grad:"linear-gradient(160deg,#D8D0C8,#C4BAB0)" },
+  { id:3, title:"Weekend Ease",  desc:"Relaxed fits, elevated materials.", products:[14,8,9], grad:"linear-gradient(160deg,#D8E4F2,#C2D2E4)" },
+  { id:4, title:"The Edit",      desc:"Our curated selection for the season.", products:[2,11,5], grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
+];
+
+function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
+  const [activeLook, setActiveLook] = useState(null);
+  const look = activeLook ? LOOKS.find(l=>l.id===activeLook) : null;
+  const lookProducts = look ? look.products.map(id=>products.find(p=>p.id===id)).filter(Boolean) : [];
+
+  if(look) return (
+    <div style={{ animation:"fadeIn 0.25s ease" }}>
+      <button onClick={()=>setActiveLook(null)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", marginBottom:16, color:T.gray3, fontSize:14, fontWeight:500 }}>
+        <Icon name="back" size={18} color={T.gray3}/> All Looks
+      </button>
+      <div style={{ aspectRatio:"4/3", background:look.grad, borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <span style={{ fontSize:36, fontWeight:200, color:"rgba(0,0,0,0.18)", fontStyle:"italic" }}>{look.title}</span>
+      </div>
+      <h2 style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>{look.title}</h2>
+      <p style={{ fontSize:14, color:T.gray4, marginBottom:20, lineHeight:1.6 }}>{look.desc}</p>
+      <p style={{ fontSize:13, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14, color:T.gray2 }}>Shop The Look</p>
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        {lookProducts.map(p=>(
+          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.gray9, borderRadius:10, padding:12 }}>
+            <div style={{ width:72, height:90, background:p.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontSize:16, fontStyle:"italic", color:"rgba(0,0,0,0.22)" }}>{p.name[0]}</span>
+            </div>
+            <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
+              <p style={{ fontSize:14, fontWeight:700, marginBottom:3 }}>{p.name}</p>
+              <p style={{ fontSize:12, color:T.gray4, marginBottom:6 }}>{p.cat}</p>
+              <PriceLine price={p.price} was={p.was}/>
+            </div>
+            <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ background:"none", border:"none", cursor:"pointer", alignSelf:"center" }}>
+              <Icon name={wishlist.includes(p.id)?"heart-fill":"heart"} size={18} color={wishlist.includes(p.id)?T.red:T.gray5}/>
+            </button>
+          </div>
+        ))}
+      </div>
+      <div style={{ height:80 }}/>
+    </div>
+  );
+
+  return (
+    <div style={{ animation:"fadeIn 0.25s ease" }}>
+      <div style={{ marginBottom:16 }}>
+        <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:4 }}>Lookbook</p>
+        <p style={{ fontSize:14, color:T.gray4 }}>SS26 — Curated edits for the season</p>
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+        {LOOKS.map((look, i) => (
+          <button key={look.id} onClick={()=>setActiveLook(look.id)} className="pressable" style={{ width:"100%", background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
+            <div style={{ aspectRatio: i%2===0?"16/9":"4/3", background:look.grad, borderRadius:10, marginBottom:10, display:"flex", alignItems:"flex-end", padding:20 }}>
+              <div>
+                <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(0,0,0,0.4)", marginBottom:4 }}>Look {String(look.id).padStart(2,"0")}</p>
+                <p style={{ fontSize:22, fontWeight:800, color:T.black, letterSpacing:-0.5 }}>{look.title}</p>
+              </div>
+            </div>
+            <p style={{ fontSize:13, color:T.gray4 }}>{look.desc}</p>
+          </button>
+        ))}
+      </div>
+      <div style={{ height:80 }}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   SUSTAINABILITY PAGE
+══════════════════════════════════════════════ */
+function SustainabilityScreen() {
+  const pillars = [
+    { icon:"sparkle", title:"Responsible Materials", body:"We source only certified organic, recycled, and sustainably-farmed fibres. Every fabric is traceable from field to finished garment." },
+    { icon:"trending", title:"Carbon Neutral by 2028", body:"We've mapped our full supply chain emissions and are investing in verified offset programmes while reducing at source." },
+    { icon:"box",     title:"Zero-Waste Packaging",  body:"All our packaging is made from 100% recycled or FSC-certified materials. No single-use plastics. Ever." },
+    { icon:"returns", title:"Circular Programme",    body:"Return worn pieces for store credit. We repair, resell, or responsibly recycle — keeping garments in use for longer." },
+  ];
+  return (
+    <div style={{ animation:"fadeIn 0.25s ease" }}>
+      <div style={{ background:"linear-gradient(135deg,#1A2E1A 0%,#2E4A2E 100%)", borderRadius:10, padding:"32px 22px", marginBottom:20 }}>
+        <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:8 }}>Our commitment</p>
+        <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:8 }}>Better Fashion</h2>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,0.55)", lineHeight:1.6 }}>We believe beautiful clothes and a healthier planet are not in conflict.</p>
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:20 }}>
+        {pillars.map(p=>(
+          <div key={p.title} style={{ background:T.gray9, borderRadius:10, padding:"18px 16px", display:"flex", gap:14, alignItems:"flex-start" }}>
+            <div style={{ width:40, height:40, borderRadius:8, background:T.black, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <Icon name={p.icon} size={18} color={T.white}/>
+            </div>
+            <div>
+              <p style={{ fontSize:15, fontWeight:700, marginBottom:4 }}>{p.title}</p>
+              <p style={{ fontSize:13, color:T.gray3, lineHeight:1.6 }}>{p.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:"linear-gradient(135deg,#E8F5EC,#D8EDD8)", borderRadius:10, padding:"20px 18px", marginBottom:16 }}>
+        <p style={{ fontSize:16, fontWeight:800, color:"#1A5C1A", marginBottom:4 }}>2025 Impact Report</p>
+        <p style={{ fontSize:13, color:"#2E7A2E", lineHeight:1.6 }}>78% of materials certified sustainable · 42% emissions reduction since 2022 · 12,000+ garments returned & rehomed</p>
+      </div>
+      <div style={{ height:80 }}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   BRAND LOGO  (SVG wordmark)
+══════════════════════════════════════════════ */
+function Logo({ color = "#000", height = 18 }) {
+  return (
+    <svg height={height} viewBox="0 0 220 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display:"block" }}>
+      {/* M */}
+      <path d="M2 28V4h3.5l6.5 14L18.5 4H22v24h-3.5V11l-5.5 12h-2L5.5 11V28H2z" fill={color}/>
+      {/* S */}
+      <path d="M28 22.5c1.2 1.2 2.8 2 5 2 2 0 3.4-.9 3.4-2.4 0-1.3-.8-2-3.2-2.8-3.2-1-5.2-2.3-5.2-5.1 0-2.9 2.4-4.9 5.8-4.9 2.2 0 4 .7 5.3 1.8l-1.8 2.4c-1-.9-2.2-1.4-3.6-1.4-1.8 0-2.8.9-2.8 2.1 0 1.3.9 1.9 3.4 2.7 3.2 1 5 2.4 5 5.2 0 3-2.4 5.2-6.4 5.2-2.6 0-4.8-.9-6.4-2.4l1.5-2.4z" fill={color}/>
+      {/* A */}
+      <path d="M48 28l7-18.5h3.5L65.5 28H62l-1.6-4.5h-7.8L51 28h-3zm5.5-7.2h5.8l-2.9-8-2.9 8z" fill={color}/>
+      {/* M */}
+      <path d="M70 28V9.5h3.5l6.5 14 6.5-14H90V28h-3.5V16l-5.5 12h-2L73.5 16V28H70z" fill={color}/>
+      {/* B */}
+      <path d="M96 28V9.5h7c3.4 0 5.5 1.8 5.5 4.5 0 1.8-.9 3.1-2.3 3.8 1.8.6 3 2.1 3 4.2 0 3.2-2.3 6-7.2 6H96zm3.4-10.8h3.4c1.8 0 2.8-.9 2.8-2.3 0-1.4-1-2.2-2.8-2.2h-3.4v4.5zm0 8h4c2.2 0 3.4-1.1 3.4-3 0-1.8-1.2-2.8-3.4-2.8h-4v5.8z" fill={color}/>
+      {/* W */}
+      <path d="M113 9.5h3.6l3.9 14 4-14h3.2l4 14 3.9-14h3.6L134 28h-3.5l-3.9-13.5L122.7 28h-3.5L113 9.5z" fill={color}/>
+      {/* A */}
+      <path d="M140 28l7-18.5h3.5L157.5 28H154l-1.6-4.5h-7.8L143 28h-3zm5.5-7.2h5.8l-2.9-8-2.9 8z" fill={color}/>
+      {/* thin separator */}
+      <rect x="162" y="9" width="1" height="20" fill={color} opacity="0.2"/>
+      {/* C */}
+      <path d="M172 18.8c0-5.6 3.8-9.8 9-9.8 3 0 5.2 1.2 6.8 3.2l-2.4 2c-1.1-1.4-2.6-2.2-4.4-2.2-3.2 0-5.4 2.6-5.4 6.8 0 4.2 2.2 6.8 5.4 6.8 1.8 0 3.3-.8 4.4-2.2l2.4 2c-1.6 2-3.8 3.2-6.8 3.2-5.2 0-9-4.2-9-9.8z" fill={color}/>
+    </svg>
+  );
+}
+
+/* ══════════════════════════════════════════════
    TOP HEADER (Shopify-style icons)
 ══════════════════════════════════════════════ */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount }) {
-  const screenTitles = { home:"", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"" };
+  const screenTitles = { home:"", shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"Orders", product:"", "new-arrivals":"New Arrivals", sale:"Sale", lookbook:"Lookbook", sustainability:"Sustainability" };
   const title = screenTitles[screen] || "";
 
   return (
@@ -920,7 +1185,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
           {canGoBack
             ? <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>
             : <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px 0" }}>
-                <span style={{ fontSize:22, fontWeight:900, letterSpacing:2, color:T.black }}>MSAMBWA CLASSIC</span>
+                <Logo height={16}/>
               </button>
           }
         </div>
@@ -1026,13 +1291,17 @@ export default function Page() {
 
   const renderScreen = () => {
     const {screen,data} = current;
-    if(screen==="home")     return <HomeScreen   products={PRODUCTS} onNavigate={navigate} {...sp}/>;
-    if(screen==="shop")     return <ShopScreen   products={PRODUCTS} {...sp}/>;
-    if(screen==="search")   return <SearchScreen products={PRODUCTS} {...sp}/>;
-    if(screen==="wishlist") return <WishlistScreen products={PRODUCTS} wishlist={wishlist} onSelect={p=>navigate("product",p)} onWishlist={toggleWishlist}/>;
-    if(screen==="orders")   return <OrdersScreen/>;
-    if(screen==="account")  return <AccountScreen onNavigate={navigate}/>;
-    if(screen==="product")  return <ProductDetail p={data} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(data?.id)} onWishlist={toggleWishlist}/>;
+    if(screen==="home")          return <HomeScreen   products={PRODUCTS} onNavigate={navigate} {...sp}/>;
+    if(screen==="shop")          return <ShopScreen   products={PRODUCTS} {...sp}/>;
+    if(screen==="search")        return <SearchScreen products={PRODUCTS} {...sp}/>;
+    if(screen==="wishlist")      return <WishlistScreen products={PRODUCTS} wishlist={wishlist} onSelect={p=>navigate("product",p)} onWishlist={toggleWishlist}/>;
+    if(screen==="orders")        return <OrdersScreen/>;
+    if(screen==="account")       return <AccountScreen onNavigate={navigate}/>;
+    if(screen==="product")       return <ProductDetail p={data} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(data?.id)} onWishlist={toggleWishlist}/>;
+    if(screen==="new-arrivals")  return <NewArrivalsScreen products={PRODUCTS} {...sp}/>;
+    if(screen==="sale")          return <SaleScreen products={PRODUCTS} {...sp}/>;
+    if(screen==="lookbook")      return <LookbookScreen products={PRODUCTS} {...sp}/>;
+    if(screen==="sustainability") return <SustainabilityScreen/>;
     return <HomeScreen products={PRODUCTS} onNavigate={navigate} {...sp}/>;
   };
 
@@ -1041,7 +1310,7 @@ export default function Page() {
   return (
     <>
       <GlobalStyles/>
-      <div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"-apple-system,'SF Pro Display','Inter',sans-serif", overflow:"hidden" }}>
+      <div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"'Geist',-apple-system,sans-serif", overflow:"hidden" }}>
         <Header
           screen={current.screen}
           cartCount={cartCount}
@@ -1053,7 +1322,7 @@ export default function Page() {
         />
 
         <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
-          <div style={{ maxWidth:600, margin:"0 auto", padding:"20px 16px 100px" }}>
+          <div style={{ maxWidth:600, margin:"0 auto", padding:"12px 12px 80px" }}>
             {renderScreen()}
           </div>
         </div>
