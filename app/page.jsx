@@ -1,580 +1,467 @@
-'use client'
-import { useState, useEffect } from 'react'
-import {
-  Home, Search, Library, TrendingUp, Headphones, Heart,
-  SkipForward, SkipBack, Play, Pause, ChevronLeft, ChevronDown,
-  ChevronRight, Bell, Moon, Sun, Download, Mic2,
-  BarChart2, Volume2, Check, WifiOff, Shuffle, Repeat
-} from 'lucide-react'
-import StatsCards from './components/StatsCards'
-import ListeningChart from './components/ListeningChart'
-import TopTracks from './components/TopTracks'
-import RecentlyPlayed from './components/RecentlyPlayed'
+import { useState, useEffect, useMemo } from "react";
 
-// ── Data ──────────────────────────────────────────────
-const TABS = [
-  { id: 'home',    label: 'Home',   icon: Home },
-  { id: 'search',  label: 'Search', icon: Search },
-  { id: 'library', label: 'Library',icon: Library },
-  { id: 'charts',  label: 'Charts', icon: TrendingUp },
-]
+const FontLink = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: #e0ddd8; border-radius: 2px; }
+    input, button { font-family: 'Jost', sans-serif; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @keyframes slideIn { from { transform:translateX(100%); } to { transform:translateX(0); } }
+  `}</style>
+);
 
-const ARTISTS = [
-  { id: 1, name: 'Nora James',  genre: 'Indie Soul',  hue: 320, followers: '2.4M', tracks: 48, bio: 'London-based indie soul artist known for her ethereal voice and midnight soundscapes. Her debut album "After Hours" went platinum in 2024.' },
-  { id: 2, name: 'The Wavs',    genre: 'Electronic',  hue: 188, followers: '1.8M', tracks: 63, bio: 'The Wavs blend electronic production with organic instrumentation, creating immersive sonic landscapes. Based in Berlin.' },
-  { id: 3, name: 'Elara Moon',  genre: 'Dream Pop',   hue: 141, followers: '980K', tracks: 32, bio: 'Elara Moon crafts dreamy atmospheric pop that feels like floating through clouds, heavily influenced by 80s shoegaze.' },
-  { id: 4, name: 'Marco V',     genre: 'Neo-Soul',    hue: 47,  followers: '3.1M', tracks: 71, bio: 'Neo-soul powerhouse from Lagos whose music blends afrobeats rhythms with classic soul arrangements.' },
-]
+const PRODUCTS = [
+  { id:1,  name:"Linen Overshirt",   category:"Tops",    price:148, originalPrice:null, badge:null,   colors:["#e8e0d5","#2c2c2a","#8b7355"], sizes:["XS","S","M","L","XL"], rating:4.8, reviews:124, description:"Relaxed-fit overshirt crafted from premium Belgian linen. Features a classic collar, chest pockets, and a slightly oversized silhouette.", material:"100% Belgian Linen", care:"Machine wash cold.", gradient:"linear-gradient(135deg,#e8e0d5,#d4c9b8)" },
+  { id:2,  name:"Merino Turtleneck", category:"Tops",    price:195, originalPrice:null, badge:"New",  colors:["#f0ece4","#1a1a18","#8c6b4a"], sizes:["XS","S","M","L"],     rating:4.9, reviews:89,  description:"Ultra-fine merino wool turtleneck with a slim, elegant fit.", material:"100% Extra-fine Merino Wool", care:"Hand wash cold.", gradient:"linear-gradient(135deg,#f0ece4,#ddd4c5)" },
+  { id:3,  name:"Wide-Leg Trousers", category:"Bottoms", price:228, originalPrice:285,  badge:"Sale", colors:["#d4cfc8","#3d3830","#c4a882"], sizes:["XS","S","M","L","XL"], rating:4.7, reviews:203, description:"Tailored wide-leg trousers with a high waist and clean drape.", material:"68% Viscose, 28% Polyamide, 4% Elastane", care:"Dry clean.", gradient:"linear-gradient(135deg,#d4cfc8,#bfb8ae)" },
+  { id:4,  name:"Cashmere Cardigan", category:"Tops",    price:345, originalPrice:null, badge:"New",  colors:["#e2ddd6","#6b5e4e","#2c2c2a"], sizes:["XS","S","M","L"],     rating:5.0, reviews:57,  description:"Hand-finished cardigan in Grade-A cashmere.", material:"100% Grade-A Cashmere", care:"Dry clean only.", gradient:"linear-gradient(135deg,#f5f0e8,#e2ddd6)" },
+  { id:5,  name:"Silk Slip Dress",   category:"Dresses", price:268, originalPrice:null, badge:null,   colors:["#e8d5c4","#1a1a18","#8b7355"], sizes:["XS","S","M","L"],     rating:4.6, reviews:178, description:"Fluid silk charmeuse slip dress with adjustable straps.", material:"100% Silk Charmeuse", care:"Dry clean only.", gradient:"linear-gradient(135deg,#f0e8de,#e0d0c0)" },
+  { id:6,  name:"Tailored Blazer",   category:"Outerwear",price:420,originalPrice:null, badge:null,   colors:["#2c2c2a","#8c7355","#e0dbd2"], sizes:["XS","S","M","L","XL"], rating:4.9, reviews:94,  description:"Single-breasted blazer in fine Italian wool blend.", material:"78% Wool, 18% Silk, 4% Cashmere", care:"Dry clean only.", gradient:"linear-gradient(135deg,#d8d3cc,#c8c0b5)" },
+  { id:7,  name:"Cropped Tank",      category:"Tops",    price:68,  originalPrice:null, badge:null,   colors:["#f0ece4","#1a1a18","#c4a882","#8b7355"], sizes:["XS","S","M","L","XL"], rating:4.5, reviews:312, description:"Ribbed cotton tank with a cropped length.", material:"95% Pima Cotton, 5% Elastane", care:"Machine wash cold.", gradient:"linear-gradient(135deg,#f5f2ec,#e8e3da)" },
+  { id:8,  name:"Barrel Jeans",      category:"Bottoms", price:185, originalPrice:null, badge:"New",  colors:["#6b8ab5","#2c2c2a","#8b7355"], sizes:["24","25","26","27","28","29","30"], rating:4.7, reviews:145, description:"Relaxed barrel-leg jeans in Japanese selvedge denim.", material:"98% Cotton, 2% Elastane", care:"Machine wash cold.", gradient:"linear-gradient(135deg,#d8e4f0,#c8d5e5)" },
+  { id:9,  name:"Wrap Midi Skirt",   category:"Bottoms", price:158, originalPrice:198,  badge:"Sale", colors:["#c4a882","#2c2c2a","#e8d5c4"], sizes:["XS","S","M","L"],     rating:4.8, reviews:201, description:"Fluid wrap skirt in lightweight viscose crepe.", material:"100% Viscose Crepe", care:"Hand wash cold.", gradient:"linear-gradient(135deg,#ede5d8,#ddd0be)" },
+  { id:10, name:"Trench Coat",       category:"Outerwear",price:545,originalPrice:null, badge:null,   colors:["#c4a882","#2c2c2a","#e8e0d5"], sizes:["XS","S","M","L","XL"], rating:4.9, reviews:78,  description:"Classic double-breasted trench in water-resistant cotton.", material:"100% Cotton Gabardine", care:"Dry clean only.", gradient:"linear-gradient(135deg,#e8ddd0,#d8cebe)" },
+  { id:11, name:"Knit Co-ord Set",   category:"Sets",    price:295, originalPrice:null, badge:"New",  colors:["#e8e0d5","#6b5e4e"], sizes:["XS","S","M","L"],     rating:4.8, reviews:43,  description:"Matching merino knit top and trouser set.", material:"80% Merino Wool, 20% Cashmere", care:"Hand wash cold.", gradient:"linear-gradient(135deg,#f0e8e0,#e0d5c8)" },
+  { id:12, name:"Leather Belt",      category:"Accessories",price:88,originalPrice:null,badge:null,   colors:["#2c2c2a","#8b7355","#c4a882"], sizes:["XS","S","M","L"],     rating:4.6, reviews:167, description:"Full-grain leather belt with minimalist buckle.", material:"100% Full-grain Leather", care:"Leather conditioner.", gradient:"linear-gradient(135deg,#d8d0c8,#c8c0b5)" },
+];
 
-const LYRICS = {
-  'Midnight Bloom': [
-    { time: 0,  line: '🎵 Instrumental intro...' },
-    { time: 8,  line: 'In the quiet of the night' },
-    { time: 12, line: 'Stars are bleeding into light' },
-    { time: 16, line: 'And I find myself again' },
-    { time: 20, line: 'Losing all my careful pretend' },
-    { time: 26, line: '— Chorus —' },
-    { time: 28, line: 'Midnight bloom, midnight bloom' },
-    { time: 32, line: 'Flowers growing in my room' },
-    { time: 36, line: 'Tell me that you feel it too' },
-    { time: 40, line: 'This midnight bloom inside of you' },
-    { time: 48, line: 'Walking through the silver haze' },
-    { time: 52, line: 'Lost inside your golden gaze' },
-    { time: 56, line: 'Nothing here makes sense to me' },
-    { time: 60, line: 'Except the way you set me free' },
-  ],
+const CATEGORIES = ["All","Tops","Bottoms","Dresses","Outerwear","Sets","Accessories"];
+const ORDERS = [
+  { id:"ORD-2891", date:"Feb 28, 2026", status:"Delivered",  items:["Linen Overshirt","Cropped Tank"],   total:216, tracking:[{label:"Order placed",date:"Feb 20",done:true},{label:"Processing",date:"Feb 21",done:true},{label:"Shipped",date:"Feb 23",done:true},{label:"Out for delivery",date:"Feb 28",done:true},{label:"Delivered",date:"Feb 28",done:true}] },
+  { id:"ORD-3104", date:"Mar 02, 2026", status:"In Transit", items:["Merino Turtleneck"],                total:195, tracking:[{label:"Order placed",date:"Mar 2",done:true},{label:"Processing",date:"Mar 2",done:true},{label:"Shipped",date:"Mar 3",done:true},{label:"Out for delivery",date:"",done:false},{label:"Delivered",date:"",done:false}] },
+  { id:"ORD-3287", date:"Mar 04, 2026", status:"Processing", items:["Cashmere Cardigan","Leather Belt"], total:433, tracking:[{label:"Order placed",date:"Mar 4",done:true},{label:"Processing",date:"Mar 4",done:true},{label:"Shipped",date:"",done:false},{label:"Out for delivery",date:"",done:false},{label:"Delivered",date:"",done:false}] },
+];
+
+const T = { bg:"#fafaf8", surface:"#ffffff", s2:"#f5f2ed", border:"#e8e4de", text:"#1a1a18", muted:"#8c8880", accent:"#1a1a18", tag:"#f0ede8" };
+const fmt = n => `$${n.toFixed(0)}`;
+
+function Stars({ rating }) {
+  return <span style={{fontSize:11,color:"#1a1a18",letterSpacing:1}}>{"★".repeat(Math.floor(rating))}{"☆".repeat(5-Math.floor(rating))}</span>;
+}
+function Badge({ label }) {
+  if(!label) return null;
+  return <span style={{fontSize:9,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",background:label==="Sale"?"#d4472a":"#1a1a18",color:"#fff",padding:"3px 8px",borderRadius:2}}>{label}</span>;
+}
+function Btn({ children, onClick, variant="primary", style={} }) {
+  const base = {border:"none",cursor:"pointer",fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:"0.05em",borderRadius:2,transition:"all 0.2s",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:8};
+  const v = {primary:{background:T.accent,color:"#fff",padding:"14px 28px",fontSize:13},secondary:{background:"transparent",color:T.text,border:`1px solid ${T.border}`,padding:"13px 28px",fontSize:13},ghost:{background:"transparent",color:T.muted,padding:"8px 12px",fontSize:13},icon:{background:"transparent",color:T.text,padding:8,borderRadius:"50%"}};
+  return <button onClick={onClick} style={{...base,...v[variant],...style}}>{children}</button>;
+}
+function Tag({ children, active, onClick }) {
+  return <button onClick={onClick} style={{background:active?T.accent:T.tag,color:active?"#fff":T.muted,border:"none",cursor:"pointer",padding:"8px 18px",borderRadius:2,fontSize:12,fontWeight:500,letterSpacing:"0.04em",fontFamily:"'Jost',sans-serif",transition:"all 0.18s",whiteSpace:"nowrap"}}>{children}</button>;
+}
+function ColorDot({ color, selected, onClick }) {
+  return <button onClick={onClick} style={{width:22,height:22,borderRadius:"50%",background:color,border:selected?`2px solid ${T.accent}`:"2px solid transparent",outline:selected?`1px solid ${T.accent}`:"none",outlineOffset:2,cursor:"pointer",transition:"all 0.15s"}} />;
+}
+function SizeBtn({ size, selected, onClick }) {
+  return <button onClick={onClick} style={{minWidth:42,height:36,padding:"0 10px",background:selected?T.accent:"transparent",color:selected?"#fff":T.muted,border:`1px solid ${selected?T.accent:T.border}`,borderRadius:2,cursor:"pointer",fontSize:12,fontWeight:500,fontFamily:"'Jost',sans-serif",transition:"all 0.15s"}}>{size}</button>;
+}
+function Divider() { return <div style={{height:1,background:T.border}} />; }
+function StatusPill({ status }) {
+  const map={Delivered:["#e8f5ee","#2d6a4f"],"In Transit":["#e8f0fb","#2a52a0"],Processing:["#fef5e8","#a0662a"]};
+  const [bg,col]=map[status]||[T.tag,T.muted];
+  return <span style={{fontSize:11,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",background:bg,color:col,padding:"4px 10px",borderRadius:2}}>{status}</span>;
 }
 
-const NOTIFICATIONS = [
-  { id: 1, icon: '🎵', title: 'New release',   msg: 'Nora James dropped "Velvet Sky"',        time: '2m ago',  read: false },
-  { id: 2, icon: '❤️', title: 'Milestone',     msg: "You've listened for 100+ hours!",         time: '1h ago',  read: false },
-  { id: 3, icon: '🎧', title: 'Weekly recap',  msg: 'Your top track was Midnight Bloom',       time: '2h ago',  read: true  },
-  { id: 4, icon: '🔥', title: 'Trending',      msg: 'Golden Hour is #1 in your area',          time: '5h ago',  read: true  },
-  { id: 5, icon: '👤', title: 'Artist update', msg: 'Marco V is going on tour',                time: '1d ago',  read: true  },
-]
-
-const DOWNLOADS = [
-  { title: 'Midnight Bloom', artist: 'Nora James',  size: '8.2 MB',  downloaded: true  },
-  { title: 'Golden Hour',    artist: 'The Wavs',    size: '9.1 MB',  downloaded: true  },
-  { title: 'Drift Away',     artist: 'Elara Moon',  size: '7.8 MB',  downloaded: false },
-  { title: 'City Lights',    artist: 'Marco V',     size: '11.3 MB', downloaded: true  },
-  { title: 'Slow Burn',      artist: 'Chloe Park',  size: '8.9 MB',  downloaded: false },
-]
-
-// ── Style helpers ─────────────────────────────────────
-const c = {
-  bg:      d => d ? '#121212' : '#f7f6f3',
-  surface: d => d ? '#1e1e1e' : '#ffffff',
-  surface2:d => d ? '#2a2a2a' : '#f0ede8',
-  border:  d => d ? '#2a2a2a' : '#e8e4de',
-  text:    d => d ? '#f0ede8' : '#1a1814',
-  muted:   d => d ? '#888888' : '#8c8680',
-  accent:  d => d ? '#f0ede8' : '#1a1814',
-}
-
-const card = d => ({
-  background: c.surface(d), border: `1px solid ${c.border(d)}`,
-  borderRadius: 14, padding: 16, marginBottom: 16,
-})
-
-// ── Tiny reusable components ──────────────────────────
-function Chip({ label, dark }) {
-  return <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: c.muted(dark), background: c.surface2(dark), padding: '3px 9px', borderRadius: 20, border: `1px solid ${c.border(dark)}` }}>{label}</span>
-}
-
-function Avatar({ size = 40, hue = 200, letter = 'A', radius, style = {} }) {
+function ProductCard({ product, onSelect, onAddToCart }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <div style={{ width: size, height: size, borderRadius: radius ?? size * 0.25, background: `hsl(${hue},35%,83%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700, color: 'rgba(0,0,0,0.4)', flexShrink: 0, ...style }}>{letter}</div>
-  )
-}
-
-function IconBtn({ onClick, children, style = {} }) {
-  return <button onClick={onClick} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, ...style }}>{children}</button>
-}
-
-function Toggle({ on, onChange, dark }) {
-  return (
-    <div onClick={onChange} style={{ width: 48, height: 28, borderRadius: 14, background: on ? c.accent(dark) : c.surface2(dark), position: 'relative', cursor: 'pointer', transition: 'background 0.25s', border: `1px solid ${c.border(dark)}` }}>
-      <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: on ? 24 : 3, transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
-    </div>
-  )
-}
-
-// ── Now Playing fullscreen ────────────────────────────
-function NowPlaying({ track, isPlaying, onToggle, liked, onLike, onClose, dark }) {
-  const [progress, setProgress] = useState(track.progress ?? 38)
-  const [view, setView] = useState('art') // 'art' | 'lyrics' | 'eq'
-  const lyrics = LYRICS[track.title] ?? [{ time: 0, line: 'No lyrics available.' }]
-  const activeLyric = lyrics.reduce((a, l) => l.time <= (progress / 100) * 222 ? l : a, lyrics[0])
-  const eqBars = [65, 80, 45, 90, 55, 75, 40, 85, 60, 70]
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, maxWidth: 430, margin: '0 auto', display: 'flex', flexDirection: 'column', fontFamily: 'DM Sans, sans-serif', background: dark ? `linear-gradient(160deg,hsl(300,20%,10%),#080808)` : `linear-gradient(160deg,hsl(300,40%,90%),hsl(188,35%,93%))` }}>
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '52px 24px 0' }}>
-        <IconBtn onClick={onClose}><ChevronDown size={28} color={c.text(dark)} /></IconBtn>
-        <p style={{ fontSize: 13, fontWeight: 500, color: c.text(dark) }}>Now Playing</p>
-        <div style={{ display: 'flex', gap: 4 }}>
-          <IconBtn onClick={() => setView(v => v === 'lyrics' ? 'art' : 'lyrics')}><Mic2 size={20} color={view === 'lyrics' ? '#b5451b' : c.muted(dark)} /></IconBtn>
-          <IconBtn onClick={() => setView(v => v === 'eq' ? 'art' : 'eq')}><BarChart2 size={20} color={view === 'eq' ? '#b5451b' : c.muted(dark)} /></IconBtn>
+    <div onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} style={{cursor:"pointer",animation:"fadeUp 0.5s ease both"}}>
+      <div onClick={()=>onSelect(product)} style={{position:"relative",aspectRatio:"3/4",background:product.gradient,borderRadius:4,overflow:"hidden",marginBottom:14}}>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,fontWeight:300,color:"rgba(255,255,255,0.55)",letterSpacing:2,textAlign:"center",padding:"0 12px"}}>{product.name}</span>
         </div>
-      </div>
-
-      {/* Main visual area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', overflow: 'hidden' }}>
-        {view === 'art' && (
-          <div style={{ width: 220, height: 220, borderRadius: 24, background: `hsl(300,30%,${dark ? 20 : 82}%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90, fontWeight: 800, color: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)', boxShadow: '0 28px 64px rgba(0,0,0,0.22)' }}>{track.title[0]}</div>
-        )}
-        {view === 'lyrics' && (
-          <div style={{ width: '100%', textAlign: 'center', overflowY: 'auto', maxHeight: '60vh' }}>
-            <Chip label="Lyrics" dark={dark} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 28 }}>
-              {lyrics.map((l, i) => (
-                <p key={i} style={{ fontSize: l.line === activeLyric.line ? 20 : 15, fontWeight: l.line === activeLyric.line ? 700 : 400, color: l.line === activeLyric.line ? c.text(dark) : (dark ? '#444' : '#bbb'), transition: 'all 0.3s', letterSpacing: -0.3 }}>{l.line}</p>
-              ))}
-            </div>
+        {product.badge && <div style={{position:"absolute",top:12,left:12}}><Badge label={product.badge}/></div>}
+        {hovered && (
+          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:12,background:"rgba(255,255,255,0.95)",animation:"fadeUp 0.2s ease"}}>
+            <Btn onClick={e=>{e.stopPropagation();onAddToCart(product);}} style={{width:"100%",fontSize:12,padding:"12px"}}>Quick Add</Btn>
           </div>
         )}
-        {view === 'eq' && (
-          <div style={{ width: '100%' }}>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}><Chip label="Visualizer" dark={dark} /></div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 7, height: 130 }}>
-              {eqBars.map((h, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 18, borderRadius: 4, background: isPlaying ? `hsl(${300 + i * 18},55%,${dark ? 60 : 48}%)` : c.surface2(dark), height: isPlaying ? h : 16, transition: `height ${0.3 + i * 0.05}s ease`, animation: isPlaying ? `none` : 'none' }} />
-                  <span style={{ fontSize: 7, color: c.muted(dark) }}>{['60','170','310','600','1k','3k','6k','12k','14k','16k'][i]}</span>
+      </div>
+      <div onClick={()=>onSelect(product)}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+          <p style={{fontSize:13,fontWeight:500,color:T.text,letterSpacing:"0.02em"}}>{product.name}</p>
+          <div style={{textAlign:"right"}}>
+            {product.originalPrice && <p style={{fontSize:11,color:T.muted,textDecoration:"line-through"}}>{fmt(product.originalPrice)}</p>}
+            <p style={{fontSize:13,fontWeight:500,color:product.originalPrice?"#d4472a":T.text}}>{fmt(product.price)}</p>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <Stars rating={product.rating}/>
+          <span style={{fontSize:11,color:T.muted}}>({product.reviews})</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartDrawer({ cart, onClose, onRemove, onUpdateQty }) {
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  return (
+    <>
+      <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:300,animation:"fadeIn 0.2s ease"}}/>
+      <div style={{position:"fixed",top:0,right:0,bottom:0,width:"min(400px,100%)",background:T.surface,zIndex:400,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease",boxShadow:"-8px 0 40px rgba(0,0,0,0.08)"}}>
+        <div style={{padding:"24px 24px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div>
+            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400}}>Your Cart</p>
+            <p style={{fontSize:12,color:T.muted,marginTop:2}}>{cart.length} items</p>
+          </div>
+          <Btn variant="icon" onClick={onClose} style={{fontSize:18}}>✕</Btn>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"0 24px"}}>
+          {cart.length===0 ? (
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12}}>
+              <span style={{fontSize:40}}>🛍</span>
+              <p style={{fontSize:14,color:T.muted}}>Your cart is empty</p>
+            </div>
+          ) : cart.map((item,i)=>(
+            <div key={`${item.id}-${item.selectedSize}`}>
+              <div style={{padding:"18px 0",display:"flex",gap:14}}>
+                <div style={{width:72,height:90,background:item.gradient,borderRadius:3,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,color:"rgba(255,255,255,0.6)"}}>{item.name[0]}</span>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:13,fontWeight:500,marginBottom:3}}>{item.name}</p>
+                  <p style={{fontSize:11,color:T.muted,marginBottom:10}}>Size: {item.selectedSize}</p>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,border:`1px solid ${T.border}`,borderRadius:2}}>
+                      <Btn variant="ghost" onClick={()=>onUpdateQty(item,item.qty-1)} style={{padding:"3px 10px",fontSize:16}}>−</Btn>
+                      <span style={{fontSize:13,minWidth:16,textAlign:"center"}}>{item.qty}</span>
+                      <Btn variant="ghost" onClick={()=>onUpdateQty(item,item.qty+1)} style={{padding:"3px 10px",fontSize:16}}>+</Btn>
+                    </div>
+                    <p style={{fontSize:13,fontWeight:500}}>{fmt(item.price*item.qty)}</p>
+                  </div>
+                </div>
+                <Btn variant="ghost" onClick={()=>onRemove(item)} style={{padding:"0 4px",color:T.muted,alignSelf:"flex-start",fontSize:16}}>✕</Btn>
+              </div>
+              {i<cart.length-1&&<Divider/>}
+            </div>
+          ))}
+        </div>
+        {cart.length>0&&(
+          <div style={{padding:24,borderTop:`1px solid ${T.border}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:T.muted}}>Subtotal</span><span style={{fontSize:13}}>{fmt(total)}</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:T.muted}}>Shipping</span><span style={{fontSize:13}}>{total>200?"Free":"$12"}</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:18,paddingTop:12,borderTop:`1px solid ${T.border}`}}><span style={{fontSize:14,fontWeight:600}}>Total</span><span style={{fontSize:14,fontWeight:600}}>{fmt(total>200?total:total+12)}</span></div>
+            {total>200&&<p style={{fontSize:11,color:"#2d6a4f",textAlign:"center",marginBottom:12}}>✓ Free shipping applied</p>}
+            <Btn style={{width:"100%",padding:"15px",fontSize:13,letterSpacing:"0.08em"}}>Checkout</Btn>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ProductDetail({ product, onBack, onAddToCart }) {
+  const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [added, setAdded] = useState(false);
+  const handleAdd = () => {
+    if(!selectedSize) return;
+    onAddToCart({...product,selectedColor:product.colors[selectedColor],selectedColorName:`Color ${selectedColor+1}`,selectedSize});
+    setAdded(true); setTimeout(()=>setAdded(false),2000);
+  };
+  return (
+    <div style={{animation:"fadeIn 0.3s ease"}}>
+      <div style={{padding:"16px 0 0"}}><Btn variant="ghost" onClick={onBack} style={{color:T.muted,padding:"8px 0",fontSize:13}}>← Back</Btn></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:40,paddingTop:8}}>
+        <div style={{aspectRatio:"3/4",background:product.gradient,borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+          {product.badge&&<div style={{position:"absolute",top:16,left:16}}><Badge label={product.badge}/></div>}
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:52,fontWeight:300,color:"rgba(255,255,255,0.5)",textAlign:"center",padding:"0 16px"}}>{product.name}</span>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:22}}>
+          <div>
+            <p style={{fontSize:11,color:T.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>{product.category}</p>
+            <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:400,lineHeight:1.15,marginBottom:10}}>{product.name}</h1>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}><Stars rating={product.rating}/><span style={{fontSize:12,color:T.muted}}>{product.rating} · {product.reviews} reviews</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <p style={{fontSize:22,fontWeight:500,color:product.originalPrice?"#d4472a":T.text}}>{fmt(product.price)}</p>
+              {product.originalPrice&&<p style={{fontSize:16,color:T.muted,textDecoration:"line-through"}}>{fmt(product.originalPrice)}</p>}
+            </div>
+          </div>
+          <Divider/>
+          <div>
+            <p style={{fontSize:11,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:10,color:T.muted}}>Colour</p>
+            <div style={{display:"flex",gap:10}}>{product.colors.map((col,i)=><ColorDot key={i} color={col} selected={selectedColor===i} onClick={()=>setSelectedColor(i)}/>)}</div>
+          </div>
+          <div>
+            <p style={{fontSize:11,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:10,color:T.muted}}>Size</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8}}>{product.sizes.map(sz=><SizeBtn key={sz} size={sz} selected={selectedSize===sz} onClick={()=>setSelectedSize(sz)}/>)}</div>
+            {!selectedSize&&<p style={{fontSize:11,color:T.muted,marginTop:8}}>Please select a size</p>}
+          </div>
+          <Btn onClick={handleAdd} style={{width:"100%",padding:"15px",fontSize:13,letterSpacing:"0.08em",opacity:selectedSize?1:0.5}}>{added?"✓ Added to Cart":"Add to Cart"}</Btn>
+          <Divider/>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div><p style={{fontSize:11,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6,color:T.muted}}>Description</p><p style={{fontSize:14,lineHeight:1.75,color:T.muted}}>{product.description}</p></div>
+            <div><p style={{fontSize:11,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6,color:T.muted}}>Material</p><p style={{fontSize:14,color:T.muted}}>{product.material}</p></div>
+            <div><p style={{fontSize:11,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6,color:T.muted}}>Care</p><p style={{fontSize:14,color:T.muted}}>{product.care}</p></div>
+            <div style={{background:T.s2,borderRadius:4,padding:14}}>
+              <p style={{fontSize:13,color:T.muted}}>✓ Free shipping on orders over $200</p>
+              <p style={{fontSize:13,color:T.muted,marginTop:5}}>✓ Free returns within 30 days</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderTracking() {
+  const [selected, setSelected] = useState(null);
+  return (
+    <div style={{animation:"fadeIn 0.3s ease"}}>
+      <div style={{marginBottom:28}}>
+        <p style={{fontSize:11,color:T.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>Account</p>
+        <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:400}}>Your Orders</h1>
+      </div>
+      {!selected ? (
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {ORDERS.map(order=>(
+            <div key={order.id} onClick={()=>setSelected(order)} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:4,padding:22,cursor:"pointer"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}><div><p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:18,fontWeight:400,marginBottom:3}}>{order.id}</p><p style={{fontSize:12,color:T.muted}}>{order.date}</p></div><StatusPill status={order.status}/></div>
+              <p style={{fontSize:13,color:T.muted,marginBottom:10}}>{order.items.join(", ")}</p>
+              <div style={{display:"flex",justifyContent:"space-between"}}><p style={{fontSize:13,fontWeight:500}}>{fmt(order.total)}</p><span style={{fontSize:12,color:T.muted}}>View details →</span></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{animation:"fadeIn 0.3s ease"}}>
+          <Btn variant="ghost" onClick={()=>setSelected(null)} style={{color:T.muted,padding:"8px 0",fontSize:13,marginBottom:20}}>← All Orders</Btn>
+          <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:4,padding:26}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24}}><div><p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400,marginBottom:3}}>{selected.id}</p><p style={{fontSize:13,color:T.muted}}>{selected.date} · {selected.items.join(", ")}</p></div><StatusPill status={selected.status}/></div>
+            <div style={{position:"relative",paddingLeft:26}}>
+              <div style={{position:"absolute",left:7,top:8,bottom:8,width:1,background:T.border}}/>
+              {selected.tracking.map((step,i)=>(
+                <div key={i} style={{position:"relative",paddingBottom:i<selected.tracking.length-1?24:0}}>
+                  <div style={{position:"absolute",left:-22,top:2,width:13,height:13,borderRadius:"50%",background:step.done?T.accent:T.border,display:"flex",alignItems:"center",justifyContent:"center"}}>{step.done&&<span style={{color:"#fff",fontSize:7}}>✓</span>}</div>
+                  <p style={{fontSize:13,fontWeight:step.done?500:400,color:step.done?T.text:T.muted}}>{step.label}</p>
+                  {step.date&&<p style={{fontSize:11,color:T.muted,marginTop:1}}>{step.date}</p>}
                 </div>
               ))}
             </div>
+            <div style={{marginTop:24,paddingTop:20,borderTop:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:14,fontWeight:500}}>Order Total</span><span style={{fontSize:14,fontWeight:600}}>{fmt(selected.total)}</span></div>
           </div>
-        )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AccountPage({ onNavigate }) {
+  const sections=[{label:"Your Orders",sub:"Track your orders",icon:"📦",action:"orders"},{label:"Wishlist",sub:"14 saved items",icon:"♡",action:null},{label:"Addresses",sub:"2 saved addresses",icon:"📍",action:null},{label:"Payment",sub:"Visa ending in 4242",icon:"💳",action:null},{label:"Settings",sub:"Notifications, privacy",icon:"⚙️",action:null}];
+  return (
+    <div style={{animation:"fadeIn 0.3s ease"}}>
+      <div style={{background:"linear-gradient(135deg,#e8e0d5,#d4c9b8)",borderRadius:4,padding:"36px 28px",marginBottom:32,display:"flex",alignItems:"center",gap:20}}>
+        <div style={{width:66,height:66,borderRadius:"50%",background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:24,color:T.muted,boxShadow:"0 4px 20px rgba(0,0,0,0.08)"}}>A</div>
+        <div><p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400}}>Alex Johnson</p><p style={{fontSize:13,color:T.muted,marginTop:3}}>alex@example.com · Member since 2023</p></div>
       </div>
-
-      {/* Controls */}
-      <div style={{ padding: '0 28px 36px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 21, fontWeight: 700, letterSpacing: -0.5, color: c.text(dark), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</p>
-            <p style={{ fontSize: 14, color: c.muted(dark), marginTop: 3 }}>{track.artist}</p>
+      <div style={{display:"flex",flexDirection:"column"}}>
+        {sections.map((s,i)=>(
+          <div key={s.label}>
+            <div onClick={()=>s.action&&onNavigate(s.action)} style={{display:"flex",alignItems:"center",gap:16,padding:"18px 4px",cursor:s.action?"pointer":"default"}}>
+              <span style={{fontSize:20,width:34,textAlign:"center"}}>{s.icon}</span>
+              <div style={{flex:1}}><p style={{fontSize:14,fontWeight:500}}>{s.label}</p><p style={{fontSize:12,color:T.muted,marginTop:2}}>{s.sub}</p></div>
+              <span style={{color:T.muted,fontSize:16}}>→</span>
+            </div>
+            {i<sections.length-1&&<Divider/>}
           </div>
-          <IconBtn onClick={onLike} style={{ padding: 8 }}>
-            <Heart size={22} fill={liked ? '#b5451b' : 'none'} color={liked ? '#b5451b' : c.muted(dark)} />
-          </IconBtn>
-        </div>
-
-        {/* Seekbar */}
-        <div style={{ marginBottom: 22 }}>
-          <div style={{ height: 4, background: dark ? '#333' : '#ddd', borderRadius: 2, marginBottom: 8, cursor: 'pointer', position: 'relative' }}
-            onClick={e => { const r = e.currentTarget.getBoundingClientRect(); setProgress(Math.round(((e.clientX - r.left) / r.width) * 100)) }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: c.accent(dark), borderRadius: 2 }} />
-            <div style={{ position: 'absolute', top: '50%', left: `${progress}%`, transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: '50%', background: c.accent(dark), boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, fontFamily: 'DM Mono,monospace', color: c.muted(dark) }}>1:24</span>
-            <span style={{ fontSize: 11, fontFamily: 'DM Mono,monospace', color: c.muted(dark) }}>3:42</span>
-          </div>
-        </div>
-
-        {/* Play controls */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <IconBtn style={{ color: c.muted(dark) }}><Shuffle size={20} /></IconBtn>
-          <IconBtn><SkipBack size={30} fill={c.text(dark)} strokeWidth={0} /></IconBtn>
-          <button onClick={onToggle} style={{ width: 68, height: 68, borderRadius: '50%', background: c.accent(dark), border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-            {isPlaying ? <Pause size={28} fill={dark ? '#121212' : '#fff'} strokeWidth={0} /> : <Play size={28} fill={dark ? '#121212' : '#fff'} strokeWidth={0} />}
-          </button>
-          <IconBtn><SkipForward size={30} fill={c.text(dark)} strokeWidth={0} /></IconBtn>
-          <IconBtn style={{ color: c.muted(dark) }}><Repeat size={20} /></IconBtn>
-        </div>
+        ))}
       </div>
     </div>
-  )
+  );
 }
 
-// ── Mini Player ───────────────────────────────────────
-function MiniPlayer({ track, isPlaying, onToggle, liked, onLike, onOpen, dark }) {
+function ShopScreen({ products, onSelect, onAddToCart }) {
+  const [category, setCategory] = useState("All");
+  const [sort, setSort] = useState("featured");
+  const filtered = useMemo(()=>{
+    let p = category==="All"?products:products.filter(x=>x.category===category);
+    if(sort==="price-asc") p=[...p].sort((a,b)=>a.price-b.price);
+    if(sort==="price-desc") p=[...p].sort((a,b)=>b.price-a.price);
+    if(sort==="rating") p=[...p].sort((a,b)=>b.rating-a.rating);
+    return p;
+  },[category,sort,products]);
   return (
-    <div onClick={onOpen} style={{ background: c.surface(dark), borderTop: `1px solid ${c.border(dark)}`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, cursor: 'pointer', transition: 'background 0.3s' }}>
-      <Avatar size={44} hue={300} letter={track.title[0]} style={{ borderRadius: 10 }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 500, color: c.text(dark), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</p>
-        <p style={{ fontSize: 11.5, color: c.muted(dark), marginTop: 1 }}>{track.artist}</p>
+    <div style={{animation:"fadeIn 0.3s ease"}}>
+      <div style={{marginBottom:28}}><p style={{fontSize:11,color:T.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>Collection</p><h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,fontWeight:300,lineHeight:1.1}}>All Pieces</h1></div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:14,marginBottom:28}}>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{CATEGORIES.map(cat=><Tag key={cat} active={category===cat} onClick={()=>setCategory(cat)}>{cat}</Tag>)}</div>
+        <select value={sort} onChange={e=>setSort(e.target.value)} style={{fontSize:12,color:T.muted,background:"none",border:`1px solid ${T.border}`,padding:"8px 14px",borderRadius:2,cursor:"pointer",fontFamily:"'Jost',sans-serif",outline:"none"}}>
+          <option value="featured">Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="rating">Top Rated</option>
+        </select>
       </div>
-      <IconBtn onClick={e => { e.stopPropagation(); onLike() }} style={{ color: liked ? '#b5451b' : c.muted(dark) }}>
-        <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
-      </IconBtn>
-      <button onClick={e => { e.stopPropagation(); onToggle() }} style={{ width: 38, height: 38, borderRadius: '50%', background: c.accent(dark), border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {isPlaying ? <Pause size={14} fill={dark ? '#121212' : '#fff'} strokeWidth={0} /> : <Play size={14} fill={dark ? '#121212' : '#fff'} strokeWidth={0} />}
-      </button>
-      <IconBtn style={{ color: c.muted(dark) }}>
-        <SkipForward size={18} fill="currentColor" strokeWidth={0} />
-      </IconBtn>
+      <p style={{fontSize:12,color:T.muted,marginBottom:22}}>{filtered.length} pieces</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"36px 20px"}}>
+        {filtered.map(p=><ProductCard key={p.id} product={p} onSelect={onSelect} onAddToCart={onAddToCart}/>)}
+      </div>
     </div>
-  )
+  );
 }
 
-// ── Tab Bar ───────────────────────────────────────────
-function TabBar({ active, onTab, dark, unread }) {
+function SearchScreen({ products, onSelect, onAddToCart }) {
+  const [q, setQ] = useState("");
+  const results = useMemo(()=>q.trim().length<2?[]:products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.category.toLowerCase().includes(q.toLowerCase())),[q]);
   return (
-    <nav style={{ background: c.surface(dark), borderTop: `1px solid ${c.border(dark)}`, display: 'flex', alignItems: 'center', paddingBottom: 'env(safe-area-inset-bottom)', flexShrink: 0, height: 64, transition: 'background 0.3s' }}>
-      {TABS.map(({ id, label, icon: Icon }) => (
-        <button key={id} onClick={() => onTab(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 0', color: active === id ? c.text(dark) : c.muted(dark), background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: active === id ? 600 : 400, fontFamily: 'DM Sans,sans-serif', position: 'relative' }}>
-          <Icon size={22} strokeWidth={active === id ? 2.2 : 1.6} />
-          <span>{label}</span>
-          {id === 'home' && unread > 0 && <div style={{ position: 'absolute', top: 6, right: '28%', width: 7, height: 7, borderRadius: '50%', background: '#b5451b' }} />}
-        </button>
-      ))}
-    </nav>
-  )
-}
-
-// ── Screen: Home ──────────────────────────────────────
-function HomeScreen({ onPlay, onNavigate, dark }) {
-  const h = new Date().getHours()
-  const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
-  return (
-    <div style={{ padding: '20px 16px 12px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22 }}>
+    <div style={{animation:"fadeIn 0.3s ease"}}>
+      <div style={{marginBottom:28}}>
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search for pieces…" autoFocus style={{width:"100%",padding:"12px 0",fontSize:26,fontFamily:"'Cormorant Garamond',serif",fontWeight:300,background:"none",border:"none",borderBottom:`2px solid ${T.accent}`,outline:"none",color:T.text}}/>
+      </div>
+      {q.length<2&&(
         <div>
-          <p style={{ fontSize: 13, color: c.muted(dark), marginBottom: 4 }}>{greeting}, Alex 👋</p>
-          <h1 style={{ fontSize: 23, fontWeight: 700, letterSpacing: -0.6, color: c.text(dark) }}>Your Dashboard</h1>
+          <p style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:T.muted,marginBottom:14}}>Trending</p>
+          <div style={{display:"flex",flexWrap:"wrap",gap:8}}>{["Linen","Cashmere","Trench","Silk","Merino"].map(t=><Tag key={t} onClick={()=>setQ(t)}>{t}</Tag>)}</div>
         </div>
-        <IconBtn onClick={() => onNavigate('profile')} style={{ marginTop: 2 }}>
-          <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'hsl(188,40%,78%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'rgba(0,0,0,0.4)' }}>A</div>
-        </IconBtn>
-      </div>
-      <StatsCards />
-      <ListeningChart />
-      <div style={card(dark)}>
-        <p style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.3, marginBottom: 14, color: c.text(dark) }}>Top Tracks</p>
-        <TopTracks onPlay={onPlay} />
-      </div>
-      <div style={card(dark)}>
-        <p style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.3, marginBottom: 14, color: c.text(dark) }}>Recently Played</p>
-        <RecentlyPlayed onPlay={onPlay} />
-      </div>
-      <div style={card(dark)}>
-        <p style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.3, marginBottom: 14, color: c.text(dark) }}>Artists You Love</p>
-        {ARTISTS.map(a => (
-          <div key={a.id} onClick={() => onNavigate('artist', a)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 8px', borderRadius: 10, cursor: 'pointer' }}>
-            <Avatar size={46} hue={a.hue} letter={a.name[0]} />
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 14, fontWeight: 500, color: c.text(dark) }}>{a.name}</p>
-              <p style={{ fontSize: 12, color: c.muted(dark), marginTop: 1 }}>{a.genre} · {a.followers} followers</p>
-            </div>
-            <ChevronRight size={15} color={c.muted(dark)} />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Screen: Search ────────────────────────────────────
-function SearchScreen({ dark }) {
-  const genres = ['Pop','Hip-Hop','R&B','Electronic','Jazz','Classical','Rock','Afrobeats']
-  const hues   = [47, 188, 320, 94, 21, 265, 141, 15]
-  return (
-    <div style={{ padding: '20px 16px' }}>
-      <h1 style={{ fontSize: 23, fontWeight: 700, letterSpacing: -0.6, color: c.text(dark), marginBottom: 18 }}>Search</h1>
-      <input placeholder="Artists, songs, podcasts…" style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: `1px solid ${c.border(dark)}`, background: c.surface2(dark), fontSize: 14, fontFamily: 'DM Sans,sans-serif', outline: 'none', boxSizing: 'border-box', color: c.text(dark), marginBottom: 24 }} />
-      <p style={{ fontSize: 10.5, fontWeight: 600, color: c.muted(dark), marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Browse by genre</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        {genres.map((g, i) => (
-          <div key={g} style={{ background: `hsl(${hues[i]},45%,82%)`, borderRadius: 12, padding: '20px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'rgba(0,0,0,0.65)' }}>{g}</div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Screen: Library ───────────────────────────────────
-function LibraryScreen({ onPlay, dark }) {
-  const playlists = [
-    { name: 'Liked Songs',      count: '384 songs', hue: 320 },
-    { name: 'Late Night Drive', count: '24 songs',  hue: 188 },
-    { name: 'Focus Mode',       count: '18 songs',  hue: 94  },
-    { name: 'Sunday Morning',   count: '31 songs',  hue: 47  },
-    { name: 'Workout Mix',      count: '42 songs',  hue: 21  },
-  ]
-  return (
-    <div style={{ padding: '20px 16px' }}>
-      <h1 style={{ fontSize: 23, fontWeight: 700, letterSpacing: -0.6, color: c.text(dark), marginBottom: 20 }}>Your Library</h1>
-      {playlists.map(p => (
-        <div key={p.name} onClick={() => onPlay({ title: p.name, artist: 'Playlist', progress: 0 })} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', borderBottom: `1px solid ${c.border(dark)}`, cursor: 'pointer' }}>
-          <Avatar size={52} hue={p.hue} letter={p.name[0]} style={{ borderRadius: 10 }} />
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 500, color: c.text(dark) }}>{p.name}</p>
-            <p style={{ fontSize: 12, color: c.muted(dark), marginTop: 2 }}>{p.count}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── Screen: Charts ────────────────────────────────────
-function ChartsScreen({ onPlay, dark }) {
-  return (
-    <div style={{ padding: '20px 16px' }}>
-      <h1 style={{ fontSize: 23, fontWeight: 700, letterSpacing: -0.6, color: c.text(dark), marginBottom: 20 }}>Charts</h1>
-      <div style={card(dark)}>
-        <p style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.3, marginBottom: 14, color: c.text(dark) }}>🔥 Top 7 This Week</p>
-        <TopTracks onPlay={onPlay} />
-      </div>
-    </div>
-  )
-}
-
-// ── Screen: Artist ────────────────────────────────────
-function ArtistScreen({ artist, onPlay, dark }) {
-  const tracks = [
-    { id: 1, title: 'Midnight Bloom', duration: '3:42' },
-    { id: 2, title: 'Velvet Sky',     duration: '4:12' },
-    { id: 3, title: 'After Hours',    duration: '5:01' },
-    { id: 4, title: 'Pale Blue',      duration: '3:28' },
-  ]
-  return (
-    <div>
-      <div style={{ height: 200, background: `linear-gradient(160deg,hsl(${artist.hue},40%,75%),hsl(${artist.hue+40},30%,88%))`, display: 'flex', alignItems: 'flex-end', padding: '0 20px 20px' }}>
+      )}
+      {q.length>=2&&(
         <div>
-          <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(0,0,0,0.45)', marginBottom: 4, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Artist</p>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, color: 'rgba(0,0,0,0.7)' }}>{artist.name}</h1>
-          <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>{artist.followers} followers · {artist.tracks} tracks</p>
+          <p style={{fontSize:12,color:T.muted,marginBottom:18}}>{results.length} result{results.length!==1?"s":""} for "{q}"</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:"32px 20px"}}>
+            {results.map(p=><ProductCard key={p.id} product={p} onSelect={onSelect} onAddToCart={onAddToCart}/>)}
+          </div>
+          {results.length===0&&<p style={{fontSize:14,color:T.muted,textAlign:"center",marginTop:40}}>No results found.</p>}
         </div>
-      </div>
-      <div style={{ padding: '20px 16px' }}>
-        <div style={card(dark)}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: c.text(dark), marginBottom: 10 }}>About</p>
-          <p style={{ fontSize: 14, lineHeight: 1.65, color: c.muted(dark) }}>{artist.bio}</p>
-        </div>
-        <div style={card(dark)}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: c.text(dark), marginBottom: 12 }}>Popular Tracks</p>
-          {tracks.map((t, i) => (
-            <div key={t.id} onClick={() => onPlay({ title: t.title, artist: artist.name, progress: 0 })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < tracks.length - 1 ? `1px solid ${c.border(dark)}` : 'none', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12, fontFamily: 'DM Mono,monospace', color: c.muted(dark), width: 18, textAlign: 'center' }}>{i + 1}</span>
-              <Avatar size={38} hue={artist.hue + i * 22} letter={t.title[0]} style={{ borderRadius: 8 }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 13.5, fontWeight: 500, color: c.text(dark) }}>{t.title}</p>
-                <p style={{ fontSize: 12, color: c.muted(dark), marginTop: 1 }}>{artist.genre}</p>
-              </div>
-              <span style={{ fontSize: 11.5, fontFamily: 'DM Mono,monospace', color: c.muted(dark) }}>{t.duration}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
 
-// ── Screen: Notifications ─────────────────────────────
-function NotificationsScreen({ dark }) {
-  const [notifs, setNotifs] = useState(NOTIFICATIONS)
+function HomeScreen({ products, onNavigate, onSelect, onAddToCart }) {
+  const newIn  = products.filter(p=>p.badge==="New").slice(0,4);
+  const onSale = products.filter(p=>p.badge==="Sale").slice(0,4);
   return (
-    <div style={{ padding: '20px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 23, fontWeight: 700, letterSpacing: -0.6, color: c.text(dark) }}>Notifications</h1>
-        <button onClick={() => setNotifs(n => n.map(x => ({ ...x, read: true })))} style={{ fontSize: 12, color: c.muted(dark), background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'DM Sans,sans-serif' }}>Mark all read</button>
-      </div>
-      {notifs.map(n => (
-        <div key={n.id} onClick={() => setNotifs(p => p.map(x => x.id === n.id ? { ...x, read: true } : x))} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '13px 10px', borderRadius: 12, cursor: 'pointer', background: n.read ? 'transparent' : (dark ? 'rgba(255,255,255,0.04)' : 'rgba(26,24,20,0.04)'), marginBottom: 2 }}>
-          <div style={{ fontSize: 20, width: 42, height: 42, borderRadius: 10, background: c.surface2(dark), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n.icon}</div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 13, fontWeight: n.read ? 400 : 600, color: c.text(dark) }}>{n.title}</p>
-            <p style={{ fontSize: 12.5, color: c.muted(dark), marginTop: 2, lineHeight: 1.4 }}>{n.msg}</p>
-            <p style={{ fontSize: 11, color: c.muted(dark), marginTop: 4, fontFamily: 'DM Mono,monospace' }}>{n.time}</p>
-          </div>
-          {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#b5451b', marginTop: 5, flexShrink: 0 }} />}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── Screen: Profile ───────────────────────────────────
-function ProfileScreen({ dark, onToggleDark }) {
-  const stats = [{ label: 'Following', val: '142' }, { label: 'Followers', val: '38' }, { label: 'Playlists', val: '12' }]
-  return (
-    <div style={{ paddingBottom: 20 }}>
-      <div style={{ height: 170, background: 'linear-gradient(160deg,hsl(188,45%,78%),hsl(320,35%,82%))', display: 'flex', alignItems: 'flex-end', padding: '0 20px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'rgba(0,0,0,0.35)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}>A</div>
-          <div style={{ paddingBottom: 4 }}>
-            <p style={{ fontSize: 20, fontWeight: 700, color: 'rgba(0,0,0,0.72)', letterSpacing: -0.3 }}>Alex Johnson</p>
-            <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.5)' }}>@alexj · Premium</p>
-          </div>
-        </div>
+    <div style={{animation:"fadeIn 0.35s ease"}}>
+      <div style={{background:"linear-gradient(135deg,#e8e0d5 0%,#d4c9b8 50%,#c8bfb0 100%)",borderRadius:4,padding:"64px 40px",marginBottom:52,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:-20,top:-20,width:260,height:260,background:"rgba(255,255,255,0.15)",borderRadius:"50%"}}/>
+        <p style={{fontSize:10,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(26,26,24,0.5)",marginBottom:14}}>SS26 Collection</p>
+        <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"clamp(34px,5vw,62px)",fontWeight:300,lineHeight:1.05,letterSpacing:-0.5,color:"rgba(26,26,24,0.85)",marginBottom:20,maxWidth:420}}>Dressed for the <em>in-between</em></h1>
+        <p style={{fontSize:14,color:"rgba(26,26,24,0.55)",marginBottom:28,maxWidth:320,lineHeight:1.7}}>Refined pieces for modern living. Timeless materials, thoughtful cuts.</p>
+        <Btn onClick={()=>onNavigate("shop")} style={{background:"rgba(26,26,24,0.85)",color:"#fff",fontSize:12,letterSpacing:"0.1em"}}>Shop the Collection</Btn>
       </div>
 
-      <div style={{ padding: '0 16px' }}>
-        {/* Stats row */}
-        <div style={{ display: 'flex', ...card(dark), padding: 0, overflow: 'hidden', marginTop: 20 }}>
-          {stats.map((st, i) => (
-            <div key={st.label} style={{ flex: 1, textAlign: 'center', padding: '16px 8px', borderRight: i < 2 ? `1px solid ${c.border(dark)}` : 'none' }}>
-              <p style={{ fontSize: 20, fontWeight: 700, color: c.text(dark) }}>{st.val}</p>
-              <p style={{ fontSize: 11, color: c.muted(dark), marginTop: 3 }}>{st.label}</p>
-            </div>
-          ))}
-        </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:10,marginBottom:52}}>
+        {["Tops","Bottoms","Dresses","Outerwear","Sets","Accessories"].map((cat,i)=>{
+          const grads=["linear-gradient(135deg,#f0ece4,#ddd4c5)","linear-gradient(135deg,#d8e4f0,#c8d5e5)","linear-gradient(135deg,#f0e8de,#e0d0c0)","linear-gradient(135deg,#d8d3cc,#c8c0b5)","linear-gradient(135deg,#f0e8e0,#e0d5c8)","linear-gradient(135deg,#d8d0c8,#c8c0b5)"];
+          return <button key={cat} onClick={()=>onNavigate("shop")} style={{background:grads[i],borderRadius:4,padding:"20px 14px",cursor:"pointer",border:"none",textAlign:"left",fontFamily:"'Jost',sans-serif"}}><p style={{fontSize:12,fontWeight:500,color:T.text}}>{cat}</p><p style={{fontSize:10,color:T.muted,marginTop:3}}>Shop →</p></button>;
+        })}
+      </div>
 
-        {/* Dark mode */}
-        <div style={{ ...card(dark), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {dark ? <Moon size={17} color={c.muted(dark)} /> : <Sun size={17} color={c.muted(dark)} />}
-            <p style={{ fontSize: 14, color: c.text(dark) }}>Dark Mode</p>
+      <section style={{marginBottom:52}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:22}}>
+          <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:400}}>New In</h2>
+          <button onClick={()=>onNavigate("shop")} style={{fontSize:12,color:T.muted,background:"none",border:"none",cursor:"pointer",textDecoration:"underline",fontFamily:"'Jost',sans-serif"}}>View all</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"36px 20px"}}>
+          {newIn.map(p=><ProductCard key={p.id} product={p} onSelect={onSelect} onAddToCart={onAddToCart}/>)}
+        </div>
+      </section>
+
+      <div style={{background:T.accent,borderRadius:4,padding:"40px 32px",marginBottom:52,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+        <div><p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:300,color:"#fff",marginBottom:6}}>Free shipping over $200</p><p style={{fontSize:13,color:"rgba(255,255,255,0.6)"}}>On all orders worldwide. Free returns within 30 days.</p></div>
+        <Btn onClick={()=>onNavigate("shop")} style={{background:"#fff",color:T.accent,fontSize:12,letterSpacing:"0.08em"}}>Shop Now</Btn>
+      </div>
+
+      {onSale.length>0&&(
+        <section style={{marginBottom:52}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:22}}>
+            <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,fontWeight:400}}>On Sale</h2>
+            <button onClick={()=>onNavigate("shop")} style={{fontSize:12,color:T.muted,background:"none",border:"none",cursor:"pointer",textDecoration:"underline",fontFamily:"'Jost',sans-serif"}}>View all</button>
           </div>
-          <Toggle on={dark} onChange={onToggleDark} dark={dark} />
-        </div>
-
-        {/* Downloads */}
-        <div style={card(dark)}>
-          <p style={{ fontSize: 15, fontWeight: 600, color: c.text(dark), marginBottom: 14 }}>Downloads</p>
-          {DOWNLOADS.map((d, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderBottom: i < DOWNLOADS.length - 1 ? `1px solid ${c.border(dark)}` : 'none' }}>
-              <Avatar size={38} hue={47 + i * 44} letter={d.title[0]} style={{ borderRadius: 8 }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 13, fontWeight: 500, color: c.text(dark) }}>{d.title}</p>
-                <p style={{ fontSize: 11.5, color: c.muted(dark), marginTop: 1 }}>{d.artist} · {d.size}</p>
-              </div>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: d.downloaded ? (dark ? '#1e3a2e' : '#e8f5ee') : c.surface2(dark) }}>
-                {d.downloaded ? <Check size={14} color="#2d6a4f" /> : <Download size={14} color={c.muted(dark)} />}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Settings rows */}
-        {[{ icon: Bell, label: 'Notifications' }, { icon: Volume2, label: 'Audio Quality' }, { icon: WifiOff, label: 'Offline Mode' }].map(({ icon: Icon, label }) => (
-          <div key={label} style={{ ...card(dark), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Icon size={17} color={c.muted(dark)} />
-              <p style={{ fontSize: 14, color: c.text(dark) }}>{label}</p>
-            </div>
-            <ChevronRight size={15} color={c.muted(dark)} />
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"36px 20px"}}>
+            {onSale.map(p=><ProductCard key={p.id} product={p} onSelect={onSelect} onAddToCart={onAddToCart}/>)}
           </div>
+        </section>
+      )}
+
+      <footer style={{borderTop:`1px solid ${T.border}`,paddingTop:36,paddingBottom:20,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:28}}>
+        {[{title:"AVEN",links:["Our Story","Sustainability","Careers"]},{title:"Help",links:["Sizing","Shipping","Returns","Contact"]},{title:"Legal",links:["Privacy","Terms","Cookies"]}].map(col=>(
+          <div key={col.title}><p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,marginBottom:12}}>{col.title}</p>{col.links.map(l=><p key={l} style={{fontSize:12,color:T.muted,marginBottom:7,cursor:"pointer"}}>{l}</p>)}</div>
         ))}
-      </div>
+      </footer>
     </div>
-  )
+  );
 }
 
-// ── Root App ──────────────────────────────────────────
-export default function Page() {
-  const [history, setHistory]         = useState([{ screen: 'home' }])
-  const [dark, setDark]               = useState(false)
-  const [isPlaying, setIsPlaying]     = useState(true)
-  const [liked, setLiked]             = useState(false)
-  const [nowOpen, setNowOpen]         = useState(false)
-  const [track, setTrack]             = useState({ title: 'Midnight Bloom', artist: 'Nora James', progress: 38 })
+export default function App() {
+  const [history, setHistory]     = useState([{screen:"home"}]);
+  const [cart, setCart]           = useState([]);
+  const [cartOpen, setCartOpen]   = useState(false);
+  const current   = history[history.length-1];
+  const canGoBack = history.length>1;
 
-  const current    = history[history.length - 1]
-  const canGoBack  = history.length > 1
-  const mainTabs   = ['home', 'search', 'library', 'charts']
-  const activeTab  = mainTabs.includes(current.screen) ? current.screen : null
-  const unread     = NOTIFICATIONS.filter(n => !n.read).length
+  const navigate = (screen, data=null) => {
+    setHistory(prev=>[...prev,{screen,data}]);
+    setTimeout(()=>{ const el=document.getElementById("scroll-root"); if(el) el.scrollTop=0; },10);
+  };
+  const goBack = () => setHistory(prev=>prev.length>1?prev.slice(0,-1):prev);
 
-  // Push a new screen onto the stack
-  const navigate = (screen, data = null) => {
-    window.history.pushState({ idx: history.length }, '')
-    setHistory(prev => [...prev, { screen, data }])
-  }
+  const addToCart = (product) => {
+    setCart(prev=>{
+      const key=`${product.id}-${product.selectedColor}-${product.selectedSize}`;
+      const ex=prev.find(i=>`${i.id}-${i.selectedColor}-${i.selectedSize}`===key);
+      if(ex) return prev.map(i=>`${i.id}-${i.selectedColor}-${i.selectedSize}`===key?{...i,qty:i.qty+1}:i);
+      return [...prev,{...product,qty:1}];
+    });
+    setCartOpen(true);
+  };
+  const removeFromCart = (item) => setCart(prev=>prev.filter(i=>!(i.id===item.id&&i.selectedSize===item.selectedSize)));
+  const updateQty = (item,qty) => { if(qty<1){removeFromCart(item);return;} setCart(prev=>prev.map(i=>i.id===item.id&&i.selectedSize===item.selectedSize?{...i,qty}:i)); };
+  const cartCount = cart.reduce((s,i)=>s+i.qty,0);
 
-  // Switch root tab (resets stack)
-  const setTab = (tab) => {
-    window.history.pushState({ idx: 0 }, '')
-    setHistory([{ screen: tab }])
-  }
+  const quickAdd = (p) => addToCart({...p,selectedColor:p.colors[0],selectedColorName:"Default",selectedSize:p.sizes[0]});
 
-  const goBack = () => {
-    setHistory(prev => prev.length > 1 ? prev.slice(0, -1) : prev)
-  }
+  const renderScreen = () => {
+    const {screen,data}=current;
+    if(screen==="home")    return <HomeScreen products={PRODUCTS} onNavigate={navigate} onSelect={p=>navigate("product",p)} onAddToCart={quickAdd}/>;
+    if(screen==="shop")    return <ShopScreen products={PRODUCTS} onSelect={p=>navigate("product",p)} onAddToCart={quickAdd}/>;
+    if(screen==="product") return <ProductDetail product={data} onBack={goBack} onAddToCart={addToCart}/>;
+    if(screen==="search")  return <SearchScreen products={PRODUCTS} onSelect={p=>navigate("product",p)} onAddToCart={quickAdd}/>;
+    if(screen==="account") return <AccountPage onNavigate={navigate}/>;
+    if(screen==="orders")  return <OrderTracking/>;
+    return <HomeScreen products={PRODUCTS} onNavigate={navigate} onSelect={p=>navigate("product",p)} onAddToCart={quickAdd}/>;
+  };
 
-  // Hook physical back button (Android) + browser back
-  useEffect(() => {
-    const onPop = () => {
-      if (nowOpen) { setNowOpen(false); return }
-      goBack()
-    }
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [history, nowOpen])
-
-  const handlePlay = (t) => { setTrack(t); setNowOpen(true) }
-
-  const SCREENS = {
-    home:          <HomeScreen          onPlay={handlePlay} onNavigate={navigate} dark={dark} />,
-    search:        <SearchScreen        dark={dark} />,
-    library:       <LibraryScreen       onPlay={handlePlay} dark={dark} />,
-    charts:        <ChartsScreen        onPlay={handlePlay} dark={dark} />,
-    artist:        <ArtistScreen        artist={current.data} onPlay={handlePlay} dark={dark} />,
-    notifications: <NotificationsScreen dark={dark} />,
-    profile:       <ProfileScreen       dark={dark} onToggleDark={() => setDark(p => !p)} />,
-  }
+  const NavBtn = ({label,scr}) => (
+    <button onClick={()=>navigate(scr)} style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",background:"none",border:"none",cursor:"pointer",color:current.screen===scr?T.text:T.muted,fontFamily:"'Jost',sans-serif",paddingBottom:2,borderBottom:current.screen===scr?`1px solid ${T.text}`:"1px solid transparent"}}>
+      {label}
+    </button>
+  );
 
   return (
     <>
-      {/* Inject font + global resets once */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
-        * { -webkit-tap-highlight-color: transparent; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: #e8e4de; border-radius: 2px; }
-      `}</style>
-
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 430, margin: '0 auto', background: c.bg(dark), fontFamily: 'DM Sans, sans-serif', overflow: 'hidden', transition: 'background 0.3s' }}>
-
-        {/* Now Playing overlay */}
-        {nowOpen && (
-          <NowPlaying
-            track={track} isPlaying={isPlaying}
-            onToggle={() => setIsPlaying(p => !p)}
-            liked={liked} onLike={() => setLiked(p => !p)}
-            onClose={() => setNowOpen(false)}
-            dark={dark}
-          />
-        )}
-
-        {/* Top bar */}
-        <div style={{ height: 56, background: c.surface(dark), borderBottom: `1px solid ${c.border(dark)}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', flexShrink: 0, transition: 'background 0.3s' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {canGoBack && (
-              <IconBtn onClick={goBack} style={{ marginRight: 4 }}>
-                <ChevronLeft size={24} strokeWidth={2.2} color={c.text(dark)} />
-              </IconBtn>
-            )}
-            <Headphones size={18} strokeWidth={1.5} color={c.text(dark)} />
-            <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.4, color: c.text(dark), marginLeft: 6 }}>Wavely</span>
+      <FontLink/>
+      <div style={{height:"100vh",display:"flex",flexDirection:"column",background:T.bg,fontFamily:"'Jost',sans-serif"}}>
+        {/* Navbar */}
+        <header style={{background:T.surface,borderBottom:`1px solid ${T.border}`,flexShrink:0,zIndex:50}}>
+          <div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px",height:58,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <button onClick={()=>navigate("home")} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:400,letterSpacing:3,background:"none",border:"none",cursor:"pointer",color:T.text}}>AVEN</button>
+            <nav style={{display:"flex",gap:28,position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
+              <NavBtn label="Shop" scr="shop"/><NavBtn label="Search" scr="search"/><NavBtn label="Account" scr="account"/>
+            </nav>
+            <div style={{display:"flex",alignItems:"center",gap:2}}>
+              {canGoBack&&<button onClick={goBack} style={{fontSize:11,color:T.muted,background:"none",border:`1px solid ${T.border}`,borderRadius:2,padding:"5px 12px",cursor:"pointer",fontFamily:"'Jost',sans-serif",marginRight:8}}>← Back</button>}
+              <button onClick={()=>setCartOpen(true)} style={{position:"relative",background:"none",border:"none",cursor:"pointer",fontSize:18,padding:6}}>
+                🛍{cartCount>0&&<span style={{position:"absolute",top:2,right:2,width:15,height:15,borderRadius:"50%",background:T.accent,color:"#fff",fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{cartCount}</span>}
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconBtn onClick={() => navigate('notifications')} style={{ position: 'relative' }}>
-              <Bell size={20} color={c.muted(dark)} />
-              {unread > 0 && <div style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, borderRadius: '50%', background: '#b5451b' }} />}
-            </IconBtn>
-            <IconBtn onClick={() => navigate('profile')}>
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'hsl(188,40%,78%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'rgba(0,0,0,0.4)' }}>A</div>
-            </IconBtn>
+        </header>
+
+        {/* Content */}
+        <div id="scroll-root" style={{flex:1,overflowY:"auto"}}>
+          <div style={{maxWidth:1200,margin:"0 auto",padding:"32px 20px 60px"}}>
+            {renderScreen()}
           </div>
         </div>
 
-        {/* Screen content */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {SCREENS[current.screen] ?? SCREENS.home}
-        </div>
-
-        {/* Mini player */}
-        <MiniPlayer
-          track={track} isPlaying={isPlaying}
-          onToggle={() => setIsPlaying(p => !p)}
-          liked={liked} onLike={() => setLiked(p => !p)}
-          onOpen={() => setNowOpen(true)}
-          dark={dark}
-        />
-
-        {/* Bottom tab bar */}
-        <TabBar active={activeTab} onTab={setTab} dark={dark} unread={unread} />
+        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onUpdateQty={updateQty}/>}
       </div>
     </>
-  )
+  );
 }
