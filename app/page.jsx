@@ -1,40 +1,14 @@
 'use client';
 import { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
 
-const LANGS: Record<string, string> = {
+const LANGS = {
   en:"English", sw:"Swahili", fr:"Français", de:"Deutsch",
   es:"Español", pt:"Português", ar:"العربية", zh:"中文",
   ja:"日本語", ko:"한국어", hi:"हिन्दी", ru:"Русский",
   it:"Italiano", nl:"Nederlands",
 };
 
-interface Translations {
-  home: string; shop: string; search: string; saved: string; account: string;
-  wishlist: string; myBag: string; checkout: string; addToBag: string;
-  addedToBag: string; sizeGuide: string; selectSize: string; colour: string;
-  size: string; description: string; details: string; care: string;
-  youMayLike: string; freeShipping: string; freeReturns: string;
-  authenticityGuarantee: string; ordersOver: string; within30: string;
-  guaranteed: string; newIn: string; trendingNow: string; onSale: string;
-  viewAll: string; seeAll: string; browse: string; savedItems: string;
-  noSaved: string; saveItemsYouLove: string; material: string; shipping: string;
-  subtotal: string; total: string; emptyBag: string; continueShopping: string;
-  freeShippingQualify: string; addMore: string; moreForFreeShipping: string;
-  recentSearches: string; trending: string; noResults: string; tryDifferent: string;
-  results: string; resultsPlural: string; forQuery: string; newArrivals: string;
-  justDropped: string; ss26: string; newPieces: string; limitedTime: string;
-  upTo40: string; styles: string; lookbook: string; ss26Edits: string;
-  shopTheLook: string; allLooks: string; sustainability: string; ourCommitment: string;
-  betterFashion: string; orders: string; trackOrder: string; orderTotal: string;
-  tracking: string; orderPlaced: string; myOrders: string; addresses: string;
-  paymentMethods: string; referFriend: string; notifications: string; settings: string;
-  premiumMember: string; ourStory: string; returns: string; privacy: string;
-  refinedPieces: string; limitedTimeOffer: string; upTo40Sale: string;
-  selectStyles: string; shopSale: string; exploreBtn: string; shopNow: string;
-  shopSaleBtn: string; language: string;
-}
-
-const TR: Record<string, Translations> = {
+const TR = {
   en:{
     home:"Home", shop:"Shop", search:"Search", saved:"Saved", account:"Account",
     wishlist:"Wishlist", myBag:"My Bag", checkout:"Checkout →", addToBag:"Add to Bag",
@@ -509,8 +483,7 @@ const TR: Record<string, Translations> = {
   },
 };
 
-interface LangContextType { lang: string; t: Translations; setLang: (l: string) => void; }
-const LangCtx = createContext<LangContextType>({ lang:"en", t:TR.en, setLang:()=>{} });
+const LangCtx = createContext({ lang:"en", t:TR.en, setLang:()=>{} });
 const useLang = () => useContext(LangCtx);
 
 const C = {
@@ -526,11 +499,10 @@ const shadow = {
   xl:"0 16px 48px rgba(0,0,0,0.14)", xxl:"0 24px 64px rgba(0,0,0,0.18)",
 };
 
-interface IconProps { name: string; size?: number; color?: string; strokeWidth?: number; }
 const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }: IconProps) => {
   const s: React.CSSProperties = { display:"inline-flex", alignItems:"center", justifyContent:"center", flexShrink:0 };
-  const p = { fill:"none" as const, stroke:color, strokeWidth, strokeLinecap:"round" as const, strokeLinejoin:"round" as const };
-  const icons: Record<string, React.ReactNode> = {
+  const p = { fill:"none", stroke:color, strokeWidth, strokeLinecap:"round", strokeLinejoin:"round" };
+  const icons = {
     home:        <><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></>,
     search:      <><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></>,
     bag:         <><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></>,
@@ -572,28 +544,21 @@ const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }: IconProp
   );
 };
 
-interface Product {
-  id: number; name: string; cat: string; price: number; was: number | null;
-  badge: string | null; new: boolean; colors: string[]; sizes: string[];
-  rating: number; reviews: number; desc: string; material: string;
-  care: string; ship: string; grad: string;
-}
-
-const PRODUCTS: Product[] = [
-  { id:1,  name:"Linen Overshirt",   cat:"Tops",        price:148, was:null,  badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#8B7355"], sizes:["XS","S","M","L","XL"],           rating:4.8, reviews:124, desc:"Relaxed-fit overshirt in premium Belgian linen. Slightly oversized with a classic collar and chest pockets. The perfect layering piece.", material:"100% Belgian Linen",             care:"Machine wash cold, tumble dry low",   ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
-  { id:2,  name:"Merino Turtleneck", cat:"Tops",        price:195, was:null,  badge:"New",  new:true,  colors:["#F0ECE4","#1A1A18","#8C6B4A"], sizes:["XS","S","M","L"],               rating:4.9, reviews:89,  desc:"Ultra-fine merino wool turtleneck. Naturally temperature-regulating, buttery soft, and wrinkle-resistant.", material:"100% Extra-fine Merino",          care:"Hand wash cold or dry clean",        ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
+const PRODUCTS = [
+  { id:1,  name:"Linen Overshirt",   cat:"Tops",        price:148, was,  badge,   new:false, colors:["#E8E0D5","#2C2C2A","#8B7355"], sizes:["XS","S","M","L","XL"],           rating:4.8, reviews:124, desc:"Relaxed-fit overshirt in premium Belgian linen. Slightly oversized with a classic collar and chest pockets. The perfect layering piece.", material:"100% Belgian Linen",             care:"Machine wash cold, tumble dry low",   ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
+  { id:2,  name:"Merino Turtleneck", cat:"Tops",        price:195, was,  badge:"New",  new:true,  colors:["#F0ECE4","#1A1A18","#8C6B4A"], sizes:["XS","S","M","L"],               rating:4.9, reviews:89,  desc:"Ultra-fine merino wool turtleneck. Naturally temperature-regulating, buttery soft, and wrinkle-resistant.", material:"100% Extra-fine Merino",          care:"Hand wash cold or dry clean",        ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
   { id:3,  name:"Wide-Leg Trousers", cat:"Bottoms",     price:228, was:285,   badge:"Sale", new:false, colors:["#D4CFC8","#3D3830","#C4A882"], sizes:["XS","S","M","L","XL"],           rating:4.7, reviews:203, desc:"Tailored wide-leg trousers with a high waist. Ponte-blend fabric that holds its shape and drapes beautifully.", material:"68% Viscose, 28% Polyamide, 4% Elastane", care:"Dry clean recommended",       ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#DED9D2,#CBBFB2)" },
-  { id:4,  name:"Cashmere Cardigan", cat:"Tops",        price:345, was:null,  badge:"New",  new:true,  colors:["#E2DDD6","#6B5E4E","#2C2C2A"], sizes:["XS","S","M","L"],               rating:5.0, reviews:57,  desc:"Hand-finished open-front cardigan in Grade-A cashmere. Ribbed cuffs and hem, relaxed silhouette.", material:"100% Grade-A Cashmere",          care:"Dry clean only",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DEDAD2)" },
-  { id:5,  name:"Silk Slip Dress",   cat:"Dresses",     price:268, was:null,  badge:null,   new:false, colors:["#E8D5C4","#1A1A18","#8B7355"], sizes:["XS","S","M","L"],               rating:4.6, reviews:178, desc:"Bias-cut silk charmeuse slip dress with adjustable spaghetti straps. A timeless silhouette that moves beautifully.", material:"100% Silk Charmeuse",            care:"Dry clean only",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F2E4D8,#E0CCBA)" },
-  { id:6,  name:"Tailored Blazer",   cat:"Outerwear",   price:420, was:null,  badge:null,   new:false, colors:["#2C2C2A","#8C7355","#E0DBD2"], sizes:["XS","S","M","L","XL"],           rating:4.9, reviews:94,  desc:"Single-breasted blazer in fine Italian wool blend. Structured shoulder, clean lapel, two-button closure.", material:"78% Wool, 18% Silk, 4% Cashmere", care:"Dry clean only",                   ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#DEDAD4,#C8C0B6)" },
-  { id:7,  name:"Cropped Tank",      cat:"Tops",        price:68,  was:null,  badge:null,   new:false, colors:["#F0ECE4","#1A1A18","#C4A882","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.5, reviews:312, desc:"Ribbed pima cotton tank with a cropped length. A clean minimal essential that pairs with everything.", material:"95% Pima Cotton, 5% Elastane",  care:"Machine wash cold",                  ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F5F2EC,#ECE6DE)" },
-  { id:8,  name:"Barrel Jeans",      cat:"Bottoms",     price:185, was:null,  badge:"New",  new:true,  colors:["#6B8AB5","#2C2C2A","#8B7355"], sizes:["24","25","26","27","28","29","30"], rating:4.7, reviews:145, desc:"Relaxed barrel-leg jeans cut from Japanese selvedge denim with a subtle stretch.", material:"98% Cotton, 2% Elastane",       care:"Machine wash cold, hang dry",        ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#D8E4F2,#C2D2E4)" },
+  { id:4,  name:"Cashmere Cardigan", cat:"Tops",        price:345, was,  badge:"New",  new:true,  colors:["#E2DDD6","#6B5E4E","#2C2C2A"], sizes:["XS","S","M","L"],               rating:5.0, reviews:57,  desc:"Hand-finished open-front cardigan in Grade-A cashmere. Ribbed cuffs and hem, relaxed silhouette.", material:"100% Grade-A Cashmere",          care:"Dry clean only",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DEDAD2)" },
+  { id:5,  name:"Silk Slip Dress",   cat:"Dresses",     price:268, was,  badge,   new:false, colors:["#E8D5C4","#1A1A18","#8B7355"], sizes:["XS","S","M","L"],               rating:4.6, reviews:178, desc:"Bias-cut silk charmeuse slip dress with adjustable spaghetti straps. A timeless silhouette that moves beautifully.", material:"100% Silk Charmeuse",            care:"Dry clean only",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F2E4D8,#E0CCBA)" },
+  { id:6,  name:"Tailored Blazer",   cat:"Outerwear",   price:420, was,  badge,   new:false, colors:["#2C2C2A","#8C7355","#E0DBD2"], sizes:["XS","S","M","L","XL"],           rating:4.9, reviews:94,  desc:"Single-breasted blazer in fine Italian wool blend. Structured shoulder, clean lapel, two-button closure.", material:"78% Wool, 18% Silk, 4% Cashmere", care:"Dry clean only",                   ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#DEDAD4,#C8C0B6)" },
+  { id:7,  name:"Cropped Tank",      cat:"Tops",        price:68,  was,  badge,   new:false, colors:["#F0ECE4","#1A1A18","#C4A882","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.5, reviews:312, desc:"Ribbed pima cotton tank with a cropped length. A clean minimal essential that pairs with everything.", material:"95% Pima Cotton, 5% Elastane",  care:"Machine wash cold",                  ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F5F2EC,#ECE6DE)" },
+  { id:8,  name:"Barrel Jeans",      cat:"Bottoms",     price:185, was,  badge:"New",  new:true,  colors:["#6B8AB5","#2C2C2A","#8B7355"], sizes:["24","25","26","27","28","29","30"], rating:4.7, reviews:145, desc:"Relaxed barrel-leg jeans cut from Japanese selvedge denim with a subtle stretch.", material:"98% Cotton, 2% Elastane",       care:"Machine wash cold, hang dry",        ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#D8E4F2,#C2D2E4)" },
   { id:9,  name:"Wrap Midi Skirt",   cat:"Bottoms",     price:158, was:198,   badge:"Sale", new:false, colors:["#C4A882","#2C2C2A","#E8D5C4"], sizes:["XS","S","M","L"],               rating:4.8, reviews:201, desc:"Fluid wrap skirt in lightweight viscose crepe. Elegant midi length with adjustable tie closure.", material:"100% Viscose Crepe",             care:"Hand wash cold",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE5D8,#DDD0BE)" },
-  { id:10, name:"Trench Coat",       cat:"Outerwear",   price:545, was:null,  badge:null,   new:false, colors:["#C4A882","#2C2C2A","#E8E0D5"], sizes:["XS","S","M","L","XL"],           rating:4.9, reviews:78,  desc:"Classic double-breasted trench in water-resistant cotton gabardine. A wardrobe investment.", material:"100% Cotton Gabardine",          care:"Dry clean only",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#E8DDD0,#D8CEBE)" },
-  { id:11, name:"Knit Co-ord Set",   cat:"Sets",        price:295, was:null,  badge:"New",  new:true,  colors:["#E8E0D5","#6B5E4E"],           sizes:["XS","S","M","L"],               rating:4.8, reviews:43,  desc:"Matching fine-rib knit top and trouser set in merino-cashmere blend. Sold together, worn as separates.", material:"80% Merino, 20% Cashmere",     care:"Hand wash cold",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0E8E0,#E0D5C8)" },
-  { id:12, name:"Leather Belt",      cat:"Accessories", price:88,  was:null,  badge:null,   new:false, colors:["#2C2C2A","#8B7355","#C4A882"], sizes:["XS","S","M","L"],               rating:4.6, reviews:167, desc:"Full-grain leather belt with a minimalist rectangular buckle. Develops a beautiful patina over time.", material:"100% Full-grain Leather",      care:"Clean with leather conditioner",     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#D8D0C8,#C8C0B5)" },
+  { id:10, name:"Trench Coat",       cat:"Outerwear",   price:545, was,  badge,   new:false, colors:["#C4A882","#2C2C2A","#E8E0D5"], sizes:["XS","S","M","L","XL"],           rating:4.9, reviews:78,  desc:"Classic double-breasted trench in water-resistant cotton gabardine. A wardrobe investment.", material:"100% Cotton Gabardine",          care:"Dry clean only",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#E8DDD0,#D8CEBE)" },
+  { id:11, name:"Knit Co-ord Set",   cat:"Sets",        price:295, was,  badge:"New",  new:true,  colors:["#E8E0D5","#6B5E4E"],           sizes:["XS","S","M","L"],               rating:4.8, reviews:43,  desc:"Matching fine-rib knit top and trouser set in merino-cashmere blend. Sold together, worn.", material:"80% Merino, 20% Cashmere",     care:"Hand wash cold",                     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0E8E0,#E0D5C8)" },
+  { id:12, name:"Leather Belt",      cat:"Accessories", price:88,  was,  badge,   new:false, colors:["#2C2C2A","#8B7355","#C4A882"], sizes:["XS","S","M","L"],               rating:4.6, reviews:167, desc:"Full-grain leather belt with a minimalist rectangular buckle. Develops a beautiful patina over time.", material:"100% Full-grain Leather",      care:"Clean with leather conditioner",     ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#D8D0C8,#C8C0B5)" },
   { id:13, name:"Ribbed Midi Dress", cat:"Dresses",     price:198, was:248,   badge:"Sale", new:false, colors:["#F0ECE4","#2C2C2A","#C4A882"], sizes:["XS","S","M","L"],               rating:4.7, reviews:89,  desc:"Fine-rib knit midi dress with a boat neckline and subtle flare. Effortlessly elegant.", material:"92% Viscose, 8% Elastane",      care:"Machine wash cold",                  ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D8D0C4)" },
-  { id:14, name:"Oversized Hoodie",  cat:"Tops",        price:125, was:null,  badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#6B8AB5"], sizes:["XS","S","M","L","XL","XXL"],     rating:4.8, reviews:256, desc:"Heavyweight cotton fleece hoodie with a relaxed oversized fit. Garment-dyed for a lived-in look.", material:"100% Organic Cotton Fleece",   care:"Machine wash cold",                  ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D8CEBE)" },
+  { id:14, name:"Oversized Hoodie",  cat:"Tops",        price:125, was,  badge,   new:false, colors:["#E8E0D5","#2C2C2A","#6B8AB5"], sizes:["XS","S","M","L","XL","XXL"],     rating:4.8, reviews:256, desc:"Heavyweight cotton fleece hoodie with a relaxed oversized fit. Garment-dyed for a lived-in look.", material:"100% Organic Cotton Fleece",   care:"Machine wash cold",                  ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D8CEBE)" },
 ];
 
 const CATS = ["All","Tops","Bottoms","Dresses","Outerwear","Sets","Accessories"];
@@ -611,10 +576,10 @@ const ORDERS = [
 ];
 
 const WISHLIST_IDS = [1, 5, 8];
-const fmt = (n: number) => `$${Number(n).toFixed(0)}`;
+const fmt = (n) => `$${Number(n).toFixed(0)}`;
 
-function statusColors(s: string): [string, string] {
-  const map: Record<string,[string,string]> = {
+function statusColors(s): [string, string] {
+  const map = {
     Delivered:   ["#E8F5EC","#1A7A40"],
     "In Transit":["#E8F0FB","#1A52B0"],
     Processing:  ["#FFF3E8","#B06020"],
@@ -622,12 +587,12 @@ function statusColors(s: string): [string, string] {
   return map[s] || ["#F5F5F5","#666"];
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }) {
   const [bg,col] = statusColors(status);
   return <span style={{ fontSize:11, fontWeight:600, letterSpacing:"0.05em", textTransform:"uppercase", background:bg, color:col, padding:"5px 12px", borderRadius:99 }}>{status}</span>;
 }
 
-function RatingStars({ rating, size=12 }: { rating: number; size?: number }) {
+function RatingStars({ rating, size=12 }) {
   return (
     <span style={{ display:"inline-flex", gap:1 }}>
       {[1,2,3,4,5].map(i => (
@@ -637,7 +602,7 @@ function RatingStars({ rating, size=12 }: { rating: number; size?: number }) {
   );
 }
 
-function PriceLine({ price, was }: { price: number; was: number | null }) {
+function PriceLine({ price, was }) {
   return (
     <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
       <span style={{ fontSize:16, fontWeight:700, color: was ? C.red : C.black }}>{fmt(price)}</span>
@@ -646,7 +611,7 @@ function PriceLine({ price, was }: { price: number; was: number | null }) {
   );
 }
 
-function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function Chip({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{ background: active ? C.black : C.white, color: active ? C.white : C.gray2, border:`1.5px solid ${active ? C.black : C.gray7}`, padding:"9px 18px", borderRadius:99, fontSize:14, fontWeight:500, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.18s" }}>
       {label}
@@ -654,25 +619,19 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   );
 }
 
-function Btn({ children, onClick, variant="black", full, size="md", style: sx={} }: {
-  children: React.ReactNode; onClick?: () => void; variant?: string;
-  full?: boolean; size?: string; style?: React.CSSProperties;
-}) {
+function Btn({ children, onClick, variant="black", full, size="md", style: sx={} }) {
   const base: React.CSSProperties = { border:"none", cursor:"pointer", fontWeight:600, fontSize:size==="sm"?13:15, borderRadius:8, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.18s", padding: size==="sm"?"11px 20px":"15px 28px" };
-  const variants: Record<string, React.CSSProperties> = {
+  const variants = {
     black:  { background:C.black, color:C.white },
     white:  { background:C.white, color:C.black, border:`1.5px solid ${C.gray7}` },
     gray:   { background:C.gray9, color:C.black },
     red:    { background:C.red,   color:C.white },
     ghost:  { background:"transparent", color:C.gray3 },
   };
-  return <button onClick={onClick} style={{ ...base, ...variants[variant], ...(full?{width:"100%"}:{}), ...sx }}>{children}</button>;
+  return <button onClick={onClick} style={{ ...base, ...variants[variant], ...(full?{width:"100%"}), ...sx }}>{children}</button>;
 }
 
-function IconBtn({ icon, onClick, badge, size=44, bg=C.gray9, color=C.black, style: sx={} }: {
-  icon: string; onClick?: () => void; badge?: number; size?: number;
-  bg?: string; color?: string; style?: React.CSSProperties;
-}) {
+function IconBtn({ icon, onClick, badge, size=44, bg=C.gray9, color=C.black, style: sx={} }) {
   return (
     <button onClick={onClick} style={{ width:size, height:size, borderRadius:size/2, background:bg, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", flexShrink:0, ...sx }}>
       <Icon name={icon} size={size*0.46} color={color}/>
@@ -681,11 +640,11 @@ function IconBtn({ icon, onClick, badge, size=44, bg=C.gray9, color=C.black, sty
   );
 }
 
-function Divider({ my=0, mx=0 }: { my?: number; mx?: number }) {
+function Divider({ my=0, mx=0 }) {
   return <div style={{ height:1, background:C.gray8, margin:`${my}px ${mx}px` }}/>;
 }
 
-function SectionHeader({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
+function SectionHeader({ title, action, onAction }) {
   return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
       <span style={{ fontSize:20, fontWeight:700, letterSpacing:-0.4 }}>{title}</span>
@@ -694,8 +653,8 @@ function SectionHeader({ title, action, onAction }: { title: string; action?: st
   );
 }
 
-function HScroll({ children, gap=12 }: { children: React.ReactNode; gap?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
+function HScroll({ children, gap=12 }) {
+  const ref = useRef(null);
   const drag = useRef({ on:false, startX:0, sl:0 });
 
   const onMD = (e: React.MouseEvent) => {
@@ -715,7 +674,7 @@ function HScroll({ children, gap=12 }: { children: React.ReactNode; gap?: number
 
   return (
     <div ref={ref} onMouseDown={onMD} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU}
-      style={{ overflowX:"auto", overflowY:"visible", WebkitOverflowScrolling:"touch" as any, scrollbarWidth:"none", msOverflowStyle:"none" as any, cursor:"grab" }}>
+      style={{ overflowX:"auto", overflowY:"visible", WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none", cursor:"grab" }}>
       <div style={{ display:"inline-flex", gap, paddingRight:14, paddingBottom:4 }}>
         {children}
       </div>
@@ -723,12 +682,12 @@ function HScroll({ children, gap=12 }: { children: React.ReactNode; gap?: number
   );
 }
 
-function HeroBanner({ onNavigate }: { onNavigate: (s: string) => void }) {
+function HeroBanner({ onNavigate }) {
   const [idx, setIdx] = useState(0);
   const pausedRef = useRef(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef(null);
   const isScrolling = useRef(false);
-  const touchStartX = useRef<number | null>(null);
+  const touchStartX = useRef(null);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -737,7 +696,7 @@ function HeroBanner({ onNavigate }: { onNavigate: (s: string) => void }) {
     return () => clearInterval(t);
   }, []);
 
-  const go = (i: number) => { pausedRef.current = true; setIdx(i); };
+  const go = (i) => { pausedRef.current = true; setIdx(i); };
   const prev = () => go((idx - 1 + BANNERS.length) % BANNERS.length);
   const next = () => go((idx + 1) % BANNERS.length);
 
@@ -773,7 +732,7 @@ function HeroBanner({ onNavigate }: { onNavigate: (s: string) => void }) {
       style={{ position:"relative", borderRadius:10, overflow:"hidden", marginBottom:12 }}>
       <div ref={scrollRef} onScroll={onScroll}
         style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory",
-          WebkitOverflowScrolling:"touch" as any, scrollbarWidth:"none", msOverflowStyle:"none" as any }}>
+          WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none" }}>
         {BANNERS.map(b => (
           <div key={b.id} style={{ flexShrink:0, minWidth:"100%", scrollSnapAlign:"start",
             background:b.grad, padding:"44px 22px 36px", minHeight:220,
@@ -799,18 +758,12 @@ function HeroBanner({ onNavigate }: { onNavigate: (s: string) => void }) {
   );
 }
 
-interface ProductCardProps {
-  p: Product; onSelect: (p: Product) => void; onWishlist: (id: number) => void;
-  wishlisted: boolean; compact?: boolean; grid?: boolean;
-}
 function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid: inGrid }: ProductCardProps) {
   const fixedW = compact ? 150 : 200;
   const outerStyle: React.CSSProperties = inGrid
-    ? { width:"100%", minWidth:0, cursor:"pointer" }
-    : { width:fixedW, flexShrink:0, cursor:"pointer" };
+    ? { width:"100%", minWidth:0, cursor:"pointer" };
   const imgStyle: React.CSSProperties = inGrid
-    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }
-    : { position:"relative", width:fixedW, height:compact?200:260, background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 };
+    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 };
 
   return (
     <div onClick={()=>onSelect(p)} style={outerStyle}>
@@ -836,12 +789,7 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid: inGri
   );
 }
 
-interface CartItem extends Product { sz: string; qty: number; selectedColor?: string; }
-
-function CartDrawer({ cart, onClose, onRemove, onQty }: {
-  cart: CartItem[]; onClose: () => void;
-  onRemove: (item: CartItem) => void; onQty: (item: CartItem, qty: number) => void;
-}) {
+function CartDrawer({ cart, onClose, onRemove, onQty }) {
   const { t } = useLang();
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const free  = total >= 200;
@@ -924,13 +872,10 @@ function CartDrawer({ cart, onClose, onRemove, onQty }: {
   );
 }
 
-function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }: {
-  p: Product; onBack: () => void; onAdd: (p: Product & { sz: string }) => void;
-  wishlisted: boolean; onWishlist: (id: number) => void;
-}) {
+function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
   const { t } = useLang();
   const [ci,setCi]   = useState(0);
-  const [sz,setSz]   = useState<string|null>(null);
+  const [sz,setSz]   = useState(null);
   const [done,setDone] = useState(false);
   const [tab,setTab] = useState("desc");
 
@@ -1025,13 +970,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }: {
   );
 }
 
-interface SharedProps {
-  onSelect: (p: Product) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
-}
-
-function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }: SharedProps & { products: Product[]; onNavigate: (s: string) => void }) {
+function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
   const { t } = useLang();
   const newIn    = products.filter(p=>p.new).slice(0,8);
   const trending = [...products].sort((a,b)=>b.reviews-a.reviews).slice(0,8);
@@ -1113,7 +1052,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }: Sh
         <p style={{ fontSize:13, color:C.gray5, marginBottom:18, lineHeight:1.5 }}>{t.refinedPieces}</p>
         <div style={{ display:"flex", flexWrap:"wrap", gap:"10px 20px" }}>
           {[[t.ourStory,"sustainability"],[t.lookbook,"lookbook"],[t.onSale,"sale"],[t.newArrivals,"new-arrivals"],[t.returns,null],[t.privacy,null]].map(([l,s])=>(
-            <span key={l} onClick={s?()=>onNavigate(s as string):undefined}
+            <span key={l} onClick={s?()=>onNavigate(s):undefined}
               style={{ fontSize:12, color:C.gray5, cursor:s?"pointer":"default", textDecoration:s?"underline":"none", textDecorationColor:C.gray7 }}>{l}</span>
           ))}
         </div>
@@ -1122,7 +1061,7 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }: Sh
   );
 }
 
-function ShopScreen({ products, onSelect, onWishlist, wishlist }: SharedProps & { products: Product[] }) {
+function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
   const { t } = useLang();
   const [cat,setCat]   = useState("All");
   const [sort,setSort] = useState("featured");
@@ -1180,7 +1119,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }: SharedProps & 
   );
 }
 
-function SearchScreen({ products, onSelect, onWishlist, wishlist }: SharedProps & { products: Product[] }) {
+function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
   const { t } = useLang();
   const [q,setQ] = useState("");
   const recent = ["Cashmere","Linen","Silk dress","Trench coat"];
@@ -1234,7 +1173,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }: SharedProps 
   );
 }
 
-function WishlistScreen({ products, wishlist, onSelect, onWishlist }: SharedProps & { products: Product[] }) {
+function WishlistScreen({ products, wishlist, onSelect, onWishlist }) {
   const { t } = useLang();
   const items = products.filter(p=>wishlist.includes(p.id));
   return (
@@ -1259,7 +1198,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist }: SharedProp
 
 function OrdersScreen() {
   const { t } = useLang();
-  const [sel,setSel] = useState<typeof ORDERS[0]|null>(null);
+  const [sel,setSel] = useState(null);
   if(sel) return (
     <div>
       <div style={{ background:C.gray9, borderRadius:10, padding:20, marginBottom:20 }}>
@@ -1324,7 +1263,7 @@ function OrdersScreen() {
   );
 }
 
-function AccountScreen({ onNavigate }: { onNavigate: (s: string) => void }) {
+function AccountScreen({ onNavigate }) {
   const { t } = useLang();
   const rows = [
     { icon:"box",      label:t.myOrders,       sub:"3 orders",              go:"orders" },
@@ -1375,7 +1314,7 @@ function AccountScreen({ onNavigate }: { onNavigate: (s: string) => void }) {
   );
 }
 
-function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }: SharedProps & { products: Product[] }) {
+function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
   const { t } = useLang();
   const items = products.filter(p=>p.new);
   return (
@@ -1394,7 +1333,7 @@ function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }: SharedP
   );
 }
 
-function SaleScreen({ products, onSelect, onWishlist, wishlist }: SharedProps & { products: Product[] }) {
+function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
   const { t } = useLang();
   const items = products.filter(p=>p.badge==="Sale");
   return (
@@ -1420,11 +1359,11 @@ const LOOKS = [
   { id:4, title:"The Edit",      desc:"Our curated selection for the season.",           products:[2,11,5], grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
 ];
 
-function LookbookScreen({ products, onSelect, onWishlist, wishlist }: SharedProps & { products: Product[] }) {
+function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
   const { t } = useLang();
-  const [activeLook, setActiveLook] = useState<number|null>(null);
+  const [activeLook, setActiveLook] = useState(null);
   const look = activeLook ? LOOKS.find(l=>l.id===activeLook) : null;
-  const lookProducts = look ? look.products.map(id=>products.find(p=>p.id===id)).filter(Boolean) as Product[] : [];
+  const lookProducts = look ? look.products.map(id=>products.find(p=>p.id===id)).filter(Boolean) : [];
 
   if(look) return (
     <div>
@@ -1516,9 +1455,9 @@ function SustainabilityScreen() {
   );
 }
 
-function LanguageSwitcher({ lang, setLang }: { lang: string; setLang: (l: string) => void }) {
+function LanguageSwitcher({ lang, setLang }) {
   const [open, setOpen] = useState(false);
-  const flagMap: Record<string,string> = {
+  const flagMap = {
     en:"🇬🇧", sw:"🇹🇿", fr:"🇫🇷", de:"🇩🇪", es:"🇪🇸", pt:"🇧🇷",
     ar:"🇸🇦", zh:"🇨🇳", ja:"🇯🇵", ko:"🇰🇷", hi:"🇮🇳", ru:"🇷🇺", it:"🇮🇹", nl:"🇳🇱",
   };
@@ -1554,15 +1493,9 @@ function LanguageSwitcher({ lang, setLang }: { lang: string; setLang: (l: string
   );
 }
 
-interface HistoryEntry { screen: string; data?: Product | null; }
-
-function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount, lang, setLang }: {
-  screen: string; cartCount: number; onCart: () => void; onNavigate: (s: string) => void;
-  canGoBack: boolean; onBack: () => void; wishlistCount: number;
-  lang: string; setLang: (l: string) => void;
-}) {
+function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount, lang, setLang }) {
   const { t } = useLang();
-  const screenTitles: Record<string,string> = {
+  const screenTitles = {
     home:"", shop:t.shop, search:t.search, wishlist:t.wishlist, account:t.account,
     orders:t.orders, product:"", "new-arrivals":t.newArrivals, sale:t.onSale,
     lookbook:t.lookbook, sustainability:t.sustainability,
@@ -1596,7 +1529,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
   );
 }
 
-function BottomNav({ screen, onNavigate }: { screen: string; onNavigate: (s: string) => void }) {
+function BottomNav({ screen, onNavigate }) {
   const { t } = useLang();
   const tabs = [
     { s:"home",     icon:"home",   label:t.home },
@@ -1628,9 +1561,9 @@ function BottomNav({ screen, onNavigate }: { screen: string; onNavigate: (s: str
 }
 
 export default function Page() {
-  const [history,  setHistory]  = useState<HistoryEntry[]>([{screen:"home"}]);
-  const [cart,     setCart]     = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<number[]>(WISHLIST_IDS);
+  const [history,  setHistory]  = useState([{screen:"home"}]);
+  const [cart,     setCart]     = useState([]);
+  const [wishlist, setWishlist] = useState(WISHLIST_IDS);
   const [cartOpen, setCartOpen] = useState(false);
   const [lang,     setLang]     = useState("en");
 
@@ -1638,7 +1571,7 @@ export default function Page() {
   const current    = history[history.length-1];
   const canGoBack  = history.length > 1;
 
-  const navigate = (screen: string, data: Product | null = null) => {
+  const navigate = (screen, data: Product | null = null) => {
     window.history.pushState({ idx:history.length }, "");
     setHistory(prev=>[...prev,{ screen, data }]);
     setTimeout(()=>{ const el=document.getElementById("__main"); if(el) el.scrollTop=0; },10);
@@ -1655,7 +1588,7 @@ export default function Page() {
     return () => window.removeEventListener("popstate", h);
   }, [history, cartOpen]);
 
-  const addToCart = (p: Product & { sz: string }) => {
+  const addToCart = (p) => {
     setCart(prev=>{
       const key=`${p.id}-${p.sz}`;
       const ex=prev.find(i=>`${i.id}-${i.sz}`===key);
@@ -1665,12 +1598,12 @@ export default function Page() {
     setCartOpen(true);
   };
 
-  const removeFromCart = (item: CartItem) => setCart(prev=>prev.filter(i=>!(i.id===item.id&&i.sz===item.sz)));
-  const updateQty      = (item: CartItem, qty: number) => { if(qty<1){removeFromCart(item);return;} setCart(prev=>prev.map(i=>i.id===item.id&&i.sz===item.sz?{...i,qty}:i)); };
+  const removeFromCart = (item) => setCart(prev=>prev.filter(i=>!(i.id===item.id&&i.sz===item.sz)));
+  const updateQty      = (item, qty) => { if(qty<1){removeFromCart(item);return;} setCart(prev=>prev.map(i=>i.id===item.id&&i.sz===item.sz?{...i,qty}:i)); };
   const cartCount      = cart.reduce((s,i)=>s+i.qty,0);
-  const toggleWishlist = (id: number) => setWishlist(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
+  const toggleWishlist = (id) => setWishlist(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
 
-  const sp: SharedProps = { onSelect:(p)=>navigate("product",p), onWishlist:toggleWishlist, wishlist };
+  const sp = { onSelect:(p)=>navigate("product",p), onWishlist:toggleWishlist, wishlist };
 
   const renderScreen = () => {
     const {screen, data} = current;
