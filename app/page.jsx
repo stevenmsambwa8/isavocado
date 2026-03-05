@@ -767,13 +767,24 @@ function AccountScreen({ onNavigate }) {
 }
 
 /* ─── Logo ──────────────────────────────────────────────────── */
-function Logo({ height=60
-}) {
+// logo.png must be in your /public folder for Next.js to serve it at /logo.png
+// On GitHub: open logo.png → edit → rename path to: public/logo.png → commit
+function Logo({ height=40 }) {
+  const [broken, setBroken] = useState(false);
+
+  if (broken) {
+    return (
+      <span style={{ fontSize:18, fontWeight:800, letterSpacing:"-0.6px", color:"#000", fontFamily:"-apple-system,sans-serif", lineHeight:1 }}>
+        MSAMBWA
+      </span>
+    );
+  }
   return (
     <img
       src="/logo.png"
       alt="MSAMBWA"
-      style={{ height, width:"auto", display:"block", objectFit:"contain" }}
+      onError={() => setBroken(true)}
+      style={{ height, width:"auto", display:"block", objectFit:"contain", maxWidth:140 }}
     />
   );
 }
@@ -784,7 +795,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
   const title = titles[screen] || "";
   return (
     <header style={{ background:"rgba(255,255,255,0.94)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none" }}>
-      <div style={{ height:56,display:"flex",alignItems:"center",padding:"0 8px",position:"relative" }}>
+      <div style={{ height:64,display:"flex",alignItems:"center",padding:"0 8px",position:"relative" }}>
         <div style={{ display:"flex",alignItems:"center",minWidth:100,flexShrink:0 }}>
           {canGoBack ? (
             <button onClick={onBack} style={{ display:"flex",alignItems:"center",gap:2,background:"none",border:"none",cursor:"pointer",color:T.blue,padding:"8px 8px" }}>
@@ -792,7 +803,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
             </button>
           ) : (
             <button onClick={()=>onNavigate("home")} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
-              <Logo height={22}/>
+              <Logo height={36}/>
             </button>
           )}
         </div>
