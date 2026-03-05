@@ -2,6 +2,20 @@
 import { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
 import './layout.css';
 
+/* Inject extra keyframes needed for modals */
+if (typeof document !== "undefined") {
+  const s = document.getElementById("__keli_anim");
+  if (!s) {
+    const el = document.createElement("style");
+    el.id = "__keli_anim";
+    el.textContent = `
+      @keyframes slideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+      @keyframes scaleIn { from { transform:scale(0.88); opacity:0; } to { transform:scale(1); opacity:1; } }
+    `;
+    document.head.appendChild(el);
+  }
+}
+
 const LANGS = {
   en:"English", sw:"Swahili", fr:"Français", de:"Deutsch",
   es:"Español", pt:"Português", ar:"العربية", zh:"中文",
@@ -1079,48 +1093,206 @@ function Logo({ color = "#000", height = 18 }) {
   );
 }
 
+/* ─── Flag helper ─────────────────────────────────────────────── */
+const FLAG = {
+  en:"gb", sw:"tz", fr:"fr", de:"de", es:"es",
+  pt:"br", ar:"sa", zh:"cn", ja:"jp", ko:"kr",
+  hi:"in", ru:"ru", it:"it", nl:"nl",
+};
+function FlagImg({ code, size=20 }) {
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${FLAG[code]||code}.png`}
+      alt={code}
+      style={{ width:size, height:size*0.75, objectFit:"cover", borderRadius:3, display:"block", flexShrink:0 }}
+    />
+  );
+}
+
+/* ─── Language Switcher — full bottom-sheet modal ─────────────── */
 function LanguageSwitcher({ lang, setLang }) {
   const [open, setOpen] = useState(false);
-  const t = useLang().t;
+
+  const regions = [
+    { group:"Americas",   codes:["en","es","pt"] },
+    { group:"Europe",     codes:["fr","de","it","nl","ru"] },
+    { group:"Middle East & Africa", codes:["ar","sw"] },
+    { group:"Asia Pacific", codes:["zh","ja","ko","hi"] },
+  ];
+
   return (
-    <div style={{ position:"relative" }}>
-      <button onClick={()=>setOpen(o=>!o)} className="pressable-sm"
-        style={{ display:"flex", alignItems:"center", gap:5, background:T.fill3, border:"none",
-          borderRadius:99, padding:"7px 13px 7px 10px", cursor:"pointer", fontSize:13, fontWeight:500, letterSpacing:"-0.1px" }}>
-        <span style={{ fontSize:15 }}>
-          {lang==="en"?"🇬🇧":lang==="sw"?"🇹🇿":lang==="fr"?"🇫🇷":lang==="de"?"🇩🇪":
-           lang==="es"?"🇪🇸":lang==="pt"?"🇧🇷":lang==="ar"?"🇸🇦":lang==="zh"?"🇨🇳":
-           lang==="ja"?"🇯🇵":lang==="ko"?"🇰🇷":lang==="hi"?"🇮🇳":lang==="ru"?"🇷🇺":
-           lang==="it"?"🇮🇹":"🇳🇱"}
-        </span>
-        <span style={{ color:T.gray2 }}>{LANGS[lang]}</span>
+    <>
+      {/* Trigger button */}
+      <button
+        onClick={()=>setOpen(true)}
+        style={{
+          display:"flex", alignItems:"center", gap:7,
+          background:"rgba(0,0,0,0.05)", border:"none",
+          borderRadius:99, padding:"6px 12px 6px 8px",
+          cursor:"pointer", flexShrink:0,
+        }}
+      >
+        <FlagImg code={lang} size={18}/>
+        <span style={{ fontSize:13, fontWeight:500, color:"#000", letterSpacing:"-0.1px" }}>{LANGS[lang]}</span>
+        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#8e8e93" strokeWidth={2.5} strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
+
+      {/* Full-screen modal */}
       {open && (
-        <>
-          <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:299 }}/>
-          <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:"rgba(255,255,255,0.98)",
-            backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
-            borderRadius:16, boxShadow:"0 8px 40px rgba(0,0,0,0.14)", zIndex:300,
-            minWidth:175, overflow:"hidden", border:`1px solid rgba(0,0,0,0.07)` }}>
-            {Object.entries(LANGS).map(([code, name]) => (
-              <button key={code} onClick={()=>{ setLang(code); setOpen(false); }}
-                style={{ width:"100%", display:"flex", alignItems:"center", gap:10,
-                  padding:"12px 16px", background:lang===code?"rgba(0,0,0,0.04)":T.white,
-                  border:"none", cursor:"pointer", fontSize:14,
-                  fontWeight:lang===code?600:400, color:T.black, textAlign:"left", letterSpacing:"-0.1px" }}>
-                <span style={{ fontSize:16 }}>
-                  {code==="en"?"🇬🇧":code==="sw"?"🇹🇿":code==="fr"?"🇫🇷":code==="de"?"🇩🇪":
-                   code==="es"?"🇪🇸":code==="pt"?"🇧🇷":code==="ar"?"🇸🇦":code==="zh"?"🇨🇳":
-                   code==="ja"?"🇯🇵":code==="ko"?"🇰🇷":code==="hi"?"🇮🇳":code==="ru"?"🇷🇺":
-                   code==="it"?"🇮🇹":"🇳🇱"}
-                </span>
-                {name}
-                {lang===code && <span style={{ marginLeft:"auto", color:T.black }}>✓</span>}
+        <div style={{ position:"fixed", inset:0, zIndex:800, display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+          {/* Backdrop */}
+          <div
+            onClick={()=>setOpen(false)}
+            style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.45)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}
+          />
+          {/* Sheet */}
+          <div style={{
+            position:"relative", zIndex:1,
+            background:"#fff",
+            borderRadius:"24px 24px 0 0",
+            maxHeight:"82vh",
+            display:"flex", flexDirection:"column",
+            animation:"slideUp 0.32s cubic-bezier(0.32,0,0.28,1)",
+          }}>
+            {/* Handle */}
+            <div style={{ width:36, height:5, borderRadius:3, background:"#e5e5ea", margin:"12px auto 0" }}/>
+
+            {/* Header */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 20px 12px" }}>
+              <span style={{ fontSize:18, fontWeight:700, letterSpacing:"-0.4px" }}>Select Language</span>
+              <button onClick={()=>setOpen(false)} style={{ width:32, height:32, borderRadius:16, background:"#f2f2f7", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <Icon name="close" size={14} color="#636366"/>
               </button>
-            ))}
+            </div>
+
+            {/* Scrollable list */}
+            <div style={{ overflowY:"auto", padding:"0 16px 32px" }}>
+              {regions.map(({ group, codes }) => (
+                <div key={group} style={{ marginBottom:8 }}>
+                  <p style={{ fontSize:11, fontWeight:600, color:"#8e8e93", letterSpacing:"0.06em", textTransform:"uppercase", padding:"8px 4px 6px" }}>{group}</p>
+                  <div style={{ background:"#f2f2f7", borderRadius:16, overflow:"hidden" }}>
+                    {codes.map((code, i) => (
+                      <button
+                        key={code}
+                        onClick={()=>{ setLang(code); setOpen(false); }}
+                        style={{
+                          width:"100%", display:"flex", alignItems:"center", gap:14,
+                          padding:"14px 16px",
+                          background: lang===code ? "#000" : "transparent",
+                          border:"none", cursor:"pointer", textAlign:"left",
+                          borderBottom: i < codes.length-1 ? "1px solid rgba(0,0,0,0.07)" : "none",
+                        }}
+                      >
+                        <FlagImg code={code} size={26}/>
+                        <div style={{ flex:1 }}>
+                          <p style={{ fontSize:16, fontWeight: lang===code?600:400, color: lang===code?"#fff":"#000", letterSpacing:"-0.2px", margin:0 }}>{LANGS[code]}</p>
+                          <p style={{ fontSize:12, color: lang===code?"rgba(255,255,255,0.55)":"#8e8e93", margin:"2px 0 0", letterSpacing:"-0.1px" }}>{code.toUpperCase()}</p>
+                        </div>
+                        {lang===code && (
+                          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </>
+        </div>
       )}
+    </>
+  );
+}
+
+/* ─── Sale Modal ──────────────────────────────────────────────── */
+function SaleModal({ onClose, onShop }) {
+  return (
+    <div style={{ position:"fixed", inset:0, zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+      <div onClick={onClose} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}/>
+      <div style={{
+        position:"relative", zIndex:1,
+        background:"#fff", borderRadius:28,
+        overflow:"hidden", width:"100%", maxWidth:380,
+        animation:"scaleIn 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+        boxShadow:"0 32px 80px rgba(0,0,0,0.22)",
+      }}>
+        {/* Photo */}
+        <div style={{ position:"relative", height:220 }}>
+          <img
+            src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"
+            alt="Sale"
+            style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
+          />
+          <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)" }}/>
+          <button
+            onClick={onClose}
+            style={{ position:"absolute", top:14, right:14, width:32, height:32, borderRadius:16, background:"rgba(0,0,0,0.4)", backdropFilter:"blur(8px)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+          >
+            <Icon name="close" size={14} color="#fff"/>
+          </button>
+          <div style={{ position:"absolute", bottom:16, left:20 }}>
+            <span style={{ background:"#ff3b30", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 10px", borderRadius:99, letterSpacing:"0.05em", textTransform:"uppercase" }}>Limited Time</span>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding:"24px 24px 28px" }}>
+          <h2 style={{ fontSize:28, fontWeight:700, letterSpacing:"-0.8px", lineHeight:1.1, marginBottom:8, color:"#000" }}>Up to 40% Off</h2>
+          <p style={{ fontSize:15, color:"#636366", lineHeight:1.5, marginBottom:24, letterSpacing:"-0.1px" }}>
+            Shop the SS26 Sale — select styles at our biggest discounts of the season. While stocks last.
+          </p>
+          <button
+            onClick={onShop}
+            style={{ width:"100%", background:"#000", color:"#fff", border:"none", borderRadius:14, padding:"17px", fontSize:16, fontWeight:600, cursor:"pointer", letterSpacing:"-0.2px" }}
+          >
+            Shop the Sale →
+          </button>
+          <button
+            onClick={onClose}
+            style={{ width:"100%", background:"none", border:"none", padding:"14px", fontSize:14, color:"#8e8e93", cursor:"pointer", marginTop:4, letterSpacing:"-0.1px" }}
+          >
+            Maybe later
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Cookie Banner ───────────────────────────────────────────── */
+function CookieBanner({ onAccept, onDecline }) {
+  return (
+    <div style={{
+      position:"fixed", bottom:80, left:12, right:12,
+      zIndex:700,
+      background:"rgba(28,28,30,0.96)",
+      backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
+      borderRadius:20,
+      padding:"18px 20px",
+      boxShadow:"0 8px 40px rgba(0,0,0,0.28)",
+      animation:"slideUp 0.36s cubic-bezier(0.32,0,0.28,1)",
+      maxWidth:560, margin:"0 auto",
+    }}>
+      <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
+        <span style={{ fontSize:26, flexShrink:0, marginTop:2 }}>🍪</span>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:15, fontWeight:600, color:"#fff", letterSpacing:"-0.2px", marginBottom:5 }}>We use cookies</p>
+          <p style={{ fontSize:13, color:"rgba(255,255,255,0.55)", lineHeight:1.5, letterSpacing:"-0.1px", marginBottom:16 }}>
+            We use cookies to personalise your experience, analyse traffic and show you relevant ads. See our{" "}
+            <span style={{ color:"#fff", textDecoration:"underline", cursor:"pointer" }}>Privacy Policy</span>.
+          </p>
+          <div style={{ display:"flex", gap:10 }}>
+            <button
+              onClick={onAccept}
+              style={{ flex:1, background:"#fff", color:"#000", border:"none", borderRadius:12, padding:"12px", fontSize:14, fontWeight:600, cursor:"pointer", letterSpacing:"-0.1px" }}
+            >Accept All</button>
+            <button
+              onClick={onDecline}
+              style={{ flex:1, background:"rgba(255,255,255,0.12)", color:"#fff", border:"none", borderRadius:12, padding:"12px", fontSize:14, fontWeight:400, cursor:"pointer", letterSpacing:"-0.1px" }}
+            >Decline</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1224,6 +1396,8 @@ export default function Page() {
   const [cart,     setCart]     = useState([]);
   const [wishlist, setWishlist] = useState(WISHLIST_IDS);
   const [cartOpen, setCartOpen] = useState(false);
+  const [showSale,    setShowSale]    = useState(true);
+  const [showCookies, setShowCookies] = useState(true);
 
   const current    = history[history.length-1];
   const canGoBack  = history.length > 1;
@@ -1309,6 +1483,22 @@ export default function Page() {
             onRemove={removeFromCart}
             onQty={updateQty}
             onNavigate={navigate}
+          />
+        )}
+
+        {/* Sale modal — shows on every first open */}
+        {showSale && !cartOpen && (
+          <SaleModal
+            onClose={()=>setShowSale(false)}
+            onShop={()=>{ setShowSale(false); navigate("sale"); }}
+          />
+        )}
+
+        {/* Cookie banner — shows after sale modal closes */}
+        {!showSale && showCookies && (
+          <CookieBanner
+            onAccept={()=>setShowCookies(false)}
+            onDecline={()=>setShowCookies(false)}
           />
         )}
       </div>
