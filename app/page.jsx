@@ -1873,11 +1873,32 @@ export default function Page() {
     setHistory(h=>[...h,current]);
     setCurrent({ screen, ...data });
     window.scrollTo(0,0);
+    // Push a browser history entry so the phone's back gesture works
+    window.history.pushState({ screen, ...data }, "");
   };
+
   const goBack = () => {
     const prev = history[history.length-1];
-    if (prev) { setHistory(h=>h.slice(0,-1)); setCurrent(prev); }
+    if (prev) {
+      setHistory(h=>h.slice(0,-1));
+      setCurrent(prev);
+      window.scrollTo(0,0);
+    }
   };
+
+  // Listen to the phone/browser back button (popstate fires when user swipes back)
+  useEffect(() => {
+    const onPop = () => {
+      // Browser already moved back in its own stack — mirror it in app state
+      setHistory(h => {
+        const prev = h[h.length-1];
+        if (prev) { setCurrent(prev); window.scrollTo(0,0); return h.slice(0,-1); }
+        return h;
+      });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   /* ── Cart ── */
   const addToCart = item => {
