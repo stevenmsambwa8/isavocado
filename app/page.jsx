@@ -1571,7 +1571,7 @@ export default function Page() {
   const current    = history[history.length-1];
   const canGoBack  = history.length > 1;
 
-  const navigate = (screen, data: Product | null = null) => {
+  const navigate = (screen, data = null) => {
     window.history.pushState({ idx:history.length }, "");
     setHistory(prev=>[...prev,{ screen, data }]);
     setTimeout(()=>{ const el=document.getElementById("__main"); if(el) el.scrollTop=0; },10);
