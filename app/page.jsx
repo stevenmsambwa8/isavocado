@@ -767,7 +767,8 @@ function AccountScreen({ onNavigate }) {
 }
 
 /* ─── Logo ──────────────────────────────────────────────────── */
-function Logo({ height=28 }) {
+function Logo({ height=60
+}) {
   return (
     <img
       src="/logo.png"
