@@ -244,73 +244,105 @@ function HScroll({ children, gap=12 }) {
 
 function HeroBanner({ onNavigate }) {
   const [idx, setIdx] = useState(0);
-  const pausedRef = useRef(false);
-  const containerRef = useRef(null);
-  const touchStartX = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const [dragDelta, setDragDelta] = useState(0);
+  const startXRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const timerRef = useRef(null);
+
+  const resetTimer = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setIdx(i => (i + 1) % BANNERS.length);
+    }, 4000);
+  };
+
   useEffect(() => {
-    const t = setInterval(() => {
-      if (!pausedRef.current) setIdx(i => (i + 1) % BANNERS.length);
-    }, 3800);
-    return () => clearInterval(t);
+    resetTimer();
+    return () => clearInterval(timerRef.current);
   }, []);
 
-  const go = i => { pausedRef.current = true; setIdx(i); };
-  const prev = () => go((idx - 1 + BANNERS.length) % BANNERS.length);
-  const next = () => go((idx + 1) % BANNERS.length);
-
-  const onTouchStart = e => { touchStartX.current = e.touches[0].clientX; pausedRef.current = true; };
-  const onTouchEnd   = e => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (dx < -40) next();
-    else if (dx > 40) prev();
-    touchStartX.current = null;
+  const goTo = (i) => {
+    setIdx(i);
+    resetTimer();
   };
-  const scrollRef = useRef(null);
-  const isScrolling = useRef(false);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const w = el.offsetWidth;
-    if (w === 0) return;
-    isScrolling.current = true;
-    el.scrollTo({ left: idx * w, behavior: "smooth" });
-    const t = setTimeout(() => { isScrolling.current = false; }, 500);
-    return () => clearTimeout(t);
-  }, [idx]);
-
-  const onScroll = () => {
-    if (isScrolling.current) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const i = Math.round(el.scrollLeft / el.offsetWidth);
-    if (i !== idx) setIdx(i);
+  const onPointerDown = (e) => {
+    startXRef.current = e.clientX ?? e.touches?.[0]?.clientX;
+    isDraggingRef.current = true;
+    setDragging(true);
+    setDragDelta(0);
+    clearInterval(timerRef.current);
   };
+
+  const onPointerMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const x = e.clientX ?? e.touches?.[0]?.clientX;
+    if (x == null) return;
+    setDragDelta(x - startXRef.current);
+  };
+
+  const onPointerUp = (e) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setDragging(false);
+    const delta = dragDelta;
+    setDragDelta(0);
+    if (delta < -50 && idx < BANNERS.length - 1) goTo(idx + 1);
+    else if (delta > 50 && idx > 0) goTo(idx - 1);
+    else resetTimer();
+  };
+
+  const slideX = -idx * 100;
+  const dragPct = dragging && startXRef.current != null
+    ? (dragDelta / (typeof window !== "undefined" ? window.innerWidth : 400)) * 100
+    : 0;
 
   return (
-    <div ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
-      style={{ position:"relative", borderRadius:24, overflow:"hidden", marginBottom:20 }}>
-      <div ref={scrollRef} onScroll={onScroll}
-        style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory",
-          WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+    <div
+      style={{ position:"relative", borderRadius:24, overflow:"hidden", marginBottom:20, userSelect:"none", touchAction:"pan-y" }}
+      onMouseDown={onPointerDown}
+      onMouseMove={onPointerMove}
+      onMouseUp={onPointerUp}
+      onMouseLeave={onPointerUp}
+      onTouchStart={onPointerDown}
+      onTouchMove={onPointerMove}
+      onTouchEnd={onPointerUp}
+    >
+      {/* Track */}
+      <div style={{
+        display:"flex",
+        transform:`translateX(calc(${slideX}% + ${dragPct}%))`,
+        transition: dragging ? "none" : "transform 0.42s cubic-bezier(0.4,0,0.2,1)",
+        willChange:"transform",
+      }}>
         {BANNERS.map(b => (
-          <div key={b.id} style={{ flexShrink:0, minWidth:"100%", scrollSnapAlign:"start", position:"relative", minHeight:320 }}>
-            <img src={b.img} alt={b.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}/>
-            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 50%, transparent 100%)" }}/>
-            <div style={{ position:"relative", zIndex:1, padding:"200px 28px 36px", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+          <div key={b.id} style={{ flexShrink:0, width:"100%", position:"relative", height:320 }}>
+            <img
+              src={b.img} alt={b.title} draggable={false}
+              style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", pointerEvents:"none" }}
+            />
+            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)" }}/>
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"0 28px 36px" }}>
               <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(255,255,255,0.6)", marginBottom:8 }}>{b.sub}</p>
-              <h2 style={{ fontSize:38, fontWeight:700, letterSpacing:"-1.2px", lineHeight:1.05, marginBottom:24, color:"#fff" }}>{b.title}</h2>
-              <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start", background:"#fff", color:"#000", border:"none", cursor:"pointer", padding:"13px 24px", borderRadius:99, fontSize:14, fontWeight:600, letterSpacing:"-0.2px" }}>{b.cta}</button>
+              <h2 style={{ fontSize:36, fontWeight:700, letterSpacing:"-1px", lineHeight:1.08, marginBottom:22, color:"#fff" }}>{b.title}</h2>
+              <button
+                onClick={(e)=>{ e.stopPropagation(); onNavigate("shop"); }}
+                style={{ background:"#fff", color:"#000", border:"none", cursor:"pointer", padding:"12px 24px", borderRadius:99, fontSize:14, fontWeight:600, letterSpacing:"-0.2px", pointerEvents:"auto" }}
+              >{b.cta}</button>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ position:"absolute", bottom:18, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
+
+      {/* Dots */}
+      <div style={{ position:"absolute", bottom:16, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6, pointerEvents:"none" }}>
         {BANNERS.map((_,i) => (
-          <button key={i} onClick={()=>go(i)}
-            style={{ width:i===idx?22:6, height:6, borderRadius:3, padding:0, border:"none", cursor:"pointer",
-              background:i===idx?"rgba(255,255,255,0.95)":"rgba(255,255,255,0.4)", transition:"width 0.3s ease, background 0.3s ease" }}/>
+          <div key={i} style={{
+            width:i===idx?22:6, height:6, borderRadius:3,
+            background:i===idx?"rgba(255,255,255,0.95)":"rgba(255,255,255,0.4)",
+            transition:"width 0.3s ease, background 0.3s ease"
+          }}/>
         ))}
       </div>
     </div>
@@ -1095,30 +1127,61 @@ function LanguageSwitcher({ lang, setLang }) {
 
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wishlistCount, lang, setLang }) {
   const { t } = useLang();
-  const screenTitles = { home:"", shop:t.shop, search:t.search, wishlist:t.wishlist, account:t.account, orders:t.orders, product:"", "new-arrivals":t.newArrivals, sale:t.onSale, lookbook:t.lookbook, sustainability:t.sustainability };
+  const screenTitles = {
+    home:"", shop:t.shop, search:t.search, wishlist:t.wishlist,
+    account:t.account, orders:t.orders, product:"",
+    "new-arrivals":t.newArrivals, sale:t.onSale,
+    lookbook:t.lookbook, sustainability:t.sustainability
+  };
   const title = screenTitles[screen] || "";
+  const isHome = screen === "home" && !canGoBack;
 
   return (
-    <header style={{ background:"rgba(255,255,255,0.92)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderBottom:`1px solid rgba(0,0,0,0.08)`, position:"sticky", top:0, zIndex:200, userSelect:"none" }}>
-      {!canGoBack && (
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 18px 0", borderBottom:`1px solid rgba(0,0,0,0.07)` }}>
-          <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 0" }}>
-            <Logo height={13}/>
-          </button>
-          <LanguageSwitcher lang={lang} setLang={setLang}/>
+    <header style={{
+      background:"rgba(255,255,255,0.94)",
+      backdropFilter:"blur(20px)",
+      WebkitBackdropFilter:"blur(20px)",
+      borderBottom:"1px solid rgba(0,0,0,0.07)",
+      position:"sticky", top:0, zIndex:200,
+      userSelect:"none",
+    }}>
+      <div style={{
+        height:56,
+        display:"flex",
+        alignItems:"center",
+        padding:"0 8px",
+        position:"relative",
+      }}>
+        {/* Left: back button or logo */}
+        <div style={{ display:"flex", alignItems:"center", minWidth:100, flexShrink:0 }}>
+          {canGoBack ? (
+            <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:2, background:"none", border:"none", cursor:"pointer", color:T.blue, fontSize:16, fontWeight:400, padding:"8px 8px" }}>
+              <Icon name="back" size={20} color={T.blue} strokeWidth={2}/>
+            </button>
+          ) : (
+            <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"8px 10px" }}>
+              <Logo height={14}/>
+            </button>
+          )}
         </div>
-      )}
-      <div style={{ height:52, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:4, minWidth:80 }}>
-          {canGoBack && <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>}
+
+        {/* Center: page title */}
+        <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}>
+          {canGoBack && title ? (
+            <span style={{ fontSize:17, fontWeight:600, letterSpacing:"-0.3px", color:"#000", whiteSpace:"nowrap" }}>{title}</span>
+          ) : null}
         </div>
-        <span style={{ fontSize:17, fontWeight:600, letterSpacing:"-0.3px", position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
-          {canGoBack ? title : ""}
-        </span>
-        <div style={{ display:"flex", alignItems:"center", gap:4, minWidth:80, justifyContent:"flex-end" }}>
-          {screen!=="search"  && <IconBtn icon="search"  onClick={()=>onNavigate("search")}   size={36} bg="transparent"/>}
-          {screen!=="wishlist"&& <IconBtn icon="heart"   onClick={()=>onNavigate("wishlist")} size={36} bg="transparent" badge={wishlistCount>0?wishlistCount:0}/>}
-          <IconBtn icon="bag" onClick={onCart} size={36} bg="transparent" badge={cartCount}/>
+
+        {/* Right: actions */}
+        <div style={{ display:"flex", alignItems:"center", gap:0, marginLeft:"auto", flexShrink:0 }}>
+          {isHome && <LanguageSwitcher lang={lang} setLang={setLang}/>}
+          {screen !== "search" && (
+            <IconBtn icon="search" onClick={()=>onNavigate("search")} size={40} bg="transparent" color="#000"/>
+          )}
+          {screen !== "wishlist" && (
+            <IconBtn icon="heart" onClick={()=>onNavigate("wishlist")} size={40} bg="transparent" color="#000" badge={wishlistCount > 0 ? wishlistCount : 0}/>
+          )}
+          <IconBtn icon="bag" onClick={onCart} size={40} bg="transparent" color="#000" badge={cartCount}/>
         </div>
       </div>
     </header>
