@@ -63,7 +63,7 @@ const TR = {
     home:"Home", shop:"Shop", search:"Search", saved:"Saved", account:"Account",
     wishlist:"Wishlist", myBag:"My Bag", checkout:"Checkout →",
     addToBag:"Add to Bag", addedToBag:"Added ✓",
-    freeShipping:"Free Shipping", freeReturns:"Free Returns",
+    freeDelivery:"Free Delivery", freeReturns:"Free Returns",
     newIn:"New In ✦", trendingNow:"Trending Now 🔥", onSale:"On Sale",
     viewAll:"View All", seeAll:"See All", browse:"Browse",
     priceOnRequest:"Members only", addToBagReveal:"Add to Bag", requestReveal:"Request to Buy",
@@ -81,8 +81,9 @@ const TR = {
     savedItems:"saved items", wishlistEmpty:"Your wishlist is empty", wishlistEmptyBody:"Tap the heart on any product to save it here.",
     noSaved:"Your wishlist is empty", saveItemsYouLove:"Save items you love",
     emptyBag:"Your bag is empty", continueShopping:"Continue Shopping",
-    freeShippingQualify:"You qualify for free shipping!",
-    addMore:"Add", moreForFreeShipping:"more for free shipping",
+    freeDeliveryQualify:"You qualify for free delivery!",
+    addMore:"Add", moreForFreeDelivery:"more for free delivery",
+    delivery:"Delivery", noDeliveryNeeded:"No delivery needed", deliveryOptOut:"I'll collect / no delivery needed",
     noResults:"No results", tryDifferent:"Try a different search term",
     newArrivals:"New Arrivals", orders:"Orders", myOrders:"My Orders",
     addresses:"Addresses", paymentMethods:"Payment Methods",
@@ -126,7 +127,7 @@ const TR = {
     home:"Nyumbani", shop:"Duka", search:"Tafuta", saved:"Zilizohifadhiwa", account:"Akaunti",
     wishlist:"Orodha ya Matakwa", myBag:"Mfuko Wangu", checkout:"Malipo →",
     addToBag:"Ongeza Kwenye Mfuko", addedToBag:"Imeongezwa ✓",
-    freeShipping:"Usafirishaji Bure", freeReturns:"Kurudisha Bure",
+    freeDelivery:"Usafirishaji Bure", freeReturns:"Kurudisha Bure",
     newIn:"Mpya ✦", trendingNow:"Inayoongoza Sasa 🔥", onSale:"Punguzo",
     viewAll:"Angalia Zote", seeAll:"Angalia Zote", browse:"Tazama",
     priceOnRequest:"Wanachama tu", addToBagReveal:"Ongeza Mfukoni", requestReveal:"Ombi la Kununua",
@@ -144,8 +145,9 @@ const TR = {
     savedItems:"vitu vilivyohifadhiwa", wishlistEmpty:"Orodha yako ya matakwa ni tupu", wishlistEmptyBody:"Gusa moyo kwenye bidhaa yoyote kuihifadhi hapa.",
     noSaved:"Orodha yako ya matakwa ni tupu", saveItemsYouLove:"Hifadhi vitu unavyovipenda",
     emptyBag:"Mfuko wako ni tupu", continueShopping:"Endelea Kununua",
-    freeShippingQualify:"Unastahili usafirishaji bure!",
-    addMore:"Ongeza", moreForFreeShipping:"zaidi kwa usafirishaji bure",
+    freeDeliveryQualify:"Unastahili usafirishaji bure!",
+    addMore:"Ongeza", moreForFreeDelivery:"zaidi kwa usafirishaji bure",
+    delivery:"Uwasilishaji", noDeliveryNeeded:"Hakuna uwasilishaji", deliveryOptOut:"Nitakuja kuchukua / hakuna uwasilishaji",
     noResults:"Hakuna matokeo", tryDifferent:"Jaribu neno tofauti la utafutaji",
     newArrivals:"Waliofika Hivi Karibuni", orders:"Maagizo", myOrders:"Maagizo Yangu",
     addresses:"Anwani", paymentMethods:"Njia za Malipo",
@@ -189,7 +191,7 @@ const TR = {
     home:"Accueil", shop:"Boutique", search:"Rechercher", saved:"Sauvegardés", account:"Compte",
     wishlist:"Liste de souhaits", myBag:"Mon sac", checkout:"Commander →",
     addToBag:"Ajouter au sac", addedToBag:"Ajouté ✓",
-    freeShipping:"Livraison gratuite", freeReturns:"Retours gratuits",
+    freeDelivery:"Livraison gratuite", freeReturns:"Retours gratuits",
     newIn:"Nouveautés ✦", trendingNow:"Tendances 🔥", onSale:"En solde",
     viewAll:"Voir tout", seeAll:"Voir tout", browse:"Parcourir",
     priceOnRequest:"Membres uniquement", addToBagReveal:"Ajouter au sac", requestReveal:"Demande d'achat",
@@ -207,8 +209,9 @@ const TR = {
     savedItems:"articles sauvegardés", wishlistEmpty:"Votre liste de souhaits est vide", wishlistEmptyBody:"Appuyez sur le cœur d'un produit pour le sauvegarder ici.",
     noSaved:"Votre liste de souhaits est vide", saveItemsYouLove:"Sauvegardez vos favoris",
     emptyBag:"Votre sac est vide", continueShopping:"Continuer vos achats",
-    freeShippingQualify:"Vous bénéficiez de la livraison gratuite!",
-    addMore:"Ajoutez", moreForFreeShipping:"de plus pour la livraison gratuite",
+    freeDeliveryQualify:"Vous bénéficiez de la livraison gratuite!",
+    addMore:"Ajoutez", moreForFreeDelivery:"de plus pour la livraison gratuite",
+    delivery:"Livraison", noDeliveryNeeded:"Pas de livraison", deliveryOptOut:"Je viendrai chercher / pas de livraison",
     noResults:"Aucun résultat", tryDifferent:"Essayez un autre terme",
     newArrivals:"Nouveautés", orders:"Commandes", myOrders:"Mes commandes",
     addresses:"Adresses", paymentMethods:"Modes de paiement",
@@ -572,17 +575,27 @@ function PurchaseModal({ product, onClose, sessionId }) {
 function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
   const { t } = useLang();
   const subtotal = cart.reduce((s,i) => s + Number(i.price) * Number(i.qty), 0);
-  const FREE_TZS = 500000;
-  const SHIP_TZS = 30000;
-  const free     = subtotal >= FREE_TZS;
-  const shipping = free ? 0 : SHIP_TZS;
-  const total    = subtotal + shipping;
 
-  const [step,    setStep]  = useState("bag");
-  const [phone,   setPhone] = useState(user?.user_metadata?.phone || "");
-  const [note,    setNote]  = useState("");
-  const [loading, setLoad]  = useState(false);
-  const [err,     setErr]   = useState("");
+  // Delivery config loaded from store_settings — defaults while loading
+  const [deliveryCfg, setDeliveryCfg] = useState({ delivery_enabled:true, delivery_cost:30000, free_delivery_threshold:500000 });
+  useEffect(()=>{
+    sb.from('store_settings').select('delivery_enabled,delivery_cost,free_delivery_threshold').eq('id',1).maybeSingle()
+      .then(({ data })=>{ if(data) setDeliveryCfg({ delivery_enabled: data.delivery_enabled ?? true, delivery_cost: Number(data.delivery_cost ?? 30000), free_delivery_threshold: Number(data.free_delivery_threshold ?? 500000) }); });
+  },[]);
+
+  const { delivery_enabled, delivery_cost, free_delivery_threshold } = deliveryCfg;
+  const freeByThreshold = subtotal >= free_delivery_threshold;
+
+  const [step,       setStep]      = useState("bag");
+  const [phone,      setPhone]     = useState(user?.user_metadata?.phone || "");
+  const [note,       setNote]      = useState("");
+  const [noDelivery, setNoDelivery]= useState(false);
+  const [loading,    setLoad]      = useState(false);
+  const [err,        setErr]       = useState("");
+
+  const deliveryFee  = (!delivery_enabled || freeByThreshold || noDelivery) ? 0 : delivery_cost;
+  const total        = subtotal + deliveryFee;
+  const showFreeBar  = delivery_enabled && !noDelivery;
 
   const buyerName  = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
   const buyerEmail = user?.email || null;
@@ -638,7 +651,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
         {/* ── CHECKOUT FORM ── */}
         {step==="checkout" && (
           <div style={{ flex:1,overflowY:"auto",padding:"4px 22px 36px" }}>
-            {/* Mini order summary */}
+            {/* Order summary */}
             <div style={{ background:T.fill4,borderRadius:14,padding:"14px 16px",marginBottom:20 }}>
               {cart.map(item=>(
                 <div key={`${item.id}-${item.sz}`} style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
@@ -649,10 +662,16 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
                 </div>
               ))}
               <div style={{ height:1,background:T.gray8,margin:"8px 0" }}/>
-              {!free && (
+              {deliveryFee > 0 && (
                 <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
-                  <span style={{ fontSize:13,color:T.gray4 }}>Shipping</span>
-                  <span style={{ fontSize:13,color:T.gray4 }}>{$p(SHIP_TZS)}</span>
+                  <span style={{ fontSize:13,color:T.gray4 }}>{t.delivery}</span>
+                  <span style={{ fontSize:13,color:T.gray4 }}>{$p(deliveryFee)}</span>
+                </div>
+              )}
+              {(deliveryFee === 0 && delivery_enabled && !noDelivery) && (
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
+                  <span style={{ fontSize:13,color:T.green }}>{t.delivery}</span>
+                  <span style={{ fontSize:13,fontWeight:600,color:T.green }}>Free</span>
                 </div>
               )}
               <div style={{ display:"flex",justifyContent:"space-between" }}>
@@ -669,6 +688,17 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
               <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+255 700 000 000"
                 style={{ padding:"13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${err&&!phone.trim()?T.red:T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
             </div>
+
+            {/* Delivery opt-out */}
+            {delivery_enabled && (
+              <button onClick={()=>setNoDelivery(v=>!v)}
+                style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 14px",borderRadius:12,border:`1.5px solid ${noDelivery?T.black:T.gray8}`,background:noDelivery?T.fill3:T.white,cursor:"pointer",marginBottom:14,textAlign:"left" }}>
+                <div style={{ width:20,height:20,borderRadius:10,border:`2px solid ${noDelivery?T.black:T.gray6}`,background:noDelivery?T.black:"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                  {noDelivery && <div style={{ width:8,height:8,borderRadius:4,background:T.white }}/>}
+                </div>
+                <span style={{ fontSize:14,color:T.black,fontWeight:noDelivery?600:400 }}>{t.deliveryOptOut}</span>
+              </button>
+            )}
 
             {/* Note */}
             <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:22 }}>
@@ -687,12 +717,14 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
         {/* ── BAG ── */}
         {step==="bag" && (
           <>
-            <div style={{ margin:"0 22px 10px",background:T.fill4,borderRadius:14,padding:"12px 16px",flexShrink:0 }}>
-              {free
-                ? <p style={{ fontSize:13,fontWeight:600,color:T.green,display:"flex",alignItems:"center",gap:6,margin:0 }}><Icon name="truck" size={15} color={T.green}/> {t.freeShippingQualify}</p>
-                : <p style={{ fontSize:13,color:T.gray3,margin:0 }}>{t.addMore} <strong>{$p(FREE_TZS-subtotal)}</strong> {t.moreForFreeShipping}</p>
-              }
-            </div>
+            {showFreeBar && (
+              <div style={{ margin:"0 22px 10px",background:T.fill4,borderRadius:14,padding:"12px 16px",flexShrink:0 }}>
+                {freeByThreshold
+                  ? <p style={{ fontSize:13,fontWeight:600,color:T.green,display:"flex",alignItems:"center",gap:6,margin:0 }}><Icon name="truck" size={15} color={T.green}/> {t.freeDeliveryQualify}</p>
+                  : <p style={{ fontSize:13,color:T.gray3,margin:0 }}>{t.addMore} <strong>{$p(free_delivery_threshold-subtotal)}</strong> {t.moreForFreeDelivery}</p>
+                }
+              </div>
+            )}
             <div style={{ flex:1,overflowY:"auto",padding:"0 22px" }}>
               {cart.length===0
                 ? <EmptyState icon="🛍️" title={t.emptyBag} body={t.continueShopping}/>
@@ -713,7 +745,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
                             <span style={{ fontSize:15,fontWeight:600,minWidth:22,textAlign:"center" }}>{item.qty}</span>
                             <button onClick={()=>onQty(item,item.qty+1)} style={{ width:34,height:34,borderRadius:17,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="plus" size={14} color={T.black}/></button>
                           </div>
-                          <span style={{ fontSize:16,fontWeight:700 }}>{$p(item.price*item.qty)}</span>
+                          <span style={{ fontSize:16,fontWeight:700 }}>{$p(Number(item.price)*Number(item.qty))}</span>
                         </div>
                       </div>
                       <button onClick={()=>onRemove(item)} style={{ background:"none",border:"none",cursor:"pointer",alignSelf:"flex-start",marginTop:2 }}><Icon name="close" size={16} color={T.gray5}/></button>
@@ -725,19 +757,21 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
             </div>
             {cart.length>0&&(
               <div style={{ padding:"18px 22px 32px",borderTop:`1px solid ${T.gray8}`,flexShrink:0 }}>
-                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
                   <span style={{ fontSize:14,color:T.gray4 }}>Subtotal</span>
                   <span style={{ fontSize:14,color:T.gray3 }}>{$p(subtotal)}</span>
                 </div>
-                {!free && (
-                  <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
-                    <span style={{ fontSize:14,color:T.gray4 }}>Shipping</span>
-                    <span style={{ fontSize:14,color:T.gray3 }}>{$p(SHIP_TZS)}</span>
+                {delivery_enabled && (
+                  <div style={{ display:"flex",justifyContent:"space-between",marginBottom:10 }}>
+                    <span style={{ fontSize:14,color:T.gray4 }}>{t.delivery}</span>
+                    <span style={{ fontSize:14,color:freeByThreshold?T.green:T.gray3,fontWeight:freeByThreshold?600:400 }}>
+                      {freeByThreshold ? "Free" : $p(delivery_cost)}
+                    </span>
                   </div>
                 )}
                 <div style={{ display:"flex",justifyContent:"space-between",marginBottom:18 }}>
                   <span style={{ fontSize:15,fontWeight:700 }}>Total</span>
-                  <span style={{ fontSize:18,fontWeight:700 }}>{$p(total)}</span>
+                  <span style={{ fontSize:18,fontWeight:700 }}>{$p(freeByThreshold||!delivery_enabled ? subtotal : subtotal+delivery_cost)}</span>
                 </div>
                 <Btn full onClick={()=>setStep("checkout")} style={{ borderRadius:14,padding:"17px",fontSize:16 }}>{t.checkout}</Btn>
               </div>
