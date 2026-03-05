@@ -569,18 +569,23 @@ function PurchaseModal({ product, onClose, sessionId }) {
 }
 
 /* ─── Cart Drawer ────────────────────────────────────────────── */
-function CartDrawer({ cart, onClose, onRemove, onQty, sessionId }) {
+function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
   const { t } = useLang();
-  const total    = cart.reduce((s,i)=>s+i.price*i.qty, 0);
+  const subtotal = cart.reduce((s,i) => s + Number(i.price) * Number(i.qty), 0);
   const FREE_TZS = 500000;
   const SHIP_TZS = 30000;
-  const free     = total >= FREE_TZS;
+  const free     = subtotal >= FREE_TZS;
+  const shipping = free ? 0 : SHIP_TZS;
+  const total    = subtotal + shipping;
 
-  const [step,    setStep]  = useState("bag"); // "bag" | "checkout" | "sent"
-  const [phone,   setPhone] = useState("");
+  const [step,    setStep]  = useState("bag");
+  const [phone,   setPhone] = useState(user?.user_metadata?.phone || "");
   const [note,    setNote]  = useState("");
   const [loading, setLoad]  = useState(false);
   const [err,     setErr]   = useState("");
+
+  const buyerName  = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
+  const buyerEmail = user?.email || null;
 
   const submitOrder = async () => {
     if (!phone.trim()) { setErr(t.cartPhoneLabel + " is required."); return; }
@@ -588,8 +593,9 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId }) {
     try {
       for (const item of cart) {
         const payload = {
-          product_id: item.id, product_name: item.name, product_price: item.price,
-          selected_size: item.sz || null, quantity: item.qty,
+          product_id: item.id, product_name: item.name, product_price: Number(item.price),
+          selected_size: item.sz || null, quantity: Number(item.qty),
+          buyer_name: buyerName, buyer_email: buyerEmail,
           buyer_phone: phone.trim(), note: note.trim() || null, status: "pending",
         };
         let { error } = await sb.from("purchase_requests").insert({ ...payload, session_id: sessionId || null });
@@ -639,13 +645,19 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId }) {
                   <span style={{ fontSize:13,color:T.gray3,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:8 }}>
                     {item.name}{item.sz?` · ${item.sz}`:""} ×{item.qty}
                   </span>
-                  <span style={{ fontSize:13,fontWeight:600,flexShrink:0 }}>{$p(item.price*item.qty)}</span>
+                  <span style={{ fontSize:13,fontWeight:600,flexShrink:0 }}>{$p(Number(item.price)*Number(item.qty))}</span>
                 </div>
               ))}
               <div style={{ height:1,background:T.gray8,margin:"8px 0" }}/>
+              {!free && (
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
+                  <span style={{ fontSize:13,color:T.gray4 }}>Shipping</span>
+                  <span style={{ fontSize:13,color:T.gray4 }}>{$p(SHIP_TZS)}</span>
+                </div>
+              )}
               <div style={{ display:"flex",justifyContent:"space-between" }}>
-                <span style={{ fontSize:14,fontWeight:600 }}>Total</span>
-                <span style={{ fontSize:14,fontWeight:700 }}>{$p(free?total:total+SHIP_TZS)}</span>
+                <span style={{ fontSize:14,fontWeight:700 }}>Total</span>
+                <span style={{ fontSize:14,fontWeight:700 }}>{$p(total)}</span>
               </div>
             </div>
 
@@ -678,7 +690,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId }) {
             <div style={{ margin:"0 22px 10px",background:T.fill4,borderRadius:14,padding:"12px 16px",flexShrink:0 }}>
               {free
                 ? <p style={{ fontSize:13,fontWeight:600,color:T.green,display:"flex",alignItems:"center",gap:6,margin:0 }}><Icon name="truck" size={15} color={T.green}/> {t.freeShippingQualify}</p>
-                : <p style={{ fontSize:13,color:T.gray3,margin:0 }}>{t.addMore} <strong>{$p(FREE_TZS-total)}</strong> {t.moreForFreeShipping}</p>
+                : <p style={{ fontSize:13,color:T.gray3,margin:0 }}>{t.addMore} <strong>{$p(FREE_TZS-subtotal)}</strong> {t.moreForFreeShipping}</p>
               }
             </div>
             <div style={{ flex:1,overflowY:"auto",padding:"0 22px" }}>
@@ -713,9 +725,19 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId }) {
             </div>
             {cart.length>0&&(
               <div style={{ padding:"18px 22px 32px",borderTop:`1px solid ${T.gray8}`,flexShrink:0 }}>
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
+                  <span style={{ fontSize:14,color:T.gray4 }}>Subtotal</span>
+                  <span style={{ fontSize:14,color:T.gray3 }}>{$p(subtotal)}</span>
+                </div>
+                {!free && (
+                  <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
+                    <span style={{ fontSize:14,color:T.gray4 }}>Shipping</span>
+                    <span style={{ fontSize:14,color:T.gray3 }}>{$p(SHIP_TZS)}</span>
+                  </div>
+                )}
                 <div style={{ display:"flex",justifyContent:"space-between",marginBottom:18 }}>
-                  <span style={{ fontSize:15,color:T.gray3 }}>Total</span>
-                  <span style={{ fontSize:18,fontWeight:700 }}>{$p(free?total:total+SHIP_TZS)}</span>
+                  <span style={{ fontSize:15,fontWeight:700 }}>Total</span>
+                  <span style={{ fontSize:18,fontWeight:700 }}>{$p(total)}</span>
                 </div>
                 <Btn full onClick={()=>setStep("checkout")} style={{ borderRadius:14,padding:"17px",fontSize:16 }}>{t.checkout}</Btn>
               </div>
@@ -2405,7 +2427,7 @@ export default function Page() {
         <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
-        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty} sessionId={sessionId}/>}
+        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty} sessionId={sessionId} user={user}/>}
 
         {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={u=>{ if(u&&!u.is_anonymous) setUser(u); setShowAuth(false); }} t={t}/>}
 
