@@ -147,7 +147,7 @@ const TR = {
     emptyBag:"Mfuko wako ni tupu", continueShopping:"Endelea Kununua",
     freeDeliveryQualify:"Unastahili usafirishaji bure!",
     addMore:"Ongeza", moreForFreeDelivery:"zaidi kwa usafirishaji bure",
-    delivery:"Uwasilishaji", noDeliveryNeeded:"Hakuna uwasilishaji", deliveryOptOut:"Nitakuja kuchukua / hakuna uwasilishaji",
+    delivery:"Delivery", noDeliveryNeeded:"Hakuna delivery", deliveryOptOut:"Nitakuja kuchukua / hakuna delivery",
     noResults:"Hakuna matokeo", tryDifferent:"Jaribu neno tofauti la utafutaji",
     newArrivals:"Waliofika Hivi Karibuni", orders:"Maagizo", myOrders:"Maagizo Yangu",
     addresses:"Anwani", paymentMethods:"Njia za Malipo",
