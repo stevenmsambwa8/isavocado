@@ -549,25 +549,108 @@ function CartDrawer({ cart, onClose, onRemove, onQty }) {
 
 /* ─── Product Detail ────────────────────────────────────────── */
 function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) {
-  const [sz, setSz]       = useState(null);
-  const [done, setDone]   = useState(false);
-  const [showReq, setReq] = useState(false);
+  const [sz, setSz]         = useState(null);
+  const [done, setDone]     = useState(false);
+  const [showReq, setReq]   = useState(false);
+  const [imgIdx, setImgIdx] = useState(0);
+  const [lightbox, setLB]   = useState(null); // index when open
+  const scrollRef           = useRef();
+
+  // Build images array — prefer image_urls, fall back to image_url
+  const images = p.image_urls?.length ? p.image_urls : p.image_url ? [p.image_url] : [];
+
+  /* ── Scroll gallery to slide ── */
+  const scrollTo = (i) => {
+    setImgIdx(i);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: i * scrollRef.current.offsetWidth, behavior: 'smooth' });
+    }
+  };
+
+  /* ── Track scroll position to update dot ── */
+  const onScroll = () => {
+    if (!scrollRef.current) return;
+    const i = Math.round(scrollRef.current.scrollLeft / scrollRef.current.offsetWidth);
+    setImgIdx(i);
+  };
 
   const add = () => {
-    if (!sz && p.sizes?.length>0) return;
+    if (!sz && p.sizes?.length > 0) return;
     onAdd({ ...p, sz: sz || null });
-    setDone(true); setTimeout(()=>setDone(false), 2200);
+    setDone(true); setTimeout(() => setDone(false), 2200);
   };
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ position:"relative",width:"100%",aspectRatio:"4/5",background:"#f2f2f7",borderRadius:24,overflow:"hidden",marginBottom:24 }}>
-        {p.image_url?<img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:64,color:T.gray6 }}>👗</div>}
-        {p.badge&&<div style={{ position:"absolute",top:16,left:16,background:p.badge==="Sale"?T.red:"#000",color:"#fff",fontSize:11,fontWeight:700,padding:"5px 12px",borderRadius:99,textTransform:"uppercase" }}>{p.badge}</div>}
-        <div style={{ position:"absolute",top:14,right:14,display:"flex",flexDirection:"column",gap:10 }}>
-          <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
-        </div>
+
+      {/* ── Image Gallery ── */}
+      <div style={{ position:"relative", marginBottom:20, borderRadius:24, overflow:"hidden" }}>
+        {images.length === 0 ? (
+          <div style={{ aspectRatio:"4/5", background:"#f2f2f7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:64, color:T.gray6 }}>👗</div>
+        ) : (
+          <>
+            {/* Horizontal scroll strip */}
+            <div
+              ref={scrollRef}
+              onScroll={onScroll}
+              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", WebkitOverflowScrolling:"touch", borderRadius:24 }}
+            >
+              {images.map((src, i) => (
+                <div
+                  key={i}
+                  onClick={() => setLB(i)}
+                  style={{ minWidth:"100%", aspectRatio:"4/5", flexShrink:0, scrollSnapAlign:"start", cursor:"zoom-in", position:"relative", overflow:"hidden", background:"#f2f2f7" }}
+                >
+                  <img src={src} alt={`${p.name} ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                </div>
+              ))}
+            </div>
+
+            {/* Badge */}
+            {p.badge && <div style={{ position:"absolute", top:16, left:16, background:p.badge==="Sale"?T.red:"#000", color:"#fff", fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, textTransform:"uppercase" }}>{p.badge}</div>}
+
+            {/* Wishlist + zoom hint */}
+            <div style={{ position:"absolute", top:14, right:14, display:"flex", flexDirection:"column", gap:10 }}>
+              <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
+            </div>
+
+            {/* Zoom hint */}
+            {images.length > 0 && (
+              <div style={{ position:"absolute", bottom:14, right:14, background:"rgba(0,0,0,0.35)", borderRadius:99, padding:"4px 10px", backdropFilter:"blur(6px)" }}>
+                <p style={{ fontSize:11, color:"#fff", margin:0 }}>🔍 Tap to zoom</p>
+              </div>
+            )}
+
+            {/* Dot indicators */}
+            {images.length > 1 && (
+              <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", display:"flex", gap:5 }}>
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => scrollTo(i)}
+                    style={{ width: i===imgIdx ? 18 : 6, height:6, borderRadius:3, background: i===imgIdx ? "#fff" : "rgba(255,255,255,0.45)", border:"none", cursor:"pointer", padding:0, transition:"width .22s, background .22s" }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* ── Thumbnail strip (when >1 image) ── */}
+      {images.length > 1 && (
+        <div style={{ display:"flex", gap:8, marginBottom:20, overflowX:"auto", scrollbarWidth:"none" }}>
+          {images.map((src, i) => (
+            <div
+              key={i}
+              onClick={() => scrollTo(i)}
+              style={{ width:60, height:72, borderRadius:12, overflow:"hidden", flexShrink:0, cursor:"pointer", border:`2px solid ${i===imgIdx?T.black:"transparent"}`, transition:"border .18s" }}
+            >
+              <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+            </div>
+          ))}
+        </div>
+      )}
 
       <p style={{ fontSize:12,fontWeight:500,color:T.gray4,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6 }}>{p.category}</p>
       <h1 style={{ fontSize:28,fontWeight:700,letterSpacing:"-0.8px",marginBottom:12,lineHeight:1.2,color:T.black }}>{p.name}</h1>
@@ -607,6 +690,134 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) 
       </div>
 
       {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>}
+
+      {/* ── Lightbox / Zoom ── */}
+      {lightbox !== null && (
+        <ImageLightbox images={images} startIndex={lightbox} onClose={() => setLB(null)}/>
+      )}
+    </div>
+  );
+}
+
+/* ─── Image Lightbox with pinch-to-zoom ─────────────────────── */
+function ImageLightbox({ images, startIndex, onClose }) {
+  const [idx, setIdx]     = useState(startIndex);
+  const [scale, setScale] = useState(1);
+  const [offset, setOffs] = useState({ x:0, y:0 });
+  const lastTouch         = useRef(null);
+  const lastDist          = useRef(null);
+  const dragStart         = useRef(null);
+
+  const reset = () => { setScale(1); setOffs({ x:0, y:0 }); };
+
+  const goTo = (i) => { reset(); setIdx((i + images.length) % images.length); };
+
+  // Pinch zoom
+  const onTouchStart = e => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastDist.current = Math.hypot(dx, dy);
+    } else if (e.touches.length === 1) {
+      dragStart.current = { x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y };
+    }
+  };
+
+  const onTouchMove = e => {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      if (lastDist.current) {
+        const delta = dist / lastDist.current;
+        setScale(s => Math.min(Math.max(s * delta, 1), 5));
+      }
+      lastDist.current = dist;
+    } else if (e.touches.length === 1 && scale > 1 && dragStart.current) {
+      setOffs({
+        x: e.touches[0].clientX - dragStart.current.x,
+        y: e.touches[0].clientY - dragStart.current.y,
+      });
+    }
+  };
+
+  const onTouchEnd = e => {
+    lastDist.current = null;
+    if (scale <= 1 && e.changedTouches.length === 1) {
+      // swipe to next/prev
+      const endX = e.changedTouches[0].clientX;
+      if (lastTouch.current) {
+        const dx = lastTouch.current - endX;
+        if (Math.abs(dx) > 50) goTo(idx + (dx > 0 ? 1 : -1));
+      }
+    }
+    lastTouch.current = null;
+    dragStart.current = null;
+  };
+
+  const onTouchStartSwipe = e => {
+    if (e.touches.length === 1) lastTouch.current = e.touches[0].clientX;
+    onTouchStart(e);
+  };
+
+  return (
+    <div
+      style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.96)", display:"flex", alignItems:"center", justifyContent:"center" }}
+      onTouchStart={onTouchStartSwipe}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Close */}
+      <button onClick={onClose} style={{ position:"absolute", top:20, right:20, zIndex:10, width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <Icon name="close" size={20} color="#fff"/>
+      </button>
+
+      {/* Counter */}
+      <p style={{ position:"absolute", top:24, left:"50%", transform:"translateX(-50%)", color:"rgba(255,255,255,0.6)", fontSize:13, fontWeight:600 }}>
+        {idx + 1} / {images.length}
+      </p>
+
+      {/* Double-tap to reset zoom */}
+      <div
+        onDoubleClick={() => scale > 1 ? reset() : setScale(2.5)}
+        style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}
+      >
+        <img
+          src={images[idx]}
+          alt=""
+          style={{
+            maxWidth:"100%", maxHeight:"100%", objectFit:"contain",
+            transform:`scale(${scale}) translate(${offset.x/scale}px, ${offset.y/scale}px)`,
+            transition: scale === 1 ? "transform .25s" : "none",
+            userSelect:"none", pointerEvents:"none",
+          }}
+        />
+      </div>
+
+      {/* Zoom hint */}
+      {scale === 1 && (
+        <p style={{ position:"absolute", bottom:80, left:"50%", transform:"translateX(-50%)", color:"rgba(255,255,255,0.35)", fontSize:12, whiteSpace:"nowrap" }}>
+          Pinch or double-tap to zoom
+        </p>
+      )}
+
+      {/* Prev / Next arrows */}
+      {images.length > 1 && (
+        <>
+          <button onClick={()=>goTo(idx-1)} style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)", width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", color:"#fff", fontSize:22, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
+          <button onClick={()=>goTo(idx+1)} style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", color:"#fff", fontSize:22, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
+        </>
+      )}
+
+      {/* Dot strip */}
+      {images.length > 1 && (
+        <div style={{ position:"absolute", bottom:32, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
+          {images.map((_, i) => (
+            <div key={i} onClick={()=>goTo(i)} style={{ width: i===idx?18:6, height:6, borderRadius:3, background: i===idx?"#fff":"rgba(255,255,255,0.3)", cursor:"pointer", transition:"width .2s" }}/>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
