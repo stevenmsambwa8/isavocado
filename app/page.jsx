@@ -228,7 +228,7 @@ const T = {
   blue:"#007AFF", red:"#FF3B30", green:"#34C759", yellow:"#FF9500",
 };
 const shadow = { xs:"0 1px 4px rgba(0,0,0,.08)", xl:"0 16px 48px rgba(0,0,0,.14)", xxl:"0 24px 60px rgba(0,0,0,.18)" };
-const $p = v => `$${Number(v).toFixed(2)}`;
+const $p = v => `TZS ${Number(v).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 })}`;
 
 /* ─── Atoms ─────────────────────────────────────────────────── */
 function Spin({ size=24 }) {
@@ -305,7 +305,15 @@ function RatingStars({ rating, size=12 }) {
   );
 }
 
-function PriceLine({ price, was }) {
+function PriceLine({ price, was, user, onLoginPrompt }) {
+  if (!user) return (
+    <button
+      onClick={e => { e.stopPropagation(); onLoginPrompt && onLoginPrompt(); }}
+      style={{ background:"none", border:"none", padding:0, cursor:"pointer", textAlign:"left" }}
+    >
+      <span style={{ fontSize:12, color:T.blue, fontWeight:500 }}>Sign in to see price</span>
+    </button>
+  );
   return (
     <div style={{ display:"flex",alignItems:"baseline",gap:7 }}>
       <span style={{ fontSize:15,fontWeight:700,color:was?T.red:T.black }}>{$p(price)}</span>
@@ -377,7 +385,7 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, ch
 }
 
 /* ─── ProductCard ───────────────────────────────────────────── */
-function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted }) {
+function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user, onLoginPrompt }) {
   // Prefer image_urls array, fall back to single image_url
   const images = p.image_urls?.length ? p.image_urls : p.image_url ? [p.image_url] : [];
 
@@ -385,7 +393,7 @@ function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted }) {
     <div onClick={()=>onSelect(p)} className="pressable" style={{ width:140,flexShrink:0,cursor:"pointer" }}>
       <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge}/>
       <p style={{ fontSize:13,fontWeight:600,marginBottom:3,marginTop:8,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
-      <PriceLine price={p.price} was={p.was}/>
+      <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
     </div>
   );
 
@@ -400,7 +408,7 @@ function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted }) {
       </div>
       <p style={{ fontSize:13,fontWeight:700,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
       <p style={{ fontSize:11,color:T.gray4,marginBottom:5 }}>{p.category}</p>
-      <PriceLine price={p.price} was={p.was}/>
+      <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
     </div>
   );
   return null;
@@ -522,8 +530,10 @@ function PurchaseModal({ product, onClose, sessionId }) {
 
 /* ─── Cart Drawer ────────────────────────────────────────────── */
 function CartDrawer({ cart, onClose, onRemove, onQty }) {
-  const total = cart.reduce((s,i)=>s+i.price*i.qty, 0);
-  const free  = total >= 200;
+  const total     = cart.reduce((s,i)=>s+i.price*i.qty, 0);
+  const FREE_TZS  = 500000;
+  const SHIP_TZS  = 30000;
+  const free      = total >= FREE_TZS;
   return (
     <>
       <div onClick={onClose} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.36)",zIndex:500,backdropFilter:"blur(4px)" }}/>
@@ -536,7 +546,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty }) {
         <div style={{ margin:"0 22px 10px",background:T.fill4,borderRadius:14,padding:"12px 16px" }}>
           {free
             ? <p style={{ fontSize:13,fontWeight:600,color:T.green,display:"flex",alignItems:"center",gap:6 }}><Icon name="truck" size={15} color={T.green}/> You qualify for free shipping!</p>
-            : <p style={{ fontSize:13,color:T.gray3 }}>Add <strong>{$p(200-total)}</strong> more for free shipping</p>
+            : <p style={{ fontSize:13,color:T.gray3 }}>Add <strong>{$p(FREE_TZS-total)}</strong> more for free shipping</p>
           }
         </div>
         <div style={{ flex:1,overflowY:"auto",padding:"0 22px" }}>
@@ -570,7 +580,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty }) {
           <div style={{ padding:"18px 22px 32px",borderTop:`1px solid ${T.gray8}` }}>
             <div style={{ display:"flex",justifyContent:"space-between",marginBottom:18 }}>
               <span style={{ fontSize:15,color:T.gray3 }}>Total</span>
-              <span style={{ fontSize:18,fontWeight:700 }}>{$p(free?total:total+12)}</span>
+              <span style={{ fontSize:18,fontWeight:700 }}>{$p(free?total:total+SHIP_TZS)}</span>
             </div>
             <Btn full style={{ borderRadius:14,padding:"17px",fontSize:16 }}>Checkout →</Btn>
           </div>
@@ -581,13 +591,14 @@ function CartDrawer({ cart, onClose, onRemove, onQty }) {
 }
 
 /* ─── Product Detail ────────────────────────────────────────── */
-function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) {
-  const [sz, setSz]         = useState(null);
-  const [done, setDone]     = useState(false);
-  const [showReq, setReq]   = useState(false);
-  const [imgIdx, setImgIdx] = useState(0);
-  const [lightbox, setLB]   = useState(null); // index when open
-  const scrollRef           = useRef();
+function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt }) {
+  const [sz, setSz]           = useState(null);
+  const [done, setDone]       = useState(false);
+  const [showReq, setReq]     = useState(false);
+  const [imgIdx, setImgIdx]   = useState(0);
+  const [lightbox, setLB]     = useState(null);
+  const [priceRevealed, setPriceRevealed] = useState(false);
+  const scrollRef             = useRef();
 
   // Build images array — prefer image_urls, fall back to image_url
   const images = p.image_urls?.length ? p.image_urls : p.image_url ? [p.image_url] : [];
@@ -612,6 +623,20 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) 
     onAdd({ ...p, sz: sz || null });
     setDone(true); setTimeout(() => setDone(false), 2200);
   };
+
+  // Guest clicks "Add to Bag" → reveal price first, then let them proceed
+  const handleAddToBag = () => {
+    if (!user && !priceRevealed) { setPriceRevealed(true); return; }
+    add();
+  };
+
+  // Guest clicks "Request to Buy" → reveal price then open modal
+  const handleRequest = () => {
+    if (!user && !priceRevealed) { setPriceRevealed(true); return; }
+    setReq(true);
+  };
+
+  const showPrice = user || priceRevealed;
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
@@ -696,8 +721,20 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) 
       )}
 
       <div style={{ display:"flex",alignItems:"baseline",gap:10,marginBottom:20 }}>
-        <span style={{ fontSize:30,fontWeight:700,letterSpacing:"-0.8px",color:p.was?T.red:T.black }}>{$p(p.price)}</span>
-        {p.was&&<span style={{ fontSize:18,color:T.gray4,textDecoration:"line-through" }}>{$p(p.was)}</span>}
+        {showPrice ? (
+          <>
+            <span style={{ fontSize:30,fontWeight:700,letterSpacing:"-0.8px",color:p.was?T.red:T.black }}>{$p(p.price)}</span>
+            {p.was&&<span style={{ fontSize:18,color:T.gray4,textDecoration:"line-through" }}>{$p(p.was)}</span>}
+          </>
+        ) : (
+          <div style={{ background:T.fill3, borderRadius:12, padding:"10px 16px", display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:20 }}>🔒</span>
+            <div>
+              <p style={{ fontSize:14,fontWeight:600,color:T.black,margin:"0 0 2px" }}>Price hidden</p>
+              <p style={{ fontSize:12,color:T.gray4,margin:0 }}>Tap "Request to Buy" or "Add to Bag" to reveal</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {p.description&&(<><Divider my={16}/><p style={{ fontSize:15,color:T.gray3,lineHeight:1.7,marginBottom:20 }}>{p.description}</p></>)}
@@ -714,15 +751,15 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) 
       )}
 
       <div style={{ display:"flex",gap:12,marginBottom:24 }}>
-        <Btn full onClick={add} disabled={p.sizes?.length>0&&!sz} style={{ borderRadius:16,padding:"17px",fontSize:16 }}>
-          {done?"Added ✓":"Add to Bag"}
+        <Btn full onClick={handleAddToBag} disabled={showPrice && p.sizes?.length>0&&!sz} style={{ borderRadius:16,padding:"17px",fontSize:16 }}>
+          {!showPrice ? "See Price & Add to Bag 🔓" : done ? "Added ✓" : "Add to Bag"}
         </Btn>
-        <Btn variant="gray" onClick={()=>setReq(true)} style={{ borderRadius:16,padding:"17px",whiteSpace:"nowrap" }}>
-          Request to Buy
+        <Btn variant="gray" onClick={handleRequest} style={{ borderRadius:16,padding:"17px",whiteSpace:"nowrap" }}>
+          {!showPrice ? "See Price 🔓" : "Request to Buy"}
         </Btn>
       </div>
 
-      {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>}
+      {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>
 
       {/* ── Lightbox / Zoom ── */}
       {lightbox !== null && (
@@ -951,7 +988,7 @@ function HeroSlider({ onNavigate }) {
     </div>
   );
 }
-function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate }) {
+function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user, onLoginPrompt }) {
   const newP  = products.filter(p=>p.badge==='New').slice(0,8);
   const saleP = products.filter(p=>p.badge==='Sale').slice(0,8);
   const trend = products.slice(0,6);
@@ -968,7 +1005,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate }) {
             <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>New In ✦</p>
             <button onClick={()=>onNavigate("shop")} style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:T.blue,fontWeight:500 }}>See All</button>
           </div>
-          <HScroll gap={12}>{newP.map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>)}</HScroll>
+          <HScroll gap={12}>{newP.map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll>
         </div>
       )}
 
@@ -985,7 +1022,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate }) {
         <div style={{ marginBottom:32 }}>
           <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",marginBottom:16 }}>Trending Now 🔥</p>
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
-            {trend.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>)}
+            {trend.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
           </div>
         </div>
       )}
@@ -994,7 +1031,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate }) {
 }
 
 /* ─── Shop ──────────────────────────────────────────────────── */
-function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
+function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
   const [cat,setCat]   = useState("All");
   const [sort,setSort] = useState("featured");
   const [grid,setGrid] = useState(true);
@@ -1033,7 +1070,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
       {filtered.length===0 ? <EmptyState icon="🔍" title={`No ${cat} items`} body="Try a different category."/> : (
         <div style={{ display:"grid",gridTemplateColumns:grid?"1fr 1fr":"1fr",gap:grid?"16px 10px":"12px" }}>
           {filtered.map(p=>(
-            grid ? <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/> : (
+            grid ? <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/> : (
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex",gap:14,cursor:"pointer",background:T.fill4,borderRadius:18,padding:14 }}>
                 <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
                   {p.image_url?<img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28 }}>👗</div>}
@@ -1042,7 +1079,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
                   <p style={{ fontSize:15,fontWeight:700,marginBottom:4 }}>{p.name}</p>
                   <p style={{ fontSize:12,color:T.gray4,marginBottom:6 }}>{p.category}</p>
                   {Number(p.rating)>0&&<RatingStars rating={p.rating} size={11}/>}
-                  <div style={{ marginTop:6 }}><PriceLine price={p.price} was={p.was}/></div>
+                  <div style={{ marginTop:6 }}><PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/></div>
                 </div>
               </div>
             )
@@ -1054,7 +1091,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
 }
 
 /* ─── Search ────────────────────────────────────────────────── */
-function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
+function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
   const [q, setQ] = useState("");
   const res = useMemo(() => q.trim().length<2 ? [] : products.filter(p=>p.name?.toLowerCase().includes(q.toLowerCase())||p.category?.toLowerCase().includes(q.toLowerCase())), [q,products]);
   return (
@@ -1066,14 +1103,14 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
       </div>
       {q.length<2 ? (
         products.length===0 ? <EmptyState icon="🔍" title="Search products" body="Add products from the admin dashboard to enable search."/> : (
-          <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>Trending</p><HScroll gap={10}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>)}</HScroll></>
+          <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>Trending</p><HScroll gap={10}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll></>
         )
       ) : (
         <>
           <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} result{res.length!==1?"s":""} for "{q}"</p>
           {res.length===0 ? <EmptyState icon="🔍" title="No results" body={`Nothing matched "${q}".`}/> : (
             <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
-              {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>)}
+              {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
             </div>
           )}
         </>
@@ -1083,14 +1120,14 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
 }
 
 /* ─── Wishlist ──────────────────────────────────────────────── */
-function WishlistScreen({ products, wishlist, onSelect, onWishlist }) {
+function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLoginPrompt }) {
   const items = products.filter(p=>wishlist.includes(p.id));
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} saved items</p>
       {items.length===0 ? <EmptyState icon="❤️" title="Your wishlist is empty" body="Tap the heart on any product to save it here."/> : (
         <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
-          {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true}/>)}
+          {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true} user={user} onLoginPrompt={onLoginPrompt}/>)}
         </div>
       )}
     </div>
@@ -2168,7 +2205,7 @@ export default function Page() {
 
   const cartCount  = cart.reduce((s,i)=>s+i.qty, 0);
   const canGoBack  = history.length > 0;
-  const screenProps = { products, onSelect: p=>navigate("product",{product:p}), onWishlist:toggleWishlist, wishlist, onNavigate:navigate };
+  const screenProps = { products, onSelect: p=>navigate("product",{product:p}), onWishlist:toggleWishlist, wishlist, onNavigate:navigate, user, onLoginPrompt:()=>setShowAuth(true) };
 
   const renderScreen = () => {
     if (loading) return (
@@ -2193,7 +2230,7 @@ export default function Page() {
       case "returns":      return <ReturnsScreen t={t}/>;
       case "sustainability":return <SustainabilityScreen t={t}/>;
       case "lookbook":     return <LookbookScreen products={products} onSelect={p=>navigate("product",{product:p})} t={t}/>;
-      case "product":      return <ProductDetail p={current.product} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId}/>;
+      case "product":      return <ProductDetail p={current.product} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId} user={user} onLoginPrompt={()=>setShowAuth(true)}/>;
       default:             return <HomeScreen {...screenProps}/>;
     }
   };
