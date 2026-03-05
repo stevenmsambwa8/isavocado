@@ -481,7 +481,102 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) 
   );
 }
 
-/* ─── Home ──────────────────────────────────────────────────── */
+/* ─── Hero Slider ───────────────────────────────────────────── */
+const SLIDES = [
+  {
+    id: 1,
+    label:    "SS26 Collection",
+    title:    "Refined pieces\nfor modern living.",
+    sub:      "New arrivals — just dropped",
+    cta:      "Explore →",
+    bg:       "linear-gradient(145deg,#1C1C1E,#3A3A3C)",
+    textColor:"#fff",
+  },
+  {
+    id: 2,
+    label:    "Limited Time",
+    title:    "Up to 40% Off\nSelect Styles.",
+    sub:      "Shop the sale before it ends",
+    cta:      "Shop Sale →",
+    bg:       "linear-gradient(145deg,#FF3B30,#C0392B)",
+    textColor:"#fff",
+  },
+  {
+    id: 3,
+    label:    "Knitwear Edit",
+    title:    "Luxuriously soft\ncashmere pieces.",
+    sub:      "Crafted for the season",
+    cta:      "Discover →",
+    bg:       "linear-gradient(145deg,#2C2C2E,#5B4A3A)",
+    textColor:"#fff",
+  },
+];
+
+function HeroSlider({ onNavigate }) {
+  const [idx, setIdx]     = useState(0);
+  const [drag, setDrag]   = useState(null); // { startX, startIdx }
+  const timerRef          = useRef(null);
+
+  const go = (i) => setIdx((i + SLIDES.length) % SLIDES.length);
+
+  // Auto-advance every 4 s
+  const resetTimer = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setIdx(i => (i + 1) % SLIDES.length), 4000);
+  };
+  useEffect(() => { resetTimer(); return () => clearInterval(timerRef.current); }, []);
+
+  // Touch / mouse swipe
+  const onDragStart = (clientX) => setDrag({ startX: clientX, startIdx: idx });
+  const onDragEnd   = (clientX) => {
+    if (!drag) return;
+    const dx = drag.startX - clientX;
+    if (Math.abs(dx) > 40) { go(idx + (dx > 0 ? 1 : -1)); resetTimer(); }
+    setDrag(null);
+  };
+
+  const slide = SLIDES[idx];
+
+  return (
+    <div
+      style={{ position:"relative", borderRadius:24, overflow:"hidden", marginBottom:28, userSelect:"none" }}
+      onMouseDown={e=>onDragStart(e.clientX)}
+      onMouseUp={e=>onDragEnd(e.clientX)}
+      onTouchStart={e=>onDragStart(e.touches[0].clientX)}
+      onTouchEnd={e=>onDragEnd(e.changedTouches[0].clientX)}
+    >
+      {/* Slide panels (CSS translate trick — instant no-flash) */}
+      <div style={{ display:"flex", transition:"transform .38s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*100}%)`, willChange:"transform" }}>
+        {SLIDES.map((s, i) => (
+          <div key={s.id} style={{ minWidth:"100%", background:s.bg, padding:"38px 26px 32px", boxSizing:"border-box" }}>
+            <p style={{ fontSize:11,fontWeight:700,letterSpacing:"0.16em",textTransform:"uppercase",color:"rgba(255,255,255,0.45)",marginBottom:10 }}>{s.label}</p>
+            <h2 style={{ fontSize:30,fontWeight:800,color:s.textColor,letterSpacing:"-0.8px",lineHeight:1.15,marginBottom:10,whiteSpace:"pre-line" }}>{s.title}</h2>
+            <p style={{ fontSize:14,color:"rgba(255,255,255,0.55)",marginBottom:26,lineHeight:1.5 }}>{s.sub}</p>
+            <button
+              onClick={() => onNavigate("shop")}
+              style={{ background:"rgba(255,255,255,0.18)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",padding:"11px 22px",borderRadius:99,fontSize:14,fontWeight:600,cursor:"pointer",letterSpacing:"-0.1px" }}
+            >{s.cta}</button>
+          </div>
+        ))}
+      </div>
+
+      {/* Dot indicators */}
+      <div style={{ position:"absolute",bottom:14,left:"50%",transform:"translateX(-50%)",display:"flex",gap:6 }}>
+        {SLIDES.map((_,i) => (
+          <button
+            key={i}
+            onClick={()=>{ go(i); resetTimer(); }}
+            style={{ width:i===idx?20:6,height:6,borderRadius:3,background:i===idx?"rgba(255,255,255,0.95)":"rgba(255,255,255,0.35)",border:"none",cursor:"pointer",padding:0,transition:"width .25s, background .25s" }}
+          />
+        ))}
+      </div>
+
+      {/* Left / right arrow taps */}
+      <button onClick={()=>{ go(idx-1); resetTimer(); }} style={{ position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.25)",border:"none",borderRadius:99,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:300 }}>‹</button>
+      <button onClick={()=>{ go(idx+1); resetTimer(); }} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.25)",border:"none",borderRadius:99,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,fontWeight:300 }}>›</button>
+    </div>
+  );
+}
 function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate }) {
   const newP  = products.filter(p=>p.badge==='New').slice(0,8);
   const saleP = products.filter(p=>p.badge==='Sale').slice(0,8);
@@ -491,12 +586,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate }) {
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"36px 24px 32px",marginBottom:28 }}>
-        <p style={{ fontSize:11,fontWeight:600,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.45)",marginBottom:8 }}>SS26 Collection</p>
-        <h2 style={{ fontSize:32,fontWeight:800,color:"#fff",letterSpacing:"-0.8px",lineHeight:1.1,marginBottom:8 }}>Refined pieces<br/>for modern living.</h2>
-        <p style={{ fontSize:14,color:"rgba(255,255,255,0.55)",marginBottom:24 }}>New arrivals — just dropped</p>
-        <Btn variant="white" onClick={()=>onNavigate("shop")} size="sm">Explore →</Btn>
-      </div>
+      <HeroSlider onNavigate={onNavigate}/>
 
       {newP.length>0&&(
         <div style={{ marginBottom:32 }}>
@@ -677,16 +767,13 @@ function AccountScreen({ onNavigate }) {
 }
 
 /* ─── Logo ──────────────────────────────────────────────────── */
-function Logo({ color="#000", height=18 }) {
+function Logo({ height=28 }) {
   return (
-    <svg height={height} viewBox="0 0 220 32" fill="none" style={{ display:"block" }}>
-      <path d="M2 28V4h3.5l6.5 14L18.5 4H22v24h-3.5V11l-5.5 12h-2L5.5 11V28H2z" fill={color}/>
-      <path d="M28 22.5c1.2 1.2 2.8 2 5 2 2 0 3.4-.9 3.4-2.4 0-1.3-.8-2-3.2-2.8-3.2-1-5.2-2.3-5.2-5.1 0-2.9 2.4-4.9 5.8-4.9 2.2 0 4 .7 5.3 1.8l-1.8 2.4c-1-.9-2.2-1.4-3.6-1.4-1.8 0-2.8.9-2.8 2.1 0 1.3.9 1.9 3.4 2.7 3.2 1 5 2.4 5 5.2 0 3-2.4 5.2-6.4 5.2-2.6 0-4.8-.9-6.4-2.4l1.5-2.4z" fill={color}/>
-      <path d="M48 28l7-18.5h3.5L65.5 28H62l-1.6-4.5h-7.8L51 28h-3zm5.5-7.2h5.8l-2.9-8-2.9 8z" fill={color}/>
-      <path d="M70 28V9.5h3.5l6.5 14 6.5-14H90V28h-3.5V16l-5.5 12h-2L73.5 16V28H70z" fill={color}/>
-      <path d="M96 28V9.5h7c3.4 0 5.5 1.8 5.5 4.5 0 1.8-.9 3.1-2.3 3.8 1.8.6 3 2.1 3 4.2 0 3.2-2.3 6-7.2 6H96zm3.4-10.8h3.4c1.8 0 2.8-.9 2.8-2.3 0-1.4-1-2.2-2.8-2.2h-3.4v4.5zm0 8h4c2.2 0 3.4-1.1 3.4-3 0-1.8-1.2-2.8-3.4-2.8h-4v5.8z" fill={color}/>
-      <path d="M172 18.8c0-5.6 3.8-9.8 9-9.8 3 0 5.2 1.2 6.8 3.2l-2.4 2c-1.1-1.4-2.6-2.2-4.4-2.2-3.2 0-5.4 2.6-5.4 6.8 0 4.2 2.2 6.8 5.4 6.8 1.8 0 3.3-.8 4.4-2.2l2.4 2c-1.6 2-3.8 3.2-6.8 3.2-5.2 0-9-4.2-9-9.8z" fill={color}/>
-    </svg>
+    <img
+      src="/logo.png"
+      alt="MSAMBWA"
+      style={{ height, width:"auto", display:"block", objectFit:"contain" }}
+    />
   );
 }
 
@@ -704,7 +791,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
             </button>
           ) : (
             <button onClick={()=>onNavigate("home")} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
-              <Logo height={14}/>
+              <Logo height={22}/>
             </button>
           )}
         </div>
