@@ -578,7 +578,7 @@ const ORDERS = [
 const WISHLIST_IDS = [1, 5, 8];
 const fmt = (n) => `$${Number(n).toFixed(0)}`;
 
-function statusColors(s): [string, string] {
+function statusColors(s) {
   const map = {
     Delivered:   ["#E8F5EC","#1A7A40"],
     "In Transit":["#E8F0FB","#1A52B0"],
