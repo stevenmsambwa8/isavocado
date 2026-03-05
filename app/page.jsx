@@ -766,7 +766,270 @@ function AccountScreen({ onNavigate }) {
   );
 }
 
-/* ─── Logo ──────────────────────────────────────────────────── */
+/* ─── My Orders Screen ──────────────────────────────────────── */
+const ORDER_STATUS = {
+  pending:   { color:"#FF9500", label:"Pending",   icon:"⏳", canCancel:true  },
+  confirmed: { color:"#007AFF", label:"Confirmed", icon:"✅", canCancel:true  },
+  shipped:   { color:"#30B0C7", label:"Shipped",   icon:"🚚", canCancel:false },
+  delivered: { color:"#34C759", label:"Delivered", icon:"📦", canCancel:false },
+  cancelled: { color:"#FF3B30", label:"Cancelled", icon:"❌", canCancel:false },
+};
+
+function MyOrdersScreen({ sessionId }) {
+  const [orders,   setOrders]   = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [sel,      setSel]      = useState(null);       // selected order for detail
+  const [confirm,  setConfirm]  = useState(null);       // { id, action:'cancel'|'delete' }
+  const [busy,     setBusy]     = useState(false);
+  const [toast,    setToast]    = useState(null);
+
+  const showToast = (msg, type="success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const load = async () => {
+    if (!sessionId) return;
+    setLoading(true);
+    const { data, error } = await sb
+      .from('purchase_requests')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false });
+    setOrders(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [sessionId]);
+
+  const cancelOrder = async (id) => {
+    setBusy(true);
+    const { error } = await sb
+      .from('purchase_requests')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .eq('session_id', sessionId); // safety: only own orders
+    if (error) { showToast("Failed to cancel. Try again.", "error"); }
+    else {
+      showToast("Order cancelled");
+      setOrders(os => os.map(o => o.id===id ? {...o, status:'cancelled'} : o));
+      if (sel?.id === id) setSel(o => ({...o, status:'cancelled'}));
+    }
+    setBusy(false);
+    setConfirm(null);
+  };
+
+  const deleteOrder = async (id) => {
+    setBusy(true);
+    const { error } = await sb
+      .from('purchase_requests')
+      .delete()
+      .eq('id', id)
+      .eq('session_id', sessionId); // safety: only own orders
+    if (error) { showToast("Failed to delete. Try again.", "error"); }
+    else {
+      showToast("Order removed");
+      setOrders(os => os.filter(o => o.id !== id));
+      setSel(null);
+    }
+    setBusy(false);
+    setConfirm(null);
+  };
+
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  const $$ = v => `$${Number(v||0).toFixed(2)}`;
+
+  if (loading) return (
+    <div style={{ display:"flex",alignItems:"center",justifyContent:"center",minHeight:"40vh" }}>
+      <Spin size={32}/>
+    </div>
+  );
+
+  if (orders.length === 0) return (
+    <EmptyState
+      icon="📋"
+      title="No orders yet"
+      body="Your purchase requests will appear here after you submit them."
+    />
+  );
+
+  return (
+    <div style={{ animation:"fadeIn 0.25s ease" }}>
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:toast.type==="error"?"#FF3B30":"rgba(28,28,30,0.92)",color:"#fff",padding:"12px 20px",borderRadius:99,fontSize:14,fontWeight:500,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.2)",animation:"slideUp .2s ease" }}>
+          {toast.type==="error" ? "⚠️  " : "✓  "}{toast.msg}
+        </div>
+      )}
+
+      <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{orders.length} order{orders.length!==1?"s":""}</p>
+
+      <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
+        {orders.map(order => {
+          const st = ORDER_STATUS[order.status] || ORDER_STATUS.pending;
+          return (
+            <div
+              key={order.id}
+              onClick={() => setSel(order)}
+              className="pressable"
+              style={{ background:T.fill4,borderRadius:18,padding:"16px",cursor:"pointer",border:`1px solid ${T.gray8}` }}
+            >
+              <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10 }}>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <p style={{ fontSize:15,fontWeight:700,margin:"0 0 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{order.product_name}</p>
+                  <p style={{ fontSize:12,color:T.gray4,margin:0 }}>{fmtDate(order.created_at)}</p>
+                </div>
+                <span style={{ fontSize:12,fontWeight:600,padding:"4px 10px",borderRadius:99,background:`${st.color}18`,color:st.color,marginLeft:10,flexShrink:0 }}>
+                  {st.icon} {st.label}
+                </span>
+              </div>
+
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+                <div style={{ display:"flex",gap:12 }}>
+                  {order.selected_size && <span style={{ fontSize:13,color:T.gray3 }}>Size: <strong>{order.selected_size}</strong></span>}
+                  <span style={{ fontSize:13,color:T.gray3 }}>Qty: <strong>{order.quantity}</strong></span>
+                </div>
+                <span style={{ fontSize:16,fontWeight:700,color:T.black }}>{$$(order.product_price)}</span>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ marginTop:14 }}>
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
+                  {["pending","confirmed","shipped","delivered"].map((s,i) => {
+                    const steps = ["pending","confirmed","shipped","delivered"];
+                    const curIdx = steps.indexOf(order.status);
+                    const active = i <= curIdx && order.status !== "cancelled";
+                    return (
+                      <div key={s} style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4 }}>
+                        <div style={{ width:"100%",height:3,borderRadius:99,background:active?"#007AFF":T.gray8,transition:"background .3s" }}/>
+                        <span style={{ fontSize:9,color:active?"#007AFF":T.gray5,fontWeight:active?600:400,textTransform:"capitalize" }}>{s}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Order Detail Sheet */}
+      {sel && (
+        <div style={{ position:"fixed",inset:0,zIndex:700,display:"flex",alignItems:"flex-end" }}>
+          <div onClick={()=>setSel(null)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(5px)" }}/>
+          <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,margin:"0 auto",background:T.white,borderRadius:"24px 24px 0 0",maxHeight:"88dvh",overflowY:"auto",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)",paddingBottom:"env(safe-area-inset-bottom,24px)" }}>
+            <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"14px auto 0" }}/>
+
+            <div style={{ padding:"18px 20px 32px" }}>
+              {/* Header */}
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20 }}>
+                <h3 style={{ fontSize:20,fontWeight:700,margin:0,letterSpacing:"-0.4px" }}>Order Details</h3>
+                <button onClick={()=>setSel(null)} style={{ width:32,height:32,borderRadius:16,background:T.fill3,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                  <Icon name="close" size={15} color={T.gray4}/>
+                </button>
+              </div>
+
+              {/* Status banner */}
+              {(() => { const st = ORDER_STATUS[sel.status] || ORDER_STATUS.pending; return (
+                <div style={{ background:`${st.color}12`,borderRadius:14,padding:"14px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:12 }}>
+                  <span style={{ fontSize:28 }}>{st.icon}</span>
+                  <div>
+                    <p style={{ fontSize:16,fontWeight:700,color:st.color,margin:"0 0 2px" }}>{st.label}</p>
+                    <p style={{ fontSize:13,color:T.gray4,margin:0 }}>
+                      {sel.status==="pending" && "Waiting for seller to confirm your request"}
+                      {sel.status==="confirmed" && "Your order has been confirmed by the seller"}
+                      {sel.status==="shipped" && "Your order is on its way!"}
+                      {sel.status==="delivered" && "Your order has been delivered"}
+                      {sel.status==="cancelled" && "This order has been cancelled"}
+                    </p>
+                  </div>
+                </div>
+              ); })()}
+
+              {/* Product */}
+              <div style={{ background:T.fill4,borderRadius:14,padding:"14px 16px",marginBottom:16 }}>
+                <p style={{ fontSize:11,fontWeight:600,color:T.gray4,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10 }}>Product</p>
+                <p style={{ fontSize:16,fontWeight:700,margin:"0 0 6px" }}>{sel.product_name}</p>
+                <div style={{ display:"flex",gap:16 }}>
+                  {sel.selected_size && <p style={{ fontSize:13,color:T.gray3,margin:0 }}>Size: <strong>{sel.selected_size}</strong></p>}
+                  <p style={{ fontSize:13,color:T.gray3,margin:0 }}>Qty: <strong>{sel.quantity}</strong></p>
+                  <p style={{ fontSize:15,fontWeight:700,margin:0,marginLeft:"auto" }}>{$$(sel.product_price)}</p>
+                </div>
+              </div>
+
+              {/* Delivery info */}
+              <div style={{ background:T.fill4,borderRadius:14,padding:"14px 16px",marginBottom:16 }}>
+                <p style={{ fontSize:11,fontWeight:600,color:T.gray4,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10 }}>Delivery Info</p>
+                <p style={{ fontSize:14,fontWeight:600,margin:"0 0 3px" }}>{sel.buyer_name}</p>
+                <p style={{ fontSize:13,color:T.gray3,margin:"0 0 3px" }}>{sel.buyer_email}</p>
+                {sel.buyer_phone   && <p style={{ fontSize:13,color:T.gray3,margin:"0 0 3px" }}>{sel.buyer_phone}</p>}
+                {sel.buyer_address && <p style={{ fontSize:13,color:T.gray3,margin:0 }}>{sel.buyer_address}</p>}
+              </div>
+
+              {sel.note && (
+                <div style={{ background:T.fill4,borderRadius:14,padding:"14px 16px",marginBottom:16 }}>
+                  <p style={{ fontSize:11,fontWeight:600,color:T.gray4,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:6 }}>Note</p>
+                  <p style={{ fontSize:14,color:T.gray3,margin:0,lineHeight:1.6 }}>{sel.note}</p>
+                </div>
+              )}
+
+              <p style={{ fontSize:12,color:T.gray5,textAlign:"center",marginBottom:20 }}>Ordered on {fmtDate(sel.created_at)}</p>
+
+              {/* Action buttons */}
+              <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                {ORDER_STATUS[sel.status]?.canCancel && (
+                  <button
+                    onClick={() => setConfirm({ id:sel.id, action:"cancel" })}
+                    style={{ width:"100%",padding:"14px",borderRadius:14,background:"rgba(255,59,48,0.08)",color:"#FF3B30",border:"1.5px solid rgba(255,59,48,0.2)",fontSize:15,fontWeight:600,cursor:"pointer" }}
+                  >
+                    Cancel Order
+                  </button>
+                )}
+                <button
+                  onClick={() => setConfirm({ id:sel.id, action:"delete" })}
+                  style={{ width:"100%",padding:"14px",borderRadius:14,background:T.fill3,color:T.gray3,border:"none",fontSize:15,fontWeight:500,cursor:"pointer" }}
+                >
+                  Remove from History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Dialog */}
+      {confirm && (
+        <div style={{ position:"fixed",inset:0,zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
+          <div onClick={()=>setConfirm(null)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(8px)" }}/>
+          <div style={{ position:"relative",zIndex:1,background:T.white,borderRadius:22,padding:"28px 24px",width:"100%",maxWidth:340,animation:"scaleIn .22s cubic-bezier(.34,1.56,.64,1)" }}>
+            <p style={{ fontSize:20,fontWeight:700,marginBottom:10,letterSpacing:"-0.4px" }}>
+              {confirm.action === "cancel" ? "Cancel Order?" : "Remove Order?"}
+            </p>
+            <p style={{ fontSize:14,color:T.gray4,marginBottom:24,lineHeight:1.6 }}>
+              {confirm.action === "cancel"
+                ? "Are you sure you want to cancel this order? The seller will be notified."
+                : "This will remove the order from your history. It cannot be undone."}
+            </p>
+            <div style={{ display:"flex",gap:10 }}>
+              <button onClick={()=>setConfirm(null)} style={{ flex:1,padding:"13px",borderRadius:12,background:T.fill3,border:"none",fontSize:15,fontWeight:600,cursor:"pointer",color:T.black }}>
+                Keep
+              </button>
+              <button
+                onClick={() => confirm.action==="cancel" ? cancelOrder(confirm.id) : deleteOrder(confirm.id)}
+                disabled={busy}
+                style={{ flex:1,padding:"13px",borderRadius:12,background:"#FF3B30",border:"none",fontSize:15,fontWeight:600,cursor:"pointer",color:"#fff",opacity:busy?.6:1 }}
+              >
+                {busy ? "…" : confirm.action==="cancel" ? "Cancel Order" : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // logo.png must be in your /public folder for Next.js to serve it at /logo.png
 // On GitHub: open logo.png → edit → rename path to: public/logo.png → commit
 function Logo({ height=40 }) {
@@ -791,7 +1054,7 @@ function Logo({ height=40 }) {
 
 /* ─── Header ────────────────────────────────────────────────── */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
-  const titles = { shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account" };
+  const titles = { shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"My Orders" };
   const title = titles[screen] || "";
   return (
     <header style={{ background:"rgba(255,255,255,0.94)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none" }}>
@@ -1018,6 +1281,7 @@ export default function Page() {
       case "search":   return <SearchScreen {...screenProps}/>;
       case "wishlist": return <WishlistScreen {...screenProps}/>;
       case "account":  return <AccountScreen onNavigate={navigate}/>;
+      case "orders":   return <MyOrdersScreen sessionId={sessionId}/>;
       case "product":  return <ProductDetail p={current.product} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId}/>;
       default:         return <HomeScreen {...screenProps}/>;
     }
