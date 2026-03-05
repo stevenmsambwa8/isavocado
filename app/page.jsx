@@ -66,6 +66,15 @@ const TR = {
     freeShipping:"Free Shipping", freeReturns:"Free Returns",
     newIn:"New In ✦", trendingNow:"Trending Now 🔥", onSale:"On Sale",
     viewAll:"View All", seeAll:"See All", browse:"Browse",
+    priceOnRequest:"Members only", addToBagReveal:"Add to Bag", requestReveal:"Request to Buy",
+    limitedTime:"Limited Time", upTo40:"Up to 40% off", whileStocks:"Select styles. While stocks last.", shopSale:"Shop Sale →",
+    shopOpeningSoon:"Shop opening soon", curatingCollection:"Our collection is being curated. Check back shortly for new arrivals.",
+    shopEmpty:"Shop is empty", shopEmptyBody:"Products will appear here once added by the team.",
+    sortFeatured:"Browse", sortNew:"New In", sortLow:"Lowest Price", sortHigh:"Highest Price", sortRating:"Top Rated",
+    items:"items", tryCategory:"Try a different category.",
+    trending:"Trending", searchPlaceholder:"Search products…",
+    noResultsFor:"No results for", nothingMatched:"Nothing matched",
+    savedItems:"saved items", wishlistEmpty:"Your wishlist is empty", wishlistEmptyBody:"Tap the heart on any product to save it here.",
     noSaved:"Your wishlist is empty", saveItemsYouLove:"Save items you love",
     emptyBag:"Your bag is empty", continueShopping:"Continue Shopping",
     freeShippingQualify:"You qualify for free shipping!",
@@ -80,7 +89,7 @@ const TR = {
     yourEmail:"Your Email", yourPhone:"Phone (optional)",
     deliveryAddress:"Delivery Address", noteToSeller:"Note (optional)",
     submitRequest:"Submit Request", requestSent:"Request Sent! ✓",
-    size:"Size", colour:"Colour", description:"Description",
+    size:"Size", colour:"Colour", description:"Description", reviewsLabel:"reviews",
     loading:"Loading…", language:"Language",
     noProducts:"No products yet",
     noProductsBody:"Our collection is being curated. Check back soon.",
@@ -116,6 +125,15 @@ const TR = {
     freeShipping:"Usafirishaji Bure", freeReturns:"Kurudisha Bure",
     newIn:"Mpya ✦", trendingNow:"Inayoongoza Sasa 🔥", onSale:"Punguzo",
     viewAll:"Angalia Zote", seeAll:"Angalia Zote", browse:"Tazama",
+    priceOnRequest:"Wanachama tu", addToBagReveal:"Ongeza Mfukoni", requestReveal:"Ombi la Kununua",
+    limitedTime:"Wakati Mdogo", upTo40:"Hadi 40% punguzo", whileStocks:"Mitindo iliyochaguliwa. Hadi stoki itakapokwisha.", shopSale:"Nunua Punguzo →",
+    shopOpeningSoon:"Duka linafunguliwa hivi karibuni", curatingCollection:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
+    shopEmpty:"Duka ni tupu", shopEmptyBody:"Bidhaa zitaonekana hapa zikishaongezwa.",
+    sortFeatured:"Tazama", sortNew:"Mpya", sortLow:"Bei ya Chini", sortHigh:"Bei ya Juu", sortRating:"Zilizopimwa Zaidi",
+    items:"bidhaa", tryCategory:"Jaribu aina tofauti.",
+    trending:"Inayoongoza", searchPlaceholder:"Tafuta bidhaa…",
+    noResultsFor:"Hakuna matokeo kwa", nothingMatched:"Hakuna kilicholingana",
+    savedItems:"vitu vilivyohifadhiwa", wishlistEmpty:"Orodha yako ya matakwa ni tupu", wishlistEmptyBody:"Gusa moyo kwenye bidhaa yoyote kuihifadhi hapa.",
     noSaved:"Orodha yako ya matakwa ni tupu", saveItemsYouLove:"Hifadhi vitu unavyovipenda",
     emptyBag:"Mfuko wako ni tupu", continueShopping:"Endelea Kununua",
     freeShippingQualify:"Unastahili usafirishaji bure!",
@@ -130,7 +148,7 @@ const TR = {
     yourEmail:"Barua Pepe Yako", yourPhone:"Simu (si lazima)",
     deliveryAddress:"Anwani ya Usafirishaji", noteToSeller:"Kumbuka (si lazima)",
     submitRequest:"Wasilisha Ombi", requestSent:"Ombi Limetumwa! ✓",
-    size:"Ukubwa", colour:"Rangi", description:"Maelezo",
+    size:"Ukubwa", colour:"Rangi", description:"Maelezo", reviewsLabel:"maoni",
     loading:"Inapakia…", language:"Lugha",
     noProducts:"Hakuna bidhaa bado",
     noProductsBody:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
@@ -166,6 +184,15 @@ const TR = {
     freeShipping:"Livraison gratuite", freeReturns:"Retours gratuits",
     newIn:"Nouveautés ✦", trendingNow:"Tendances 🔥", onSale:"En solde",
     viewAll:"Voir tout", seeAll:"Voir tout", browse:"Parcourir",
+    priceOnRequest:"Membres uniquement", addToBagReveal:"Ajouter au sac", requestReveal:"Demande d'achat",
+    limitedTime:"Durée limitée", upTo40:"Jusqu'à -40%", whileStocks:"Styles sélectionnés. Jusqu'à épuisement des stocks.", shopSale:"Voir les soldes →",
+    shopOpeningSoon:"Ouverture prochaine", curatingCollection:"Notre collection est en cours de sélection. Revenez bientôt.",
+    shopEmpty:"La boutique est vide", shopEmptyBody:"Les produits apparaîtront ici une fois ajoutés.",
+    sortFeatured:"Parcourir", sortNew:"Nouveautés", sortLow:"Prix croissant", sortHigh:"Prix décroissant", sortRating:"Mieux notés",
+    items:"articles", tryCategory:"Essayez une autre catégorie.",
+    trending:"Tendances", searchPlaceholder:"Rechercher…",
+    noResultsFor:"Aucun résultat pour", nothingMatched:"Rien ne correspond à",
+    savedItems:"articles sauvegardés", wishlistEmpty:"Votre liste de souhaits est vide", wishlistEmptyBody:"Appuyez sur le cœur d'un produit pour le sauvegarder ici.",
     noSaved:"Votre liste de souhaits est vide", saveItemsYouLove:"Sauvegardez vos favoris",
     emptyBag:"Votre sac est vide", continueShopping:"Continuer vos achats",
     freeShippingQualify:"Vous bénéficiez de la livraison gratuite!",
@@ -180,7 +207,7 @@ const TR = {
     yourEmail:"Votre e-mail", yourPhone:"Téléphone (optionnel)",
     deliveryAddress:"Adresse de livraison", noteToSeller:"Note (optionnel)",
     submitRequest:"Soumettre", requestSent:"Demande envoyée! ✓",
-    size:"Taille", colour:"Couleur", description:"Description",
+    size:"Taille", colour:"Couleur", description:"Description", reviewsLabel:"avis",
     loading:"Chargement…", language:"Langue",
     noProducts:"Pas encore de produits",
     noProductsBody:"Notre collection est en cours de curation. Revenez bientôt.",
@@ -306,12 +333,13 @@ function RatingStars({ rating, size=12 }) {
 }
 
 function PriceLine({ price, was, user, onLoginPrompt }) {
+  const { t } = useLang();
   if (!user) return (
     <button
       onClick={e => { e.stopPropagation(); onLoginPrompt && onLoginPrompt(); }}
       style={{ background:"none", border:"none", padding:0, cursor:"pointer", textAlign:"left" }}
     >
-      <span style={{ fontSize:12, color:T.blue, fontWeight:500 }}>Sign in to see price</span>
+      <span style={{ fontSize:12, color:T.gray5, fontStyle:"italic" }}>{t.priceOnRequest}</span>
     </button>
   );
   return (
@@ -592,6 +620,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty }) {
 
 /* ─── Product Detail ────────────────────────────────────────── */
 function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt }) {
+  const { t } = useLang();
   const [sz, setSz]           = useState(null);
   const [done, setDone]       = useState(false);
   const [showReq, setReq]     = useState(false);
@@ -716,7 +745,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
       {Number(p.rating)>0&&(
         <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:14 }}>
           <RatingStars rating={p.rating}/>
-          <span style={{ fontSize:13,color:T.gray3 }}>{p.rating} ({p.reviews} reviews)</span>
+          <span style={{ fontSize:13,color:T.gray3 }}>{p.rating} ({p.reviews} {t.reviewsLabel})</span>
         </div>
       )}
 
@@ -727,13 +756,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
             {p.was&&<span style={{ fontSize:18,color:T.gray4,textDecoration:"line-through" }}>{$p(p.was)}</span>}
           </>
         ) : (
-          <div style={{ background:T.fill3, borderRadius:12, padding:"10px 16px", display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:20 }}>🔒</span>
-            <div>
-              <p style={{ fontSize:14,fontWeight:600,color:T.black,margin:"0 0 2px" }}>Price hidden</p>
-              <p style={{ fontSize:12,color:T.gray4,margin:0 }}>Tap "Request to Buy" or "Add to Bag" to reveal</p>
-            </div>
-          </div>
+          <span style={{ fontSize:22, color:T.gray6, fontStyle:"italic", letterSpacing:"-0.3px" }}>{t.priceOnRequest}</span>
         )}
       </div>
 
@@ -741,7 +764,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
 
       {p.sizes?.length>0&&(
         <div style={{ marginBottom:24 }}>
-          <p style={{ fontSize:13,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:12,color:T.gray2 }}>Size</p>
+          <p style={{ fontSize:13,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:12,color:T.gray2 }}>{t.size}</p>
           <div style={{ display:"flex",flexWrap:"wrap",gap:10 }}>
             {p.sizes.map(s=>(
               <button key={s} onClick={()=>setSz(s)} style={{ minWidth:52,padding:"10px 14px",borderRadius:12,border:`1.5px solid ${sz===s?T.black:T.gray7}`,background:sz===s?T.black:T.fill3,color:sz===s?T.white:T.black,fontSize:14,fontWeight:600,cursor:"pointer" }}>{s}</button>
@@ -752,10 +775,10 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
 
       <div style={{ display:"flex",gap:12,marginBottom:24 }}>
         <Btn full onClick={handleAddToBag} disabled={showPrice && p.sizes?.length>0&&!sz} style={{ borderRadius:16,padding:"17px",fontSize:16 }}>
-          {!showPrice ? "See Price & Add to Bag 🔓" : done ? "Added ✓" : "Add to Bag"}
+          {done ? t.addedToBag : t.addToBagReveal}
         </Btn>
         <Btn variant="gray" onClick={handleRequest} style={{ borderRadius:16,padding:"17px",whiteSpace:"nowrap" }}>
-          {!showPrice ? "See Price 🔓" : "Request to Buy"}
+          {t.requestReveal}
         </Btn>
       </div>
 
@@ -989,11 +1012,12 @@ function HeroSlider({ onNavigate }) {
   );
 }
 function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user, onLoginPrompt }) {
+  const { t } = useLang();
   const newP  = products.filter(p=>p.badge==='New').slice(0,8);
   const saleP = products.filter(p=>p.badge==='Sale').slice(0,8);
   const trend = products.slice(0,6);
 
-  if (products.length===0) return <EmptyState icon="🛍️" title="Shop opening soon" body="Our collection is being curated. Check back shortly for new arrivals."/>;
+  if (products.length===0) return <EmptyState icon="🛍️" title={t.shopOpeningSoon} body={t.curatingCollection}/>;
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
@@ -1002,8 +1026,8 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user
       {newP.length>0&&(
         <div style={{ marginBottom:32 }}>
           <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16 }}>
-            <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>New In ✦</p>
-            <button onClick={()=>onNavigate("shop")} style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:T.blue,fontWeight:500 }}>See All</button>
+            <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>{t.newIn}</p>
+            <button onClick={()=>onNavigate("shop")} style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:T.blue,fontWeight:500 }}>{t.seeAll}</button>
           </div>
           <HScroll gap={12}>{newP.map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll>
         </div>
@@ -1011,16 +1035,16 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user
 
       {saleP.length>0&&(
         <div style={{ background:"linear-gradient(135deg,#fff0f0,#ffe5e5)",borderRadius:20,padding:"22px 20px",marginBottom:28 }}>
-          <p style={{ fontSize:12,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.red,marginBottom:4 }}>Limited Time</p>
-          <p style={{ fontSize:22,fontWeight:800,letterSpacing:"-0.5px",marginBottom:4 }}>Up to 40% off</p>
-          <p style={{ fontSize:13,color:T.gray4,marginBottom:16 }}>Select styles. While stocks last.</p>
-          <Btn size="sm" style={{ background:T.red,color:T.white }} onClick={()=>onNavigate("shop")}>Shop Sale →</Btn>
+          <p style={{ fontSize:12,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:T.red,marginBottom:4 }}>{t.limitedTime}</p>
+          <p style={{ fontSize:22,fontWeight:800,letterSpacing:"-0.5px",marginBottom:4 }}>{t.upTo40}</p>
+          <p style={{ fontSize:13,color:T.gray4,marginBottom:16 }}>{t.whileStocks}</p>
+          <Btn size="sm" style={{ background:T.red,color:T.white }} onClick={()=>onNavigate("shop")}>{t.shopSale}</Btn>
         </div>
       )}
 
       {trend.length>0&&(
         <div style={{ marginBottom:32 }}>
-          <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",marginBottom:16 }}>Trending Now 🔥</p>
+          <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",marginBottom:16 }}>{t.trendingNow}</p>
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
             {trend.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
           </div>
@@ -1032,6 +1056,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user
 
 /* ─── Shop ──────────────────────────────────────────────────── */
 function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
+  const { t } = useLang();
   const [cat,setCat]   = useState("All");
   const [sort,setSort] = useState("featured");
   const [grid,setGrid] = useState(true);
@@ -1047,27 +1072,27 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
     return p;
   }, [cat,sort,products]);
 
-  if (products.length===0) return <EmptyState icon="👗" title="Shop is empty" body="Products will appear here once added by the team."/>;
+  if (products.length===0) return <EmptyState icon="👗" title={t.shopEmpty} body={t.shopEmptyBody}/>;
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <HScroll gap={8}>{cats.map(c=><Chip key={c} label={c} active={cat===c} onClick={()=>setCat(c)}/>)}</HScroll>
       <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",margin:"16px 0 20px" }}>
-        <span style={{ fontSize:14,color:T.gray4 }}>{filtered.length} items</span>
+        <span style={{ fontSize:14,color:T.gray4 }}>{filtered.length} {t.items}</span>
         <div style={{ display:"flex",gap:10,alignItems:"center" }}>
           <select value={sort} onChange={e=>setSort(e.target.value)} style={{ fontSize:14,color:T.black,background:T.fill3,border:"none",padding:"9px 16px",borderRadius:99,cursor:"pointer",outline:"none" }}>
-            <option value="featured">Browse</option>
-            <option value="new">New In</option>
-            <option value="low">Lowest Price</option>
-            <option value="high">Highest Price</option>
-            <option value="rating">Top Rated</option>
+            <option value="featured">{t.sortFeatured}</option>
+            <option value="new">{t.sortNew}</option>
+            <option value="low">{t.sortLow}</option>
+            <option value="high">{t.sortHigh}</option>
+            <option value="rating">{t.sortRating}</option>
           </select>
           <button onClick={()=>setGrid(g=>!g)} style={{ width:36,height:36,borderRadius:10,background:T.fill3,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
             <Icon name={grid?"list":"grid"} size={16} color={T.black}/>
           </button>
         </div>
       </div>
-      {filtered.length===0 ? <EmptyState icon="🔍" title={`No ${cat} items`} body="Try a different category."/> : (
+      {filtered.length===0 ? <EmptyState icon="🔍" title={`No ${cat} ${t.items}`} body={t.tryCategory}/> : (
         <div style={{ display:"grid",gridTemplateColumns:grid?"1fr 1fr":"1fr",gap:grid?"16px 10px":"12px" }}>
           {filtered.map(p=>(
             grid ? <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/> : (
@@ -1092,23 +1117,24 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
 
 /* ─── Search ────────────────────────────────────────────────── */
 function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
+  const { t } = useLang();
   const [q, setQ] = useState("");
   const res = useMemo(() => q.trim().length<2 ? [] : products.filter(p=>p.name?.toLowerCase().includes(q.toLowerCase())||p.category?.toLowerCase().includes(q.toLowerCase())), [q,products]);
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ position:"relative",marginBottom:22 }}>
-        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search products…" style={{ width:"100%",padding:"15px 20px 15px 48px",fontSize:16,background:T.fill4,border:"none",borderRadius:14,outline:"none",color:T.black,boxSizing:"border-box" }}/>
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.searchPlaceholder} style={{ width:"100%",padding:"15px 20px 15px 48px",fontSize:16,background:T.fill4,border:"none",borderRadius:14,outline:"none",color:T.black,boxSizing:"border-box" }}/>
         <span style={{ position:"absolute",left:16,top:"50%",transform:"translateY(-50%)" }}><Icon name="search" size={19} color={T.gray4}/></span>
         {q&&<button onClick={()=>setQ("")} style={{ position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer" }}><Icon name="close" size={16} color={T.gray4}/></button>}
       </div>
       {q.length<2 ? (
-        products.length===0 ? <EmptyState icon="🔍" title="Search products" body="Add products from the admin dashboard to enable search."/> : (
-          <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>Trending</p><HScroll gap={10}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll></>
+        products.length===0 ? <EmptyState icon="🔍" title={t.search} body={t.noProducts}/> : (
+          <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>{t.trending}</p><HScroll gap={10}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll></>
         )
       ) : (
         <>
-          <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} result{res.length!==1?"s":""} for "{q}"</p>
-          {res.length===0 ? <EmptyState icon="🔍" title="No results" body={`Nothing matched "${q}".`}/> : (
+          <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} {res.length!==1?t.noResults:t.noResults} for "{q}"</p>
+          {res.length===0 ? <EmptyState icon="🔍" title={t.noResults} body={`${t.nothingMatched} "${q}".`}/> : (
             <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
               {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
             </div>
@@ -1121,11 +1147,12 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
 
 /* ─── Wishlist ──────────────────────────────────────────────── */
 function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLoginPrompt }) {
+  const { t } = useLang();
   const items = products.filter(p=>wishlist.includes(p.id));
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} saved items</p>
-      {items.length===0 ? <EmptyState icon="❤️" title="Your wishlist is empty" body="Tap the heart on any product to save it here."/> : (
+      <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} {t.savedItems}</p>
+      {items.length===0 ? <EmptyState icon="❤️" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
         <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
           {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true} user={user} onLoginPrompt={onLoginPrompt}/>)}
         </div>
@@ -1941,12 +1968,13 @@ function Logo({ height=40 }) {
 
 /* ─── Header ────────────────────────────────────────────────── */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
+  const { t } = useLang();
   const titles = {
-    shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account",
-    orders:"My Orders", "edit-profile":"Edit Profile", addresses:"Addresses",
-    notifications:"Notifications", settings:"Settings", privacy:"Privacy",
-    "our-story":"Our Story", returns:"Returns", sustainability:"Sustainability",
-    lookbook:"Lookbook",
+    shop:t.shop, search:t.search, wishlist:t.wishlist, account:t.account,
+    orders:t.myOrders, "edit-profile":t.editProfile, addresses:t.addresses,
+    notifications:t.notifications, settings:t.settings, privacy:t.privacy,
+    "our-story":t.ourStory, returns:t.returns, sustainability:t.sustainability,
+    lookbook:t.lookbook,
   };
   const title = titles[screen] || "";
   return (
@@ -1984,12 +2012,13 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
 
 /* ─── Bottom Nav ────────────────────────────────────────────── */
 function BottomNav({ screen, onNavigate }) {
+  const { t } = useLang();
   const tabs = [
-    { id:"home",     icon:"home",   label:"Home"    },
-    { id:"shop",     icon:"bag",    label:"Shop"    },
-    { id:"search",   icon:"search", label:"Search"  },
-    { id:"wishlist", icon:"heart",  label:"Saved"   },
-    { id:"account",  icon:"person", label:"Account" },
+    { id:"home",     icon:"home",   label:t.home    },
+    { id:"shop",     icon:"bag",    label:t.shop    },
+    { id:"search",   icon:"search", label:t.search  },
+    { id:"wishlist", icon:"heart",  label:t.saved   },
+    { id:"account",  icon:"person", label:t.account },
   ];
   return (
     <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.94)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",padding:"8px 0 20px",zIndex:300 }}>
