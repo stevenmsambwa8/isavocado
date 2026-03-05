@@ -67,6 +67,10 @@ const TR = {
     newIn:"New In ✦", trendingNow:"Trending Now 🔥", onSale:"On Sale",
     viewAll:"View All", seeAll:"See All", browse:"Browse",
     priceOnRequest:"Members only", addToBagReveal:"Add to Bag", requestReveal:"Request to Buy",
+    signInToContinue:"Sign in to continue",
+    cartCheckoutTitle:"Send Order Request", cartCheckoutSub:"We'll reach out to confirm your order.",
+    cartPhoneLabel:"Your Phone Number", cartNotePlaceholder:"Anything we should know about your order…",
+    cartSubmit:"Send Request", cartSent:"Order Request Sent! ✓", cartSentBody:"We'll contact you shortly to confirm.",
     limitedTime:"Limited Time", upTo40:"Up to 40% off", whileStocks:"Select styles. While stocks last.", shopSale:"Shop Sale →",
     shopOpeningSoon:"Shop opening soon", curatingCollection:"Our collection is being curated. Check back shortly for new arrivals.",
     shopEmpty:"Shop is empty", shopEmptyBody:"Products will appear here once added by the team.",
@@ -126,6 +130,10 @@ const TR = {
     newIn:"Mpya ✦", trendingNow:"Inayoongoza Sasa 🔥", onSale:"Punguzo",
     viewAll:"Angalia Zote", seeAll:"Angalia Zote", browse:"Tazama",
     priceOnRequest:"Wanachama tu", addToBagReveal:"Ongeza Mfukoni", requestReveal:"Ombi la Kununua",
+    signInToContinue:"Ingia kuendelea",
+    cartCheckoutTitle:"Tuma Ombi la Agizo", cartCheckoutSub:"Tutawasiliana nawe kuthibitisha agizo lako.",
+    cartPhoneLabel:"Nambari Yako ya Simu", cartNotePlaceholder:"Kuna kitu chochote tunachopaswa kujua kuhusu agizo lako…",
+    cartSubmit:"Tuma Ombi", cartSent:"Ombi la Agizo Limetumwa! ✓", cartSentBody:"Tutawasiliana nawe hivi karibuni kuthibitisha.",
     limitedTime:"Wakati Mdogo", upTo40:"Hadi 40% punguzo", whileStocks:"Mitindo iliyochaguliwa. Hadi stoki itakapokwisha.", shopSale:"Nunua Punguzo →",
     shopOpeningSoon:"Duka linafunguliwa hivi karibuni", curatingCollection:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
     shopEmpty:"Duka ni tupu", shopEmptyBody:"Bidhaa zitaonekana hapa zikishaongezwa.",
@@ -185,6 +193,10 @@ const TR = {
     newIn:"Nouveautés ✦", trendingNow:"Tendances 🔥", onSale:"En solde",
     viewAll:"Voir tout", seeAll:"Voir tout", browse:"Parcourir",
     priceOnRequest:"Membres uniquement", addToBagReveal:"Ajouter au sac", requestReveal:"Demande d'achat",
+    signInToContinue:"Connectez-vous pour continuer",
+    cartCheckoutTitle:"Envoyer la demande", cartCheckoutSub:"Nous vous contacterons pour confirmer votre commande.",
+    cartPhoneLabel:"Votre numéro de téléphone", cartNotePlaceholder:"Quelque chose que nous devrions savoir sur votre commande…",
+    cartSubmit:"Envoyer", cartSent:"Demande envoyée! ✓", cartSentBody:"Nous vous contacterons prochainement pour confirmer.",
     limitedTime:"Durée limitée", upTo40:"Jusqu'à -40%", whileStocks:"Styles sélectionnés. Jusqu'à épuisement des stocks.", shopSale:"Voir les soldes →",
     shopOpeningSoon:"Ouverture prochaine", curatingCollection:"Notre collection est en cours de sélection. Revenez bientôt.",
     shopEmpty:"La boutique est vide", shopEmptyBody:"Les produits apparaîtront ici une fois ajoutés.",
@@ -339,7 +351,7 @@ function PriceLine({ price, was, user, onLoginPrompt }) {
       onClick={e => { e.stopPropagation(); onLoginPrompt && onLoginPrompt(); }}
       style={{ background:"none", border:"none", padding:0, cursor:"pointer", textAlign:"left" }}
     >
-      <span style={{ fontSize:12, color:T.gray5, fontStyle:"italic" }}>{t.priceOnRequest}</span>
+      <span style={{ fontSize:12, color:T.gray5, fontStyle:"italic" }}>{t.signInToContinue}</span>
     </button>
   );
   return (
@@ -557,61 +569,158 @@ function PurchaseModal({ product, onClose, sessionId }) {
 }
 
 /* ─── Cart Drawer ────────────────────────────────────────────── */
-function CartDrawer({ cart, onClose, onRemove, onQty }) {
-  const total     = cart.reduce((s,i)=>s+i.price*i.qty, 0);
-  const FREE_TZS  = 500000;
-  const SHIP_TZS  = 30000;
-  const free      = total >= FREE_TZS;
+function CartDrawer({ cart, onClose, onRemove, onQty, sessionId }) {
+  const { t } = useLang();
+  const total    = cart.reduce((s,i)=>s+i.price*i.qty, 0);
+  const FREE_TZS = 500000;
+  const SHIP_TZS = 30000;
+  const free     = total >= FREE_TZS;
+
+  const [step,    setStep]  = useState("bag"); // "bag" | "checkout" | "sent"
+  const [phone,   setPhone] = useState("");
+  const [note,    setNote]  = useState("");
+  const [loading, setLoad]  = useState(false);
+  const [err,     setErr]   = useState("");
+
+  const submitOrder = async () => {
+    if (!phone.trim()) { setErr(t.cartPhoneLabel + " is required."); return; }
+    setLoad(true); setErr("");
+    try {
+      for (const item of cart) {
+        const payload = {
+          product_id: item.id, product_name: item.name, product_price: item.price,
+          selected_size: item.sz || null, quantity: item.qty,
+          buyer_phone: phone.trim(), note: note.trim() || null, status: "pending",
+        };
+        let { error } = await sb.from("purchase_requests").insert({ ...payload, session_id: sessionId || null });
+        if (error?.code === "42703") ({ error } = await sb.from("purchase_requests").insert(payload));
+        if (error) throw error;
+      }
+      setStep("sent");
+    } catch(e) {
+      setErr(e?.message || "Something went wrong. Please try again.");
+    } finally { setLoad(false); }
+  };
+
   return (
     <>
       <div onClick={onClose} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.36)",zIndex:500,backdropFilter:"blur(4px)" }}/>
       <div style={{ position:"fixed",top:0,right:0,bottom:0,width:"min(440px,100vw)",background:"rgba(255,255,255,0.97)",backdropFilter:"blur(40px)",zIndex:600,display:"flex",flexDirection:"column",animation:"slideInR 0.36s cubic-bezier(.32,0,.28,1)",borderRadius:"20px 0 0 20px",boxShadow:shadow.xxl }}>
         <div style={{ width:40,height:4,borderRadius:2,background:T.gray7,margin:"14px auto 0" }}/>
-        <div style={{ padding:"16px 22px 16px",display:"flex",alignItems:"center",justifyContent:"space-between" }}>
-          <span style={{ fontSize:22,fontWeight:700,letterSpacing:"-0.5px" }}>My Bag</span>
+
+        {/* ── Header ── */}
+        <div style={{ padding:"14px 22px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0 }}>
+          {step==="checkout"
+            ? <button onClick={()=>setStep("bag")} style={{ display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",color:T.blue,padding:0,fontSize:14,fontWeight:500 }}>
+                <Icon name="back" size={17} color={T.blue}/> {t.myBag}
+              </button>
+            : <span style={{ fontSize:21,fontWeight:700,letterSpacing:"-0.5px" }}>{step==="sent" ? "✓" : t.myBag}</span>
+          }
           <IconBtn icon="close" onClick={onClose} size={34}/>
         </div>
-        <div style={{ margin:"0 22px 10px",background:T.fill4,borderRadius:14,padding:"12px 16px" }}>
-          {free
-            ? <p style={{ fontSize:13,fontWeight:600,color:T.green,display:"flex",alignItems:"center",gap:6 }}><Icon name="truck" size={15} color={T.green}/> You qualify for free shipping!</p>
-            : <p style={{ fontSize:13,color:T.gray3 }}>Add <strong>{$p(FREE_TZS-total)}</strong> more for free shipping</p>
-          }
-        </div>
-        <div style={{ flex:1,overflowY:"auto",padding:"0 22px" }}>
-          {cart.length===0 ? (
-            <EmptyState icon="🛍️" title="Your bag is empty" body="Add items from the shop to get started."/>
-          ) : cart.map((item,i)=>(
-            <div key={`${item.id}-${item.sz}`}>
-              <div style={{ padding:"16px 0",display:"flex",gap:14 }}>
-                <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
-                  {item.image_url?<img src={item.image_url} alt={item.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28 }}>👗</div>}
-                </div>
-                <div style={{ flex:1,minWidth:0 }}>
-                  <p style={{ fontSize:15,fontWeight:600,marginBottom:2 }}>{item.name}</p>
-                  {item.sz&&<p style={{ fontSize:13,color:T.gray4,marginBottom:12 }}>Size: {item.sz}</p>}
-                  <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
-                    <div style={{ display:"flex",alignItems:"center",background:T.gray9,borderRadius:99 }}>
-                      <button onClick={()=>onQty(item,item.qty-1)} style={{ width:34,height:34,borderRadius:17,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="minus" size={14} color={T.black}/></button>
-                      <span style={{ fontSize:15,fontWeight:600,minWidth:22,textAlign:"center" }}>{item.qty}</span>
-                      <button onClick={()=>onQty(item,item.qty+1)} style={{ width:34,height:34,borderRadius:17,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="plus" size={14} color={T.black}/></button>
-                    </div>
-                    <span style={{ fontSize:16,fontWeight:700 }}>{$p(item.price*item.qty)}</span>
-                  </div>
-                </div>
-                <button onClick={()=>onRemove(item)} style={{ background:"none",border:"none",cursor:"pointer",alignSelf:"flex-start",marginTop:2 }}><Icon name="close" size={16} color={T.gray5}/></button>
-              </div>
-              {i<cart.length-1&&<Divider/>}
-            </div>
-          ))}
-        </div>
-        {cart.length>0&&(
-          <div style={{ padding:"18px 22px 32px",borderTop:`1px solid ${T.gray8}` }}>
-            <div style={{ display:"flex",justifyContent:"space-between",marginBottom:18 }}>
-              <span style={{ fontSize:15,color:T.gray3 }}>Total</span>
-              <span style={{ fontSize:18,fontWeight:700 }}>{$p(free?total:total+SHIP_TZS)}</span>
-            </div>
-            <Btn full style={{ borderRadius:14,padding:"17px",fontSize:16 }}>Checkout →</Btn>
+
+        {/* ── SENT ── */}
+        {step==="sent" && (
+          <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 28px 48px",textAlign:"center",gap:14 }}>
+            <div style={{ fontSize:60 }}>✅</div>
+            <p style={{ fontSize:22,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>{t.cartSent}</p>
+            <p style={{ fontSize:14,color:T.gray4,lineHeight:1.6,maxWidth:280,margin:0 }}>{t.cartSentBody}</p>
+            <Btn onClick={onClose} variant="gray" style={{ marginTop:10,borderRadius:14,padding:"13px 32px" }}>{t.continueShopping}</Btn>
           </div>
+        )}
+
+        {/* ── CHECKOUT FORM ── */}
+        {step==="checkout" && (
+          <div style={{ flex:1,overflowY:"auto",padding:"4px 22px 36px" }}>
+            {/* Mini order summary */}
+            <div style={{ background:T.fill4,borderRadius:14,padding:"14px 16px",marginBottom:20 }}>
+              {cart.map(item=>(
+                <div key={`${item.id}-${item.sz}`} style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
+                  <span style={{ fontSize:13,color:T.gray3,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:8 }}>
+                    {item.name}{item.sz?` · ${item.sz}`:""} ×{item.qty}
+                  </span>
+                  <span style={{ fontSize:13,fontWeight:600,flexShrink:0 }}>{$p(item.price*item.qty)}</span>
+                </div>
+              ))}
+              <div style={{ height:1,background:T.gray8,margin:"8px 0" }}/>
+              <div style={{ display:"flex",justifyContent:"space-between" }}>
+                <span style={{ fontSize:14,fontWeight:600 }}>Total</span>
+                <span style={{ fontSize:14,fontWeight:700 }}>{$p(free?total:total+SHIP_TZS)}</span>
+              </div>
+            </div>
+
+            <p style={{ fontSize:13,color:T.gray4,marginBottom:18,lineHeight:1.5 }}>{t.cartCheckoutSub}</p>
+
+            {/* Phone */}
+            <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
+              <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>{t.cartPhoneLabel}</label>
+              <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+255 700 000 000"
+                style={{ padding:"13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${err&&!phone.trim()?T.red:T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
+            </div>
+
+            {/* Note */}
+            <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:22 }}>
+              <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>{t.noteToSeller}</label>
+              <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder={t.cartNotePlaceholder}
+                style={{ padding:"12px 14px",fontSize:14,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif",resize:"none",minHeight:80 }}/>
+            </div>
+
+            {err&&<p style={{ fontSize:13,color:T.red,background:"#fff0f0",padding:"10px 14px",borderRadius:10,margin:"0 0 14px" }}>{err}</p>}
+            <Btn full onClick={submitOrder} disabled={loading} style={{ borderRadius:14,padding:"17px",fontSize:16 }}>
+              {loading?<Spin size={18}/>:t.cartSubmit+" →"}
+            </Btn>
+          </div>
+        )}
+
+        {/* ── BAG ── */}
+        {step==="bag" && (
+          <>
+            <div style={{ margin:"0 22px 10px",background:T.fill4,borderRadius:14,padding:"12px 16px",flexShrink:0 }}>
+              {free
+                ? <p style={{ fontSize:13,fontWeight:600,color:T.green,display:"flex",alignItems:"center",gap:6,margin:0 }}><Icon name="truck" size={15} color={T.green}/> {t.freeShippingQualify}</p>
+                : <p style={{ fontSize:13,color:T.gray3,margin:0 }}>{t.addMore} <strong>{$p(FREE_TZS-total)}</strong> {t.moreForFreeShipping}</p>
+              }
+            </div>
+            <div style={{ flex:1,overflowY:"auto",padding:"0 22px" }}>
+              {cart.length===0
+                ? <EmptyState icon="🛍️" title={t.emptyBag} body={t.continueShopping}/>
+                : cart.map((item,i)=>(
+                  <div key={`${item.id}-${item.sz}`}>
+                    <div style={{ padding:"16px 0",display:"flex",gap:14 }}>
+                      <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
+                        {item.image_url
+                          ? <img src={item.image_url} alt={item.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+                          : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28 }}>👗</div>}
+                      </div>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <p style={{ fontSize:15,fontWeight:600,marginBottom:2 }}>{item.name}</p>
+                        {item.sz&&<p style={{ fontSize:13,color:T.gray4,marginBottom:12 }}>{t.size}: {item.sz}</p>}
+                        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+                          <div style={{ display:"flex",alignItems:"center",background:T.gray9,borderRadius:99 }}>
+                            <button onClick={()=>onQty(item,item.qty-1)} style={{ width:34,height:34,borderRadius:17,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="minus" size={14} color={T.black}/></button>
+                            <span style={{ fontSize:15,fontWeight:600,minWidth:22,textAlign:"center" }}>{item.qty}</span>
+                            <button onClick={()=>onQty(item,item.qty+1)} style={{ width:34,height:34,borderRadius:17,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="plus" size={14} color={T.black}/></button>
+                          </div>
+                          <span style={{ fontSize:16,fontWeight:700 }}>{$p(item.price*item.qty)}</span>
+                        </div>
+                      </div>
+                      <button onClick={()=>onRemove(item)} style={{ background:"none",border:"none",cursor:"pointer",alignSelf:"flex-start",marginTop:2 }}><Icon name="close" size={16} color={T.gray5}/></button>
+                    </div>
+                    {i<cart.length-1&&<Divider/>}
+                  </div>
+                ))
+              }
+            </div>
+            {cart.length>0&&(
+              <div style={{ padding:"18px 22px 32px",borderTop:`1px solid ${T.gray8}`,flexShrink:0 }}>
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:18 }}>
+                  <span style={{ fontSize:15,color:T.gray3 }}>Total</span>
+                  <span style={{ fontSize:18,fontWeight:700 }}>{$p(free?total:total+SHIP_TZS)}</span>
+                </div>
+                <Btn full onClick={()=>setStep("checkout")} style={{ borderRadius:14,padding:"17px",fontSize:16 }}>{t.checkout}</Btn>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>
@@ -756,7 +865,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
             {p.was&&<span style={{ fontSize:18,color:T.gray4,textDecoration:"line-through" }}>{$p(p.was)}</span>}
           </>
         ) : (
-          <span style={{ fontSize:22, color:T.gray6, fontStyle:"italic", letterSpacing:"-0.3px" }}>{t.priceOnRequest}</span>
+          <span style={{ fontSize:22, color:T.gray6, fontStyle:"italic", letterSpacing:"-0.3px" }}>{t.signInToContinue}</span>
         )}
       </div>
 
@@ -1968,7 +2077,8 @@ function Logo({ height=40 }) {
 
 /* ─── Header ────────────────────────────────────────────────── */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
-  const { t } = useLang();
+  const { t, lang, setLang } = useLang();
+  const [showLang, setShowLang] = useState(false);
   const titles = {
     shop:t.shop, search:t.search, wishlist:t.wishlist, account:t.account,
     orders:t.myOrders, "edit-profile":t.editProfile, addresses:t.addresses,
@@ -1994,12 +2104,36 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
         <div style={{ position:"absolute",left:"50%",transform:"translateX(-50%)",pointerEvents:"none" }}>
           {canGoBack&&title&&<span style={{ fontSize:17,fontWeight:600,letterSpacing:"-0.3px",color:"#000",whiteSpace:"nowrap" }}>{title}</span>}
         </div>
-        <div style={{ display:"flex",alignItems:"center",gap:0,marginLeft:"auto",flexShrink:0 }}>
+        <div style={{ display:"flex",alignItems:"center",gap:0,marginLeft:"auto",flexShrink:0,position:"relative" }}>
           {screen!=="search"&&(
             <button onClick={()=>onNavigate("search")} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
               <Icon name="search" size={22} color={T.black}/>
             </button>
           )}
+          {/* Globe language picker */}
+          <div style={{ position:"relative" }}>
+            <button onClick={()=>setShowLang(v=>!v)} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 8px",display:"flex",alignItems:"center",gap:3 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={T.black} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <span style={{ fontSize:11,fontWeight:600,color:T.black }}>{lang.toUpperCase()}</span>
+            </button>
+            {showLang&&(
+              <>
+                <div onClick={()=>setShowLang(false)} style={{ position:"fixed",inset:0,zIndex:299 }}/>
+                <div style={{ position:"absolute",top:"calc(100% + 6px)",right:0,background:T.white,borderRadius:14,boxShadow:shadow.xl,border:`1px solid ${T.gray8}`,zIndex:300,overflow:"hidden",minWidth:140 }}>
+                  {LANGS.map(l=>(
+                    <button key={l.code} onClick={()=>{ setLang(l.code); setShowLang(false); }}
+                      style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 16px",background:lang===l.code?T.fill3:T.white,border:"none",cursor:"pointer",fontSize:14,fontWeight:lang===l.code?700:400,color:T.black,textAlign:"left" }}>
+                      <span style={{ fontSize:18 }}>{l.flag}</span>
+                      <span>{l.label}</span>
+                      {lang===l.code&&<span style={{ marginLeft:"auto",fontSize:12,color:T.blue }}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <button onClick={onCart} style={{ position:"relative",background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
             <Icon name="bag" size={22} color={T.black}/>
             {cartCount>0&&<span style={{ position:"absolute",top:4,right:4,minWidth:18,height:18,borderRadius:9,background:T.black,color:T.white,fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px" }}>{cartCount}</span>}
@@ -2271,7 +2405,7 @@ export default function Page() {
         <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
-        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty}/>}
+        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty} sessionId={sessionId}/>}
 
         {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={u=>{ if(u&&!u.is_anonymous) setUser(u); setShowAuth(false); }} t={t}/>}
 
