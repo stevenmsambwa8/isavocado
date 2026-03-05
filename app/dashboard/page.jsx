@@ -264,36 +264,90 @@ function StarPicker({ value, onChange }) {
   );
 }
 
-/* ─── Image picker with compression ────────────────────────── */
-function ImagePicker({ preview, onFile, compressing }) {
+/* ─── Multi-image picker (up to 6 photos) ───────────────────── */
+function MultiImagePicker({ slots, onAdd, onRemove, onReorder, compressingIdx }) {
   const ref = useRef();
+  const MAX = 6;
+  const canAdd = slots.length < MAX;
+
   return (
-    <div onClick={()=>ref.current.click()} className="tap" style={{ width:'100%', height:186, borderRadius:14, background:T.fill, border:`1.5px dashed ${T.fill2}`, overflow:'hidden', cursor:'pointer', position:'relative', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, marginBottom:20 }}>
-      {preview ? (
-        <>
-          <img src={preview} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }}/>
-          <div style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.52)', borderRadius:8, padding:'5px 12px', display:'flex', alignItems:'center', gap:6 }}>
-            {compressing ? <Spin size={12} color="#fff"/> : null}
-            <p style={{ fontSize:12, color:T.white, margin:0, fontWeight:500 }}>{compressing ? 'Compressing…' : 'Change photo'}</p>
+    <div style={{ marginBottom:20 }}>
+      <p style={{ fontSize:11, fontWeight:600, color:T.label3, textTransform:'uppercase', letterSpacing:'0.05em', margin:'0 0 10px' }}>
+        Photos ({slots.length}/{MAX}) — first photo is the cover
+      </p>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
+        {slots.map((slot, i) => (
+          <div key={slot.id} style={{ position:'relative', aspectRatio:'3/4', borderRadius:12, overflow:'hidden', background:T.fill2 }}>
+            <img src={slot.preview} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+            {/* Cover badge */}
+            {i === 0 && (
+              <div style={{ position:'absolute', top:6, left:6, background:'rgba(0,0,0,.65)', borderRadius:6, padding:'2px 7px' }}>
+                <p style={{ fontSize:10, color:'#fff', margin:0, fontWeight:700 }}>COVER</p>
+              </div>
+            )}
+            {/* Compressing overlay */}
+            {compressingIdx === i && (
+              <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.45)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6 }}>
+                <Spin size={20} color="#fff"/>
+                <p style={{ fontSize:11, color:'#fff', margin:0 }}>Compressing…</p>
+              </div>
+            )}
+            {/* Remove button */}
+            <button
+              onClick={() => onRemove(i)}
+              style={{ position:'absolute', top:6, right:6, width:24, height:24, borderRadius:12, background:'rgba(0,0,0,.6)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+            >
+              <Ic n="close" size={12} color="#fff" w={2.5}/>
+            </button>
+            {/* Move left */}
+            {i > 0 && (
+              <button
+                onClick={() => onReorder(i, i - 1)}
+                style={{ position:'absolute', bottom:6, left:6, width:24, height:24, borderRadius:12, background:'rgba(0,0,0,.5)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:'#fff' }}
+              >‹</button>
+            )}
+            {/* Move right */}
+            {i < slots.length - 1 && (
+              <button
+                onClick={() => onReorder(i, i + 1)}
+                style={{ position:'absolute', bottom:6, right:6, width:24, height:24, borderRadius:12, background:'rgba(0,0,0,.5)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:'#fff' }}
+              >›</button>
+            )}
           </div>
-        </>
-      ) : (
-        <>
-          <div style={{ width:50, height:50, borderRadius:14, background:T.fill2, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Ic n="img" size={24} color={T.label3}/>
+        ))}
+
+        {/* Add slot */}
+        {canAdd && (
+          <div
+            onClick={() => ref.current.click()}
+            className="tap"
+            style={{ aspectRatio:'3/4', borderRadius:12, background:T.fill, border:`1.5px dashed ${T.fill2}`, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6 }}
+          >
+            <div style={{ width:36, height:36, borderRadius:10, background:T.fill2, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Ic n="plus" size={18} color={T.label3} w={2}/>
+            </div>
+            <p style={{ fontSize:11, color:T.label4, margin:0 }}>Add photo</p>
           </div>
-          <p style={{ fontSize:14, color:T.label3, margin:0 }}>Tap to add product photo</p>
-          <p style={{ fontSize:12, color:T.label4, margin:0 }}>Auto-compressed to ≤83 KB</p>
-        </>
-      )}
-      <input ref={ref} type="file" accept="image/*" onChange={async e => {
-        const f = e.target.files[0];
-        if (!f) return;
-        const previewUrl = URL.createObjectURL(f);
-        onFile(null, previewUrl, true); // show preview immediately, flag compressing
-        const compressed = await compressImage(f);
-        onFile(compressed, URL.createObjectURL(compressed), false);
-      }} style={{ display:'none' }}/>
+        )}
+      </div>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={async e => {
+          const files = Array.from(e.target.files).slice(0, MAX - slots.length);
+          for (let i = 0; i < files.length; i++) {
+            const f = files[i];
+            const previewUrl = URL.createObjectURL(f);
+            onAdd({ id: Date.now() + i, preview: previewUrl, file: null, compressing: true }, slots.length + i);
+            const compressed = await compressImage(f);
+            onAdd({ id: Date.now() + i, preview: URL.createObjectURL(compressed), file: compressed, compressing: false }, slots.length + i, true);
+          }
+          e.target.value = '';
+        }}
+        style={{ display:'none' }}
+      />
     </div>
   );
 }
@@ -304,13 +358,29 @@ const CATS  = ['Knitwear','Tailoring','Dresses','Trousers','Tops','Outerwear','A
 const SIZES = ['XS','S','M','L','XL','XXL','One Size','6','7','8','9','10','11','12'];
 
 function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
-  const [f, setF]          = useState({ ...BLANK, ...initial, rating: String(initial.rating ?? 0), reviews: String(initial.reviews ?? 0) });
-  const [imgFile, setImg]  = useState(null);
-  const [prev, setPrev]    = useState(initial.image_url || null);
-  const [compressing, setC]= useState(false);
-  const [err, setErr]      = useState({});
+  const [f, setF]  = useState({ ...BLANK, ...initial, rating: String(initial.rating ?? 0), reviews: String(initial.reviews ?? 0) });
+  const existingUrls = initial.image_urls || (initial.image_url ? [initial.image_url] : []);
+  const [slots, setSlots] = useState(existingUrls.map((url, i) => ({ id: i, preview: url, file: null, compressing: false })));
+  const [compressingIdx, setCompIdx] = useState(null);
+  const [err, setErr] = useState({});
   const set = (k, v) => setF(x => ({ ...x, [k]:v }));
   const toggleSz = s => set('sizes', f.sizes.includes(s) ? f.sizes.filter(x=>x!==s) : [...f.sizes, s]);
+
+  const handleAdd = (slot, idx, isUpdate = false) => {
+    if (isUpdate) {
+      setSlots(prev => prev.map(s => s.id === slot.id ? slot : s));
+      setCompIdx(null);
+    } else {
+      setSlots(prev => { const next = [...prev]; next.splice(idx, 0, slot); return next; });
+      setCompIdx(idx);
+    }
+  };
+  const handleRemove  = idx => setSlots(prev => prev.filter((_, i) => i !== idx));
+  const handleReorder = (from, to) => setSlots(prev => {
+    const next = [...prev]; const [item] = next.splice(from, 1); next.splice(to, 0, item); return next;
+  });
+
+  const isCompressing = slots.some(s => s.compressing);
 
   const validate = () => {
     const e = {};
@@ -323,14 +393,12 @@ function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
 
   return (
     <div>
-      <ImagePicker
-        preview={prev}
-        compressing={compressing}
-        onFile={(file, url, isCompressing) => {
-          setC(isCompressing);
-          if (file) setImg(file);
-          setPrev(url);
-        }}
+      <MultiImagePicker
+        slots={slots}
+        onAdd={handleAdd}
+        onRemove={handleRemove}
+        onReorder={handleReorder}
+        compressingIdx={compressingIdx}
       />
 
       <Card title="Product Info">
@@ -408,8 +476,8 @@ function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
       </Card>
 
       <div style={{ display:'flex', flexDirection:'column', gap:10, paddingBottom:8 }}>
-        <Btn full loading={saving || compressing} onClick={()=>{ if(validate()) onSave({form:f, imgFile}); }}>
-          {compressing ? 'Compressing image…' : initial.id ? 'Save Changes' : 'Add Product'}
+        <Btn full loading={saving || isCompressing} onClick={()=>{ if(validate()) onSave({form:f, slots}); }}>
+          {isCompressing ? 'Compressing…' : initial.id ? 'Save Changes' : 'Add Product'}
         </Btn>
         <Btn full ghost onClick={onCancel}>Cancel</Btn>
       </div>
@@ -442,14 +510,14 @@ function ProductsPanel() {
     return () => document.removeEventListener('dash:add', h);
   }, []);
 
-  const uploadImg = async (file, id) => {
+  const uploadImg = async (file, id, index) => {
     const ext  = file.name.split('.').pop();
-    const path = `${id}.${ext}`;
+    const path = `${id}_${index}.${ext}`;
     await sb.storage.from('product-images').upload(path, file, { upsert:true });
     return sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
   };
 
-  const handleSave = async ({ form, imgFile }) => {
+  const handleSave = async ({ form, slots }) => {
     setSaving(true);
     try {
       const payload = {
@@ -472,10 +540,23 @@ function ProductsPanel() {
         const { data } = await sb.from('products').insert(payload).select().single();
         id = data.id;
       }
-      if (imgFile) {
-        const url = await uploadImg(imgFile, id);
-        await sb.from('products').update({ image_url:url }).eq('id', id);
+      // Upload any new files and build final URLs array
+      const urls = [];
+      for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        if (slot.file) {
+          // New upload
+          const url = await uploadImg(slot.file, id, i);
+          urls.push(url);
+        } else {
+          // Already-uploaded URL (kept from existing)
+          urls.push(slot.preview);
+        }
       }
+      await sb.from('products').update({
+        image_url:  urls[0] || null,   // keep legacy column for compatibility
+        image_urls: urls,
+      }).eq('id', id);
       showToast(editing?.id ? 'Product updated' : 'Product added');
       setEditing(null);
       load();
@@ -512,11 +593,16 @@ function ProductsPanel() {
             <div key={p.id}>
               <div style={{ background:T.white, padding:'13px 16px', display:'flex', alignItems:'center', gap:12 }}>
                 {/* Thumbnail */}
-                <div style={{ width:52, height:60, borderRadius:10, background:T.fill, flexShrink:0, overflow:'hidden' }}>
+                <div style={{ width:52, height:60, borderRadius:10, background:T.fill, flexShrink:0, overflow:'hidden', position:'relative' }}>
                   {p.image_url
                     ? <img src={p.image_url} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
                     : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>👗</div>
                   }
+                  {p.image_urls?.length > 1 && (
+                    <div style={{ position:'absolute', bottom:3, right:3, background:'rgba(0,0,0,.6)', borderRadius:5, padding:'1px 5px' }}>
+                      <p style={{ fontSize:9, color:'#fff', margin:0, fontWeight:700 }}>+{p.image_urls.length - 1}</p>
+                    </div>
+                  )}
                 </div>
                 {/* Info */}
                 <div style={{ flex:1, minWidth:0 }}>
@@ -854,4 +940,3 @@ export default function Dashboard() {
     </div>
   );
 }
- 
