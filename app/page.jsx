@@ -499,8 +499,8 @@ const shadow = {
   xl:"0 16px 48px rgba(0,0,0,0.14)", xxl:"0 24px 64px rgba(0,0,0,0.18)",
 };
 
-const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }: IconProps) => {
-  const s: React.CSSProperties = { display:"inline-flex", alignItems:"center", justifyContent:"center", flexShrink:0 };
+const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 })  => {
+  const s = { display:"inline-flex", alignItems:"center", justifyContent:"center", flexShrink:0 };
   const p = { fill:"none", stroke:color, strokeWidth, strokeLinecap:"round", strokeLinejoin:"round" };
   const icons = {
     home:        <><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></>,
@@ -620,7 +620,7 @@ function Chip({ label, active, onClick }) {
 }
 
 function Btn({ children, onClick, variant="black", full, size="md", style: sx={} }) {
-  const base: React.CSSProperties = { border:"none", cursor:"pointer", fontWeight:600, fontSize:size==="sm"?13:15, borderRadius:8, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.18s", padding: size==="sm"?"11px 20px":"15px 28px" };
+  const base = { border:"none", cursor:"pointer", fontWeight:600, fontSize:size==="sm"?13:15, borderRadius:8, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.18s", padding: size==="sm"?"11px 20px":"15px 28px" };
   const variants = {
     black:  { background:C.black, color:C.white },
     white:  { background:C.white, color:C.black, border:`1.5px solid ${C.gray7}` },
@@ -657,12 +657,12 @@ function HScroll({ children, gap=12 }) {
   const ref = useRef(null);
   const drag = useRef({ on:false, startX:0, sl:0 });
 
-  const onMD = (e: React.MouseEvent) => {
+  const onMD = (e) => {
     const el = ref.current; if(!el) return;
     drag.current = { on:true, startX:e.clientX, sl:el.scrollLeft };
     el.style.cursor = "grabbing"; el.style.userSelect = "none";
   };
-  const onMM = (e: React.MouseEvent) => {
+  const onMM = (e) => {
     if(!drag.current.on || !ref.current) return;
     e.preventDefault();
     ref.current.scrollLeft = drag.current.sl - (e.clientX - drag.current.startX);
@@ -700,8 +700,8 @@ function HeroBanner({ onNavigate }) {
   const prev = () => go((idx - 1 + BANNERS.length) % BANNERS.length);
   const next = () => go((idx + 1) % BANNERS.length);
 
-  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; pausedRef.current = true; };
-  const onTouchEnd   = (e: React.TouchEvent) => {
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; pausedRef.current = true; };
+  const onTouchEnd   = (e) => {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     if (dx < -40) next(); else if (dx > 40) prev();
@@ -758,11 +758,11 @@ function HeroBanner({ onNavigate }) {
   );
 }
 
-function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid: inGrid }: ProductCardProps) {
+function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid: inGrid })  {
   const fixedW = compact ? 150 : 200;
-  const outerStyle: React.CSSProperties = inGrid
+  const outerStyle = inGrid
     ? { width:"100%", minWidth:0, cursor:"pointer" };
-  const imgStyle: React.CSSProperties = inGrid
+  const imgStyle = inGrid
     ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 };
 
   return (
