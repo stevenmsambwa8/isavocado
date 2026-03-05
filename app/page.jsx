@@ -46,15 +46,19 @@ const T = {
   red:     "#ff3b30",
   green:   "#34c759",
   orange:  "#ff9500",
+  fill1:   "rgba(120,120,128,0.2)",
+  fill2:   "rgba(120,120,128,0.16)",
+  fill3:   "rgba(118,118,128,0.12)",
+  fill4:   "rgba(116,116,128,0.08)",
 };
 
 const shadow = {
-  xs:  "0 1px 3px rgba(0,0,0,0.08)",
-  sm:  "0 2px 8px rgba(0,0,0,0.08)",
-  md:  "0 4px 16px rgba(0,0,0,0.10)",
-  lg:  "0 8px 32px rgba(0,0,0,0.12)",
-  xl:  "0 16px 48px rgba(0,0,0,0.14)",
-  xxl: "0 24px 64px rgba(0,0,0,0.18)",
+  xs:  "0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06)",
+  sm:  "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)",
+  md:  "0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.08)",
+  lg:  "0 4px 16px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.10)",
+  xl:  "0 8px 24px rgba(0,0,0,0.08), 0 24px 56px rgba(0,0,0,0.12)",
+  xxl: "0 12px 40px rgba(0,0,0,0.10), 0 40px 80px rgba(0,0,0,0.16)",
 };
 
 const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }) => {
@@ -143,7 +147,7 @@ function statusColors(s) {
 
 function StatusBadge({ status }) {
   const [bg,col] = statusColors(status);
-  return <span style={{ fontSize:11, fontWeight:600, letterSpacing:"0.05em", textTransform:"uppercase", background:bg, color:col, padding:"5px 12px", borderRadius:99 }}>{status}</span>;
+  return <span style={{ fontSize:11, fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase", background:bg, color:col, padding:"4px 10px", borderRadius:99, fontFamily:"-apple-system,sans-serif" }}>{status}</span>;
 }
 
 function RatingStars({ rating, size=12 }) {
@@ -167,29 +171,29 @@ function PriceLine({ price, was }) {
 
 function Chip({ label, active, onClick }) {
   return (
-    <button onClick={onClick} className="pressable-sm" style={{ background: active ? T.black : T.white, color: active ? T.white : T.gray2, border:`1.5px solid ${active ? T.black : T.gray7}`, padding:"9px 18px", borderRadius:99, fontSize:14, fontWeight:500, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.18s" }}>
+    <button onClick={onClick} className="pressable-sm" style={{ background: active ? T.black : T.fill3, color: active ? T.white : T.gray2, border:"none", padding:"9px 18px", borderRadius:99, fontSize:14, fontWeight: active ? 600 : 400, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.2s cubic-bezier(.4,0,.2,1)", letterSpacing:"-0.1px" }}>
       {label}
     </button>
   );
 }
 
 function Btn({ children, onClick, variant="black", full, size="md", style:sx={} }) {
-  const base = { border:"none", cursor:"pointer", fontWeight:600, fontSize:size==="sm"?13:15, borderRadius:8, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.18s", padding: size==="sm"?"11px 20px":"15px 28px" };
+  const base = { border:"none", cursor:"pointer", fontWeight:590, fontSize:size==="sm"?14:16, borderRadius:14, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.2s cubic-bezier(.4,0,.2,1)", padding: size==="sm"?"12px 22px":"16px 28px", letterSpacing:"-0.1px" };
   const v = {
     black:  { background:T.black, color:T.white },
-    white:  { background:T.white, color:T.black, border:`1.5px solid ${T.gray7}` },
-    gray:   { background:T.gray9, color:T.black },
+    white:  { background:T.white, color:T.black, boxShadow:"inset 0 0 0 1px rgba(0,0,0,0.1), "+shadow.xs },
+    gray:   { background:T.fill3, color:T.black },
     red:    { background:T.red,   color:T.white },
     ghost:  { background:"transparent", color:T.gray3 },
   };
   return <button onClick={onClick} className="pressable" style={{ ...base, ...v[variant], ...(full?{width:"100%"}:{}), ...sx }}>{children}</button>;
 }
 
-function IconBtn({ icon, onClick, badge, size=44, bg=T.gray9, color=T.black, style:sx={} }) {
+function IconBtn({ icon, onClick, badge, size=44, bg=T.fill3, color=T.black, style:sx={} }) {
   return (
-    <button onClick={onClick} className="pressable-sm" style={{ width:size, height:size, borderRadius:size/2, background:bg, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", flexShrink:0, ...sx }}>
+    <button onClick={onClick} className="pressable-sm" style={{ width:size, height:size, borderRadius:size/2, background:bg, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", flexShrink:0, transition:"all 0.2s cubic-bezier(.4,0,.2,1)", ...sx }}>
       <Icon name={icon} size={size*0.46} color={color}/>
-      {badge>0 && <span style={{ position:"absolute", top:-2, right:-2, width:18, height:18, borderRadius:9, background:T.red, color:T.white, fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center" }}>{badge}</span>}
+      {badge>0 && <span style={{ position:"absolute", top:-2, right:-2, minWidth:18, height:18, borderRadius:9, background:T.red, color:T.white, fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 4px", border:"2px solid white" }}>{badge}</span>}
     </button>
   );
 }
@@ -200,9 +204,9 @@ function Divider({ my=0, mx=0 }) {
 
 function SectionHeader({ title, action, onAction }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-      <span style={{ fontSize:20, fontWeight:700, letterSpacing:-0.4 }}>{title}</span>
-      {action && <button onClick={onAction} style={{ fontSize:14, color:T.blue, background:"none", border:"none", cursor:"pointer", fontWeight:500 }}>{action}</button>}
+    <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:18 }}>
+      <span style={{ fontSize:22, fontWeight:700, letterSpacing:"-0.5px", color:T.black }}>{title}</span>
+      {action && <button onClick={onAction} style={{ fontSize:15, color:T.blue, background:"none", border:"none", cursor:"pointer", fontWeight:400, letterSpacing:"-0.1px" }}>{action}</button>}
     </div>
   );
 }
@@ -286,29 +290,29 @@ function HeroBanner({ onNavigate }) {
 
   return (
     <div ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
-      style={{ position:"relative", borderRadius:10, overflow:"hidden", marginBottom:12 }}>
+      style={{ position:"relative", borderRadius:20, overflow:"hidden", marginBottom:16 }}>
       <div ref={scrollRef} onScroll={onScroll}
         style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory",
           WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none" }}>
         {BANNERS.map(b => (
           <div key={b.id} style={{ flexShrink:0, minWidth:"100%", scrollSnapAlign:"start",
-            background:b.grad, padding:"44px 22px 36px", minHeight:220,
+            background:b.grad, padding:"52px 28px 44px", minHeight:240,
             display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
-            <p style={{ fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase",
-              color:b.textDark?"rgba(0,0,0,0.38)":"rgba(255,255,255,0.5)", marginBottom:8 }}>{b.sub}</p>
-            <h2 style={{ fontSize:34, fontWeight:800, letterSpacing:-1, lineHeight:1.05, marginBottom:20,
+            <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase",
+              color:b.textDark?"rgba(0,0,0,0.36)":"rgba(255,255,255,0.5)", marginBottom:10 }}>{b.sub}</p>
+            <h2 style={{ fontSize:36, fontWeight:700, letterSpacing:"-1.2px", lineHeight:1.06, marginBottom:22,
               color:b.textDark?T.black:T.white }}>{b.title}</h2>
             <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start",
               background:b.textDark?T.black:T.white, color:b.textDark?T.white:T.black,
-              border:"none", cursor:"pointer", padding:"11px 22px", borderRadius:99, fontSize:13, fontWeight:700 }}>{b.cta}</button>
+              border:"none", cursor:"pointer", padding:"12px 22px", borderRadius:99, fontSize:14, fontWeight:600, letterSpacing:"-0.1px" }}>{b.cta}</button>
           </div>
         ))}
       </div>
-      <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
+      <div style={{ position:"absolute", bottom:16, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
         {BANNERS.map((_,i) => (
           <button key={i} onClick={()=>go(i)}
             style={{ width:i===idx?20:6, height:6, borderRadius:3, padding:0, border:"none", cursor:"pointer",
-              background:i===idx?"rgba(0,0,0,0.6)":"rgba(0,0,0,0.18)", transition:"width 0.3s ease, background 0.3s ease" }}/>
+              background:i===idx?"rgba(0,0,0,0.55)":"rgba(0,0,0,0.16)", transition:"width 0.3s ease, background 0.3s ease" }}/>
         ))}
       </div>
     </div>
@@ -321,8 +325,8 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid
     ? { width:"100%", minWidth:0, cursor:"pointer" }
     : { width:fixedW, flexShrink:0, cursor:"pointer" };
   const imgStyle = inGrid
-    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 }
-    : { position:"relative", width:fixedW, height:compact?200:260, background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:10 };
+    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:12 }
+    : { position:"relative", width:fixedW, height:compact?200:260, background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:12 };
 
   return (
     <div onClick={()=>onSelect(p)} className="pressable" style={outerStyle}>
@@ -338,7 +342,7 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid
           <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray4}/>
         </button>
       </div>
-      <p style={{ fontSize:13, fontWeight:600, color:T.black, marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</p>
+      <p style={{ fontSize:14, fontWeight:500, color:T.black, marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", letterSpacing:"-0.1px" }}>{p.name}</p>
       <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
         <RatingStars rating={p.rating} size={10}/>
         <span style={{ fontSize:11, color:T.gray4 }}>({p.reviews})</span>
@@ -354,14 +358,14 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
   const free  = total >= 200;
   return (
     <>
-      <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:500, animation:"fadeIn 0.2s ease" }}/>
-      <div style={{ position:"fixed", top:0, right:0, bottom:0, width:"min(440px,100vw)", background:T.white, zIndex:600, display:"flex", flexDirection:"column", animation:"slideInR 0.32s cubic-bezier(.4,0,.2,1)", borderRadius:"10px 0 0 10px", boxShadow:shadow.xxl }}>
+      <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.36)", zIndex:500, animation:"fadeIn 0.22s ease", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}/>
+      <div style={{ position:"fixed", top:0, right:0, bottom:0, width:"min(440px,100vw)", background:"rgba(255,255,255,0.97)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", zIndex:600, display:"flex", flexDirection:"column", animation:"slideInR 0.36s cubic-bezier(.32,0,.28,1)", borderRadius:"20px 0 0 20px", boxShadow:shadow.xxl }}>
         <div style={{ width:40, height:4, borderRadius:2, background:T.gray7, margin:"14px auto 0" }}/>
-        <div style={{ padding:"16px 20px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <span style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4 }}>My Bag</span>
-          <IconBtn icon="close" onClick={onClose} size={36}/>
+        <div style={{ padding:"16px 22px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <span style={{ fontSize:22, fontWeight:700, letterSpacing:"-0.5px" }}>My Bag</span>
+          <IconBtn icon="close" onClick={onClose} size={34}/>
         </div>
-        <div style={{ margin:"0 20px 8px", background:T.gray9, borderRadius:8, padding:"12px 14px" }}>
+        <div style={{ margin:"0 22px 10px", background:T.fill4, borderRadius:14, padding:"12px 16px" }}>
           {free
             ? <p style={{ fontSize:13, fontWeight:600, color:T.green, display:"flex", alignItems:"center", gap:6 }}><Icon name="truck" size={15} color={T.green}/> You qualify for free shipping!</p>
             : <>
@@ -372,7 +376,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
               </>
           }
         </div>
-        <div style={{ flex:1, overflowY:"auto", padding:"0 20px" }}>
+        <div style={{ flex:1, overflowY:"auto", padding:"0 22px" }}>
           {cart.length===0 ? (
             <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", gap:16, paddingBottom:80 }}>
               <Icon name="bag" size={56} color={T.gray6}/>
@@ -382,7 +386,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
           ) : cart.map((item,i)=>(
             <div key={`${item.id}-${item.sz}`}>
               <div style={{ padding:"16px 0", display:"flex", gap:14 }}>
-                <div style={{ width:80, height:100, background:item.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:80, height:100, background:item.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.25)" }}>{item.name[0]}</span>
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
@@ -410,20 +414,20 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
           ))}
         </div>
         {cart.length>0&&(
-          <div style={{ padding:"16px 20px 28px", borderTop:`1px solid ${T.gray8}` }}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+          <div style={{ padding:"18px 22px 32px", borderTop:`1px solid ${T.gray8}` }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
               <span style={{ fontSize:15, color:T.gray3 }}>Subtotal</span>
-              <span style={{ fontSize:15 }}>{$(total)}</span>
+              <span style={{ fontSize:15, color:T.black }}>{$(total)}</span>
             </div>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:18 }}>
               <span style={{ fontSize:15, color:T.gray3 }}>Shipping</span>
               <span style={{ fontSize:15, color:free?T.green:T.black, fontWeight:free?600:400 }}>{free?"Free":$(12)}</span>
             </div>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20, paddingTop:14, borderTop:`1px solid ${T.gray8}` }}>
-              <span style={{ fontSize:18, fontWeight:700 }}>Total</span>
-              <span style={{ fontSize:18, fontWeight:700 }}>{$(free?total:total+12)}</span>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:22, paddingTop:16, borderTop:`1px solid ${T.gray8}` }}>
+              <span style={{ fontSize:18, fontWeight:700, letterSpacing:"-0.3px" }}>Total</span>
+              <span style={{ fontSize:18, fontWeight:700, letterSpacing:"-0.3px" }}>{$(free?total:total+12)}</span>
             </div>
-            <Btn full style={{ borderRadius:8, padding:"16px", fontSize:16 }}>Checkout →</Btn>
+            <Btn full style={{ borderRadius:14, padding:"17px", fontSize:16, letterSpacing:"-0.2px" }}>Checkout →</Btn>
           </div>
         )}
       </div>
@@ -448,7 +452,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:p.grad, borderRadius:10, overflow:"hidden", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:p.grad, borderRadius:24, overflow:"hidden", marginBottom:24, display:"flex", alignItems:"center", justifyContent:"center" }}>
         {p.badge&&<div style={{ position:"absolute", top:14, left:14, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>}
         <span style={{ fontSize:56, fontWeight:300, color:"rgba(0,0,0,0.18)", textAlign:"center", padding:"0 24px", lineHeight:1.2, fontStyle:"italic" }}>{p.name}</span>
         <div style={{ position:"absolute", top:14, right:14, display:"flex", flexDirection:"column", gap:10 }}>
@@ -457,14 +461,14 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
         </div>
       </div>
       <div style={{ marginBottom:20 }}>
-        <p style={{ fontSize:13, fontWeight:500, color:T.gray4, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:6 }}>{p.cat}</p>
-        <h1 style={{ fontSize:26, fontWeight:800, letterSpacing:-0.5, marginBottom:10, lineHeight:1.2 }}>{p.name}</h1>
+        <p style={{ fontSize:12, fontWeight:500, color:T.gray4, letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:6 }}>{p.cat}</p>
+        <h1 style={{ fontSize:28, fontWeight:700, letterSpacing:"-0.8px", marginBottom:12, lineHeight:1.2, color:T.black }}>{p.name}</h1>
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
           <RatingStars rating={p.rating}/>
           <span style={{ fontSize:13, color:T.gray3 }}>{p.rating} ({p.reviews} reviews)</span>
         </div>
         <div style={{ display:"flex", alignItems:"baseline", gap:10 }}>
-          <span style={{ fontSize:28, fontWeight:800, color:p.was?T.red:T.black }}>{$(p.price)}</span>
+          <span style={{ fontSize:30, fontWeight:700, letterSpacing:"-0.8px", color:p.was?T.red:T.black }}>{$(p.price)}</span>
           {p.was&&<span style={{ fontSize:18, color:T.gray4, textDecoration:"line-through" }}>{$(p.was)}</span>}
         </div>
       </div>
@@ -485,20 +489,20 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
         </div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
           {p.sizes.map(s=>(
-            <button key={s} onClick={()=>setSz(s)} style={{ minWidth:52, height:44, padding:"0 12px", background:sz===s?T.black:T.white, color:sz===s?T.white:T.gray2, border:`1.5px solid ${sz===s?T.black:T.gray7}`, borderRadius:8, cursor:"pointer", fontSize:14, fontWeight:600, transition:"all 0.15s" }}>{s}</button>
+            <button key={s} onClick={()=>setSz(s)} style={{ minWidth:52, height:46, padding:"0 14px", background:sz===s?T.black:T.fill3, color:sz===s?T.white:T.gray2, border:"none", borderRadius:12, cursor:"pointer", fontSize:15, fontWeight:sz===s?600:400, transition:"all 0.2s cubic-bezier(.4,0,.2,1)", letterSpacing:"-0.1px" }}>{s}</button>
           ))}
         </div>
         {!sz&&<p style={{ fontSize:13, color:T.red, marginTop:8, fontWeight:500 }}>Please select a size</p>}
       </div>
-      <Btn full onClick={add} style={{ padding:"18px", borderRadius:8, fontSize:16, opacity:sz?1:0.55, marginBottom:12 }}>
+      <Btn full onClick={add} style={{ padding:"18px", borderRadius:14, fontSize:16, letterSpacing:"-0.2px", opacity:sz?1:0.45, marginBottom:14 }}>
         <Icon name="bag" size={18} color={T.white}/>
         {done?"Added to Bag ✓":"Add to Bag"}
       </Btn>
       <div style={{ display:"flex", gap:8, marginBottom:24, flexWrap:"wrap" }}>
         {[["truck",t.freeShipping],["returns",t.freeReturns],["tag",t.authenticityGuarantee]].map(([icon,label])=>(
-          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, background:T.gray9, borderRadius:10, padding:"8px 12px" }}>
+          <div key={label} style={{ display:"flex", alignItems:"center", gap:6, background:T.fill4, borderRadius:12, padding:"9px 14px" }}>
             <Icon name={icon} size={14} color={T.gray3}/>
-            <span style={{ fontSize:12, fontWeight:500, color:T.gray2 }}>{label}</span>
+            <span style={{ fontSize:12, fontWeight:500, color:T.gray2, letterSpacing:"-0.1px" }}>{label}</span>
           </div>
         ))}
       </div>
@@ -506,7 +510,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
       <Divider my={4}/>
       <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${T.gray8}`, marginBottom:20 }}>
         {[["desc",t.description],["details",t.details],["care",t.care]].map(([key,label])=>(
-          <button key={key} onClick={()=>setTab(key)} style={{ flex:1, padding:"14px 0", background:"none", border:"none", cursor:"pointer", fontSize:14, fontWeight:tab===key?700:400, color:tab===key?T.black:T.gray4, borderBottom:`2px solid ${tab===key?T.black:"transparent"}`, transition:"all 0.18s" }}>{label}</button>
+          <button key={key} onClick={()=>setTab(key)} style={{ flex:1, padding:"14px 0", background:"none", border:"none", cursor:"pointer", fontSize:14, fontWeight:tab===key?600:400, color:tab===key?T.black:T.gray4, borderBottom:`2px solid ${tab===key?T.black:"transparent"}`, transition:"all 0.2s", letterSpacing:"-0.1px" }}>{label}</button>
         ))}
       </div>
       <div style={{ marginBottom:28 }}>
@@ -546,8 +550,8 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
         <HScroll gap={10}>
           {CATS.slice(1).map((cat,i)=>(
             <button key={cat} onClick={()=>onNavigate("shop")} className="pressable-sm"
-              style={{ flexShrink:0, width:100, height:100, background:catGrads[i], borderRadius:10, border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
-              <span style={{ fontSize:11, fontWeight:700, color:T.gray2, textTransform:"uppercase", letterSpacing:"0.06em" }}>{cat}</span>
+              style={{ flexShrink:0, width:100, height:100, background:catGrads[i], borderRadius:20, border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
+              <span style={{ fontSize:11, fontWeight:600, color:T.gray2, textTransform:"uppercase", letterSpacing:"0.05em" }}>{cat}</span>
             </button>
           ))}
         </HScroll>
@@ -560,9 +564,9 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           { label:"Sustainability",sub:"Our values",   screen:"sustainability", grad:"linear-gradient(135deg,#2E4A2E,#1A2E1A)", dark:true },
         ].map(item=>(
           <button key={item.screen} onClick={()=>onNavigate(item.screen)} className="pressable-sm"
-            style={{ background:item.grad, borderRadius:10, padding:"18px 16px", border:"none", cursor:"pointer", textAlign:"left" }}>
-            <p style={{ fontSize:15, fontWeight:800, color:item.dark?T.white:T.black, letterSpacing:-0.3, marginBottom:2 }}>{item.label}</p>
-            <p style={{ fontSize:12, color:item.dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.45)" }}>{item.sub}</p>
+            style={{ background:item.grad, borderRadius:20, padding:"20px 18px", border:"none", cursor:"pointer", textAlign:"left" }}>
+            <p style={{ fontSize:16, fontWeight:700, color:item.dark?T.white:T.black, letterSpacing:"-0.4px", marginBottom:3 }}>{item.label}</p>
+            <p style={{ fontSize:12, color:item.dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.45)", letterSpacing:"-0.1px" }}>{item.sub}</p>
           </button>
         ))}
       </div>
@@ -577,9 +581,9 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
       </div>
       <div style={{ display:"flex", gap:10, marginBottom:32 }}>
         {[{icon:"truck",label:t.freeShipping,sub:t.ordersOver},{icon:"returns",label:t.freeReturns,sub:t.within30},{icon:"scan",label:t.authenticityGuarantee,sub:t.guaranteed}].map(item=>(
-          <div key={item.label} style={{ flex:1, background:T.gray9, borderRadius:10, padding:"14px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:6, textAlign:"center" }}>
+          <div key={item.label} style={{ flex:1, background:T.fill4, borderRadius:18, padding:"16px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:7, textAlign:"center" }}>
             <Icon name={item.icon} size={22} color={T.black}/>
-            <p style={{ fontSize:11, fontWeight:700, color:T.black }}>{item.label}</p>
+            <p style={{ fontSize:11, fontWeight:600, color:T.black, letterSpacing:"-0.1px" }}>{item.label}</p>
             <p style={{ fontSize:10, color:T.gray4 }}>{item.sub}</p>
           </div>
         ))}
@@ -592,12 +596,13 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
           ))}
         </HScroll>
       </div>
-      <div style={{ background:T.black, borderRadius:10, padding:"36px 28px", marginBottom:32, position:"relative", overflow:"hidden" }}>
-        <div style={{ position:"absolute", right:-30, top:-30, width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }}/>
-        <p style={{ fontSize:12, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:10 }}>Limited Time</p>
-        <p style={{ fontSize:28, fontWeight:800, color:T.white, letterSpacing:-0.5, lineHeight:1.1, marginBottom:8 }}>Up to 40% off Sale</p>
-        <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)", marginBottom:22 }}>Select styles. While stocks last.</p>
-        <Btn onClick={()=>onNavigate("shop")} style={{ background:T.white, color:T.black, borderRadius:8 }} size="sm">Shop Sale</Btn>
+      <div style={{ background:T.black, borderRadius:24, padding:"40px 28px", marginBottom:32, position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", right:-40, top:-40, width:200, height:200, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }}/>
+        <div style={{ position:"absolute", right:40, bottom:-60, width:140, height:140, borderRadius:"50%", background:"rgba(255,255,255,0.03)" }}/>
+        <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", marginBottom:12 }}>Limited Time</p>
+        <p style={{ fontSize:30, fontWeight:700, color:T.white, letterSpacing:"-0.8px", lineHeight:1.1, marginBottom:10 }}>Up to 40% off Sale</p>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,0.45)", marginBottom:24, letterSpacing:"-0.1px" }}>Select styles. While stocks last.</p>
+        <Btn onClick={()=>onNavigate("shop")} style={{ background:T.white, color:T.black, borderRadius:12 }} size="sm">Shop Sale</Btn>
       </div>
       {onSale.length>0&&(
         <div style={{ marginBottom:32 }}>
@@ -646,14 +651,14 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
         <span style={{ fontSize:14, color:T.gray4 }}>{filtered.length} items</span>
         <div style={{ display:"flex", gap:10, alignItems:"center" }}>
           <select value={sort} onChange={e=>setSort(e.target.value)}
-            style={{ fontSize:13, color:T.black, background:T.gray9, border:"none", padding:"8px 14px", borderRadius:99, cursor:"pointer", outline:"none", fontWeight:500 }}>
+            style={{ fontSize:14, color:T.black, background:T.fill3, border:"none", padding:"9px 16px", borderRadius:99, cursor:"pointer", outline:"none", fontWeight:400, letterSpacing:"-0.1px", fontFamily:"-apple-system,sans-serif" }}>
             <option value="featured">{t.browse}</option>
             <option value="new">New In</option>
             <option value="low">Lowest Price</option>
             <option value="high">Highest Price</option>
             <option value="rating">Top Rated</option>
           </select>
-          <button onClick={()=>setGrid(g=>!g)} style={{ width:36,height:36,borderRadius:10,background:T.gray9,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+          <button onClick={()=>setGrid(g=>!g)} style={{ width:36,height:36,borderRadius:10,background:T.fill3,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
             <Icon name={grid?"list":"grid"} size={16} color={T.black}/>
           </button>
         </div>
@@ -663,8 +668,8 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
           grid ? (
             <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
           ) : (
-            <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.gray9, borderRadius:10, padding:12 }}>
-              <div style={{ width:80, height:100, background:p.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.fill4, borderRadius:18, padding:14 }}>
+              <div style={{ width:80, height:100, background:p.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.22)" }}>{p.name[0]}</span>
               </div>
               <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
@@ -691,7 +696,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ position:"relative", marginBottom:22 }}>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search+"…"}
-          style={{ width:"100%", padding:"15px 20px 15px 48px", fontSize:16, background:T.gray9, border:"none", borderRadius:8, outline:"none", color:T.black, boxSizing:"border-box" }}/>
+          style={{ width:"100%", padding:"15px 20px 15px 48px", fontSize:16, background:T.fill4, border:"none", borderRadius:14, outline:"none", color:T.black, boxSizing:"border-box", letterSpacing:"-0.1px" }}/>
         <span style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)" }}>
           <Icon name="search" size={19} color={T.gray4}/>
         </span>
@@ -705,7 +710,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist }) {
           <p style={{ fontSize:16, fontWeight:700, marginBottom:14 }}>Recent Searches</p>
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:28 }}>
             {recent.map(t=>(
-              <button key={t} onClick={()=>setQ(t)} style={{ background:T.gray9, color:T.black, border:"none", padding:"10px 18px", borderRadius:99, fontSize:14, fontWeight:500, cursor:"pointer" }}>{t}</button>
+              <button key={t} onClick={()=>setQ(t)} style={{ background:T.fill3, color:T.black, border:"none", padding:"10px 18px", borderRadius:99, fontSize:14, fontWeight:400, cursor:"pointer", letterSpacing:"-0.1px" }}>{t}</button>
             ))}
           </div>
           <p style={{ fontSize:16, fontWeight:700, marginBottom:14 }}>Trending</p>
@@ -763,7 +768,7 @@ function OrdersScreen() {
   const [sel,setSel] = useState(null);
   if(sel) return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:T.gray9, borderRadius:10, padding:20, marginBottom:20 }}>
+      <div style={{ background:T.fill4, borderRadius:18, padding:20, marginBottom:20 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <div>
             <p style={{ fontSize:18, fontWeight:800, letterSpacing:-0.3, marginBottom:4 }}>{sel.id}</p>
@@ -773,7 +778,7 @@ function OrdersScreen() {
         </div>
         <p style={{ fontSize:14, color:T.gray3 }}>{sel.items.join(", ")}</p>
       </div>
-      <div style={{ background:T.white, borderRadius:10, padding:20, border:`1px solid ${T.gray8}`, marginBottom:20 }}>
+      <div style={{ background:T.white, borderRadius:18, padding:20, border:`1px solid ${T.gray8}`, marginBottom:20 }}>
         <p style={{ fontSize:16, fontWeight:700, marginBottom:20 }}>Tracking</p>
         <div style={{ position:"relative", paddingLeft:32 }}>
           <div style={{ position:"absolute", left:10, top:8, bottom:8, width:2, background:T.gray8, borderRadius:1 }}/>
@@ -788,7 +793,7 @@ function OrdersScreen() {
           ))}
         </div>
       </div>
-      <div style={{ background:T.gray9, borderRadius:10, padding:20 }}>
+      <div style={{ background:T.fill4, borderRadius:18, padding:20 }}>
         <div style={{ display:"flex", justifyContent:"space-between" }}>
           <span style={{ fontSize:16, fontWeight:600 }}>Order Total</span>
           <span style={{ fontSize:16, fontWeight:800 }}>{$(sel.total)}</span>
@@ -801,7 +806,7 @@ function OrdersScreen() {
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {ORDERS.map(o=>(
-          <button key={o.id} onClick={()=>setSel(o)} className="pressable" style={{ background:T.gray9, borderRadius:10, padding:20, border:"none", cursor:"pointer", textAlign:"left", width:"100%" }}>
+          <button key={o.id} onClick={()=>setSel(o)} className="pressable" style={{ background:T.fill4, borderRadius:18, padding:20, border:"none", cursor:"pointer", textAlign:"left", width:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
               <div>
                 <p style={{ fontSize:16, fontWeight:700, letterSpacing:-0.2, marginBottom:3 }}>{o.id}</p>
@@ -837,33 +842,33 @@ function AccountScreen({ onNavigate }) {
   ];
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)", borderRadius:10, padding:"28px 22px", marginBottom:24, display:"flex", alignItems:"center", gap:18 }}>
-        <div style={{ width:64, height:64, borderRadius:32, background:"rgba(255,255,255,0.15)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)", borderRadius:24, padding:"28px 24px", marginBottom:24, display:"flex", alignItems:"center", gap:18 }}>
+        <div style={{ width:64, height:64, borderRadius:32, background:"rgba(255,255,255,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <Icon name="person" size={28} color="rgba(255,255,255,0.7)"/>
         </div>
         <div>
-          <p style={{ fontSize:20, fontWeight:800, color:T.white, letterSpacing:-0.3 }}>Alex Johnson</p>
-          <p style={{ fontSize:13, color:"rgba(255,255,255,0.5)", marginTop:3 }}>AVEN Premium Member</p>
+          <p style={{ fontSize:20, fontWeight:700, color:T.white, letterSpacing:"-0.5px" }}>Alex Johnson</p>
+          <p style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginTop:3, letterSpacing:"-0.1px" }}>AVEN Premium Member</p>
         </div>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:24 }}>
         {[["3","Orders"],["4","Wishlist"],["$862","Spent"]].map(([v,l])=>(
-          <div key={l} style={{ background:T.gray9, borderRadius:10, padding:"16px 12px", textAlign:"center" }}>
-            <p style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5 }}>{v}</p>
-            <p style={{ fontSize:12, color:T.gray4, marginTop:3 }}>{l}</p>
+          <div key={l} style={{ background:T.fill4, borderRadius:18, padding:"18px 12px", textAlign:"center" }}>
+            <p style={{ fontSize:22, fontWeight:700, letterSpacing:"-0.8px", color:T.black }}>{v}</p>
+            <p style={{ fontSize:12, color:T.gray4, marginTop:4, letterSpacing:"-0.1px" }}>{l}</p>
           </div>
         ))}
       </div>
-      <div style={{ background:T.gray9, borderRadius:10, overflow:"hidden" }}>
+      <div style={{ background:T.fill4, borderRadius:20, overflow:"hidden" }}>
         {rows.map((row,i)=>(
           <div key={row.label}>
             <button onClick={()=>row.go&&onNavigate(row.go)} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"16px 18px", background:"none", border:"none", cursor:row.go?"pointer":"default", textAlign:"left" }}>
-              <div style={{ width:38, height:38, borderRadius:8, background:T.white, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:shadow.xs }}>
+              <div style={{ width:38, height:38, borderRadius:10, background:T.white, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:shadow.xs }}>
                 <Icon name={row.icon} size={18} color={T.black}/>
               </div>
               <div style={{ flex:1 }}>
-                <p style={{ fontSize:15, fontWeight:600, color:T.black }}>{row.label}</p>
-                <p style={{ fontSize:12, color:T.gray4, marginTop:1 }}>{row.sub}</p>
+                <p style={{ fontSize:16, fontWeight:500, color:T.black, letterSpacing:"-0.2px" }}>{row.label}</p>
+                <p style={{ fontSize:13, color:T.gray4, marginTop:1, letterSpacing:"-0.1px" }}>{row.sub}</p>
               </div>
               <Icon name="chevronR" size={16} color={T.gray5}/>
             </button>
@@ -880,7 +885,7 @@ function NewArrivalsScreen({ products, onSelect, onWishlist, wishlist }) {
   const items = products.filter(p=>p.new);
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:"linear-gradient(135deg,#1C1C1E 0%,#3A3A3C 100%)", borderRadius:10, padding:"28px 22px", marginBottom:20 }}>
+      <div style={{ background:"linear-gradient(135deg,#1C1C1E 0%,#3A3A3C 100%)", borderRadius:24, padding:"32px 24px", marginBottom:24 }}>
         <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:8 }}>Just dropped</p>
         <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:4 }}>New Arrivals</h2>
         <p style={{ fontSize:14, color:"rgba(255,255,255,0.5)" }}>{t.ss26} · {items.length} {t.newPieces}</p>
@@ -899,7 +904,7 @@ function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
   const items = products.filter(p=>p.badge==="Sale");
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:"linear-gradient(135deg,#FF3B30 0%,#C0392B 100%)", borderRadius:10, padding:"28px 22px", marginBottom:20 }}>
+      <div style={{ background:"linear-gradient(135deg,#FF3B30 0%,#C0392B 100%)", borderRadius:24, padding:"32px 24px", marginBottom:24 }}>
         <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.55)", marginBottom:8 }}>Limited time</p>
         <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:4 }}>Sale</h2>
         <p style={{ fontSize:14, color:"rgba(255,255,255,0.65)" }}>{t.upTo40} · {items.length} {t.styles}</p>
@@ -931,7 +936,7 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
       <button onClick={()=>setActiveLook(null)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", marginBottom:16, color:T.gray3, fontSize:14, fontWeight:500 }}>
         <Icon name="back" size={18} color={T.gray3}/> All Looks
       </button>
-      <div style={{ aspectRatio:"4/3", background:look.grad, borderRadius:10, marginBottom:16, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ aspectRatio:"4/3", background:look.grad, borderRadius:20, marginBottom:18, display:"flex", alignItems:"center", justifyContent:"center" }}>
         <span style={{ fontSize:36, fontWeight:200, color:"rgba(0,0,0,0.18)", fontStyle:"italic" }}>{look.title}</span>
       </div>
       <h2 style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>{look.title}</h2>
@@ -939,8 +944,8 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
       <p style={{ fontSize:13, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14, color:T.gray2 }}>Shop The Look</p>
       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {lookProducts.map(p=>(
-          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.gray9, borderRadius:10, padding:12 }}>
-            <div style={{ width:72, height:90, background:p.grad, borderRadius:8, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.fill4, borderRadius:18, padding:14 }}>
+            <div style={{ width:72, height:90, background:p.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
               <span style={{ fontSize:16, fontStyle:"italic", color:"rgba(0,0,0,0.22)" }}>{p.name[0]}</span>
             </div>
             <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
@@ -966,7 +971,7 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         {LOOKS.map((look, i) => (
           <button key={look.id} onClick={()=>setActiveLook(look.id)} className="pressable" style={{ width:"100%", background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
-            <div style={{ aspectRatio: i%2===0?"16/9":"4/3", background:look.grad, borderRadius:10, marginBottom:10, display:"flex", alignItems:"flex-end", padding:20 }}>
+            <div style={{ aspectRatio: i%2===0?"16/9":"4/3", background:look.grad, borderRadius:20, marginBottom:12, display:"flex", alignItems:"flex-end", padding:22 }}>
               <div>
                 <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(0,0,0,0.4)", marginBottom:4 }}>Look {String(look.id).padStart(2,"0")}</p>
                 <p style={{ fontSize:22, fontWeight:800, color:T.black, letterSpacing:-0.5 }}>{look.title}</p>
@@ -990,15 +995,15 @@ function SustainabilityScreen() {
   ];
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:"linear-gradient(135deg,#1A2E1A 0%,#2E4A2E 100%)", borderRadius:10, padding:"32px 22px", marginBottom:20 }}>
+      <div style={{ background:"linear-gradient(135deg,#1A2E1A 0%,#2E4A2E 100%)", borderRadius:24, padding:"36px 24px", marginBottom:24 }}>
         <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", marginBottom:8 }}>Our commitment</p>
         <h2 style={{ fontSize:30, fontWeight:900, color:"#fff", letterSpacing:-0.8, lineHeight:1.1, marginBottom:8 }}>Better Fashion</h2>
         <p style={{ fontSize:14, color:"rgba(255,255,255,0.55)", lineHeight:1.6 }}>We believe beautiful clothes and a healthier planet are not in conflict.</p>
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:20 }}>
         {pillars.map(p=>(
-          <div key={p.title} style={{ background:T.gray9, borderRadius:10, padding:"18px 16px", display:"flex", gap:14, alignItems:"flex-start" }}>
-            <div style={{ width:40, height:40, borderRadius:8, background:T.black, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <div key={p.title} style={{ background:T.fill4, borderRadius:18, padding:"20px 18px", display:"flex", gap:14, alignItems:"flex-start" }}>
+            <div style={{ width:42, height:42, borderRadius:12, background:T.black, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <Icon name={p.icon} size={18} color={T.white}/>
             </div>
             <div>
@@ -1008,7 +1013,7 @@ function SustainabilityScreen() {
           </div>
         ))}
       </div>
-      <div style={{ background:"linear-gradient(135deg,#E8F5EC,#D8EDD8)", borderRadius:10, padding:"20px 18px", marginBottom:16 }}>
+      <div style={{ background:"linear-gradient(135deg,#E8F5EC,#D8EDD8)", borderRadius:18, padding:"22px 20px", marginBottom:16 }}>
         <p style={{ fontSize:16, fontWeight:800, color:"#1A5C1A", marginBottom:4 }}>2025 Impact Report</p>
         <p style={{ fontSize:13, color:"#2E7A2E", lineHeight:1.6 }}>78% of materials certified sustainable · 42% emissions reduction since 2022 · 12,000+ garments returned & rehomed</p>
       </div>
@@ -1038,8 +1043,8 @@ function LanguageSwitcher({ lang, setLang }) {
   return (
     <div style={{ position:"relative" }}>
       <button onClick={()=>setOpen(o=>!o)} className="pressable-sm"
-        style={{ display:"flex", alignItems:"center", gap:5, background:T.gray9, border:"none",
-          borderRadius:99, padding:"6px 12px 6px 10px", cursor:"pointer", fontSize:13, fontWeight:600 }}>
+        style={{ display:"flex", alignItems:"center", gap:5, background:T.fill3, border:"none",
+          borderRadius:99, padding:"7px 13px 7px 10px", cursor:"pointer", fontSize:13, fontWeight:500, letterSpacing:"-0.1px" }}>
         <span style={{ fontSize:15 }}>
           {lang==="en"?"🇬🇧":lang==="sw"?"🇹🇿":lang==="fr"?"🇫🇷":lang==="de"?"🇩🇪":
            lang==="es"?"🇪🇸":lang==="pt"?"🇧🇷":lang==="ar"?"🇸🇦":lang==="zh"?"🇨🇳":
@@ -1051,15 +1056,16 @@ function LanguageSwitcher({ lang, setLang }) {
       {open && (
         <>
           <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:299 }}/>
-          <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:T.white,
-            borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.15)", zIndex:300,
-            minWidth:170, overflow:"hidden", border:`1px solid ${T.gray8}` }}>
+          <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:"rgba(255,255,255,0.98)",
+            backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
+            borderRadius:16, boxShadow:"0 8px 40px rgba(0,0,0,0.14)", zIndex:300,
+            minWidth:175, overflow:"hidden", border:`1px solid rgba(0,0,0,0.07)` }}>
             {Object.entries(LANGS).map(([code, name]) => (
               <button key={code} onClick={()=>{ setLang(code); setOpen(false); }}
                 style={{ width:"100%", display:"flex", alignItems:"center", gap:10,
-                  padding:"11px 16px", background:lang===code?T.gray9:T.white,
+                  padding:"12px 16px", background:lang===code?"rgba(0,0,0,0.04)":T.white,
                   border:"none", cursor:"pointer", fontSize:14,
-                  fontWeight:lang===code?700:400, color:T.black, textAlign:"left" }}>
+                  fontWeight:lang===code?600:400, color:T.black, textAlign:"left", letterSpacing:"-0.1px" }}>
                 <span style={{ fontSize:16 }}>
                   {code==="en"?"🇬🇧":code==="sw"?"🇹🇿":code==="fr"?"🇫🇷":code==="de"?"🇩🇪":
                    code==="es"?"🇪🇸":code==="pt"?"🇧🇷":code==="ar"?"🇸🇦":code==="zh"?"🇨🇳":
@@ -1083,9 +1089,9 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
   const title = screenTitles[screen] || "";
 
   return (
-    <header style={{ background:"rgba(255,255,255,0.94)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:`1px solid ${T.gray8}`, position:"sticky", top:0, zIndex:200, userSelect:"none" }}>
+    <header style={{ background:"rgba(255,255,255,0.92)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderBottom:`1px solid rgba(0,0,0,0.08)`, position:"sticky", top:0, zIndex:200, userSelect:"none" }}>
       {!canGoBack && (
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 16px 0", borderBottom:`1px solid ${T.gray8}` }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 18px 0", borderBottom:`1px solid rgba(0,0,0,0.07)` }}>
           <button onClick={()=>onNavigate("home")} style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 0" }}>
             <Logo height={13}/>
           </button>
@@ -1096,10 +1102,10 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack, wish
         <div style={{ display:"flex", alignItems:"center", gap:4, minWidth:80 }}>
           {canGoBack && <IconBtn icon="back" onClick={onBack} size={36} bg="transparent"/>}
         </div>
-        <span style={{ fontSize:17, fontWeight:700, letterSpacing:-0.3, position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
+        <span style={{ fontSize:17, fontWeight:600, letterSpacing:"-0.3px", position:"absolute", left:"50%", transform:"translateX(-50%)" }}>
           {canGoBack ? title : ""}
         </span>
-        <div style={{ display:"flex", alignItems:"center", gap:6, minWidth:80, justifyContent:"flex-end" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:4, minWidth:80, justifyContent:"flex-end" }}>
           {screen!=="search"  && <IconBtn icon="search"  onClick={()=>onNavigate("search")}   size={36} bg="transparent"/>}
           {screen!=="wishlist"&& <IconBtn icon="heart"   onClick={()=>onNavigate("wishlist")} size={36} bg="transparent" badge={wishlistCount>0?wishlistCount:0}/>}
           <IconBtn icon="bag" onClick={onCart} size={36} bg="transparent" badge={cartCount}/>
@@ -1122,16 +1128,16 @@ function BottomNav({ screen, onNavigate }) {
   const active = mainScreens.includes(screen) ? screen : "shop";
 
   return (
-    <nav style={{ position:"fixed", bottom:0, left:0, right:0, background:"rgba(255,255,255,0.96)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderTop:`1px solid ${T.gray8}`, zIndex:200, paddingBottom:"env(safe-area-inset-bottom)" }}>
-      <div style={{ display:"flex", height:64 }}>
+    <nav style={{ position:"fixed", bottom:0, left:0, right:0, background:"rgba(255,255,255,0.94)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:`1px solid rgba(0,0,0,0.08)`, zIndex:200, paddingBottom:"env(safe-area-inset-bottom)" }}>
+      <div style={{ display:"flex", height:66 }}>
         {tabs.map(tab=>{
           const isActive = active===tab.s;
           return (
             <button key={tab.s} onClick={()=>onNavigate(tab.s)}
               style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, background:"none", border:"none", cursor:"pointer", position:"relative", transition:"opacity 0.15s" }}>
-              {isActive && <div style={{ position:"absolute", top:0, left:"50%", transform:"translateX(-50%)", width:28, height:3, background:T.black, borderRadius:"0 0 3px 3px" }}/>}
-              <Icon name={tab.icon} size={26} color={isActive?T.black:T.gray5} strokeWidth={isActive?2.2:1.6}/>
-              <span style={{ fontSize:10, fontWeight:isActive?700:400, color:isActive?T.black:T.gray5, letterSpacing:"0.02em" }}>{tab.label}</span>
+              {isActive && <div style={{ position:"absolute", top:0, left:"50%", transform:"translateX(-50%)", width:32, height:3, background:T.black, borderRadius:"0 0 4px 4px" }}/>}
+              <Icon name={tab.icon} size={26} color={isActive?T.black:T.gray5} strokeWidth={isActive?2:1.5}/>
+              <span style={{ fontSize:10, fontWeight:isActive?600:400, color:isActive?T.black:T.gray5, letterSpacing:"0.01em" }}>{tab.label}</span>
             </button>
           );
         })}
@@ -1202,7 +1208,7 @@ export default function Page() {
 
   return (
     <LangCtx.Provider value={{ lang, t, setLang }}>
-      <div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"'Geist',-apple-system,sans-serif", overflow:"hidden" }}>
+      <div style={{ height:"100dvh", display:"flex", flexDirection:"column", background:T.white, fontFamily:"-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif", overflow:"hidden", WebkitFontSmoothing:"antialiased", MozOsxFontSmoothing:"grayscale" }}>
         <Header
           screen={current.screen}
           cartCount={cartCount}
@@ -1216,7 +1222,7 @@ export default function Page() {
         />
 
         <div id="__main" style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
-          <div style={{ maxWidth:600, margin:"0 auto", padding:"10px 14px 80px" }}>
+          <div style={{ maxWidth:600, margin:"0 auto", padding:"12px 16px 88px" }}>
             {renderScreen()}
           </div>
         </div>
