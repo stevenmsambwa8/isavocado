@@ -84,8 +84,138 @@ const TR = {
     loading:"Loading…", language:"Language",
     noProducts:"No products yet",
     noProductsBody:"Our collection is being curated. Check back soon.",
+    signIn:"Sign In", signUp:"Sign Up", signOut:"Sign Out",
+    email:"Email", password:"Password", confirmPassword:"Confirm Password",
+    editProfile:"Edit Profile", profile:"Profile",
+    firstName:"First Name", lastName:"Last Name", phone:"Phone",
+    saveChanges:"Save Changes", cancel:"Cancel",
+    loginRequired:"Sign in required",
+    loginRequiredBody:"Create a free account to access this feature.",
+    createAccount:"Create Account", alreadyAccount:"Already have an account?",
+    noAccount:"No account yet?",
+    guestUser:"Guest", member:"MSAMBWA Member",
+    loginToUnlock:"Sign in to unlock",
+    address:"Address", addAddress:"Add Address",
+    street:"Street", city:"City", country:"Country", postcode:"Postcode",
+    notificationsDesc:"Manage your notification preferences",
+    pushNotifications:"Push Notifications", emailNotifications:"Email Notifications",
+    orderUpdates:"Order Updates", promotions:"Promotions", newArrivalsAlert:"New Arrivals",
+    settingsDesc:"App preferences",
+    darkMode:"Dark Mode", language:"Language", currency:"Currency",
+    privacyPolicy:"Privacy Policy", termsOfService:"Terms of Service",
+    deleteAccount:"Delete Account",
+    ourStoryTitle:"Our Story", ourStoryBody:"MSAMBWA was founded with a simple belief: that beautiful, considered fashion should be accessible to everyone. We source our pieces from ethical manufacturers across the globe, ensuring every garment tells a story of craftsmanship and care.\n\nOur name, MSAMBWA, means 'spirit' in Swahili — a reminder that we put soul into everything we do. From our carefully curated collections to our personal customer service, we believe fashion is more than clothing — it's how you carry yourself through the world.",
+    returnsTitle:"Returns & Exchanges", returnsBody:"We want you to love every piece. If you're not completely satisfied, we offer hassle-free returns within 30 days of delivery.\n\nTo start a return, contact us at hello@msambwa.com with your order number and reason for return. Items must be unworn, unwashed, and in original packaging with tags attached.\n\nRefunds are processed within 5–7 business days of receiving your return.",
+    sustainabilityTitle:"Sustainability", sustainabilityBody:"At MSAMBWA, sustainability isn't just a buzzword — it's woven into everything we do. We partner only with manufacturers who meet our strict ethical and environmental standards.\n\nOur packaging is 100% recyclable. We offset our carbon emissions through verified reforestation projects. And we design pieces to last — because the most sustainable garment is one you wear for years, not seasons.",
+    lookbookTitle:"Lookbook", lookbookSeason:"SS26 Collection",
+  },
+  sw: {
+    home:"Nyumbani", shop:"Duka", search:"Tafuta", saved:"Zilizohifadhiwa", account:"Akaunti",
+    wishlist:"Orodha ya Matakwa", myBag:"Mfuko Wangu", checkout:"Malipo →",
+    addToBag:"Ongeza Kwenye Mfuko", addedToBag:"Imeongezwa ✓",
+    freeShipping:"Usafirishaji Bure", freeReturns:"Kurudisha Bure",
+    newIn:"Mpya ✦", trendingNow:"Inayoongoza Sasa 🔥", onSale:"Punguzo",
+    viewAll:"Angalia Zote", seeAll:"Angalia Zote", browse:"Tazama",
+    noSaved:"Orodha yako ya matakwa ni tupu", saveItemsYouLove:"Hifadhi vitu unavyovipenda",
+    emptyBag:"Mfuko wako ni tupu", continueShopping:"Endelea Kununua",
+    freeShippingQualify:"Unastahili usafirishaji bure!",
+    addMore:"Ongeza", moreForFreeShipping:"zaidi kwa usafirishaji bure",
+    noResults:"Hakuna matokeo", tryDifferent:"Jaribu neno tofauti la utafutaji",
+    newArrivals:"Waliofika Hivi Karibuni", orders:"Maagizo", myOrders:"Maagizo Yangu",
+    addresses:"Anwani", paymentMethods:"Njia za Malipo",
+    referFriend:"Mwambie Rafiki", notifications:"Arifa",
+    settings:"Mipangilio", ourStory:"Hadithi Yetu", returns:"Kurudisha",
+    privacy:"Faragha", lookbook:"Albamu", sustainability:"Uendelevu",
+    requestToBuy:"Ombi la Kununua", yourName:"Jina Lako",
+    yourEmail:"Barua Pepe Yako", yourPhone:"Simu (si lazima)",
+    deliveryAddress:"Anwani ya Usafirishaji", noteToSeller:"Kumbuka (si lazima)",
+    submitRequest:"Wasilisha Ombi", requestSent:"Ombi Limetumwa! ✓",
+    size:"Ukubwa", colour:"Rangi", description:"Maelezo",
+    loading:"Inapakia…", language:"Lugha",
+    noProducts:"Hakuna bidhaa bado",
+    noProductsBody:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
+    signIn:"Ingia", signUp:"Jisajili", signOut:"Toka",
+    email:"Barua Pepe", password:"Nenosiri", confirmPassword:"Thibitisha Nenosiri",
+    editProfile:"Hariri Wasifu", profile:"Wasifu",
+    firstName:"Jina la Kwanza", lastName:"Jina la Familia", phone:"Simu",
+    saveChanges:"Hifadhi Mabadiliko", cancel:"Ghairi",
+    loginRequired:"Inahitajika Kuingia",
+    loginRequiredBody:"Fungua akaunti bila malipo kupata huduma hii.",
+    createAccount:"Fungua Akaunti", alreadyAccount:"Una akaunti tayari?",
+    noAccount:"Huna akaunti bado?",
+    guestUser:"Mgeni", member:"Mwanachama wa MSAMBWA",
+    loginToUnlock:"Ingia ili ufungue",
+    address:"Anwani", addAddress:"Ongeza Anwani",
+    street:"Mtaa", city:"Mji", country:"Nchi", postcode:"Msimbo wa Posta",
+    notificationsDesc:"Simamia mapendeleo yako ya arifa",
+    pushNotifications:"Arifa za Push", emailNotifications:"Arifa za Barua Pepe",
+    orderUpdates:"Masasisho ya Maagizo", promotions:"Matangazo", newArrivalsAlert:"Waliofika Wapya",
+    settingsDesc:"Mapendeleo ya programu",
+    darkMode:"Hali ya Giza", language:"Lugha", currency:"Sarafu",
+    privacyPolicy:"Sera ya Faragha", termsOfService:"Masharti ya Huduma",
+    deleteAccount:"Futa Akaunti",
+    ourStoryTitle:"Hadithi Yetu", ourStoryBody:"MSAMBWA ilianzishwa na imani moja rahisi: kwamba mitindo nzuri na ya kufikiria inapaswa kupatikana kwa kila mtu.",
+    returnsTitle:"Kurudisha na Kubadilishana", returnsBody:"Tunataka upende kila kipande. Ikiwa hukuridhika kabisa, tunakupa kurudisha bila shida ndani ya siku 30 za uwasilishaji.",
+    sustainabilityTitle:"Uendelevu", sustainabilityBody:"Katika MSAMBWA, uendelevu si tu neno — umefumwa katika kila kitu tunachofanya.",
+    lookbookTitle:"Albamu", lookbookSeason:"Mkusanyiko wa SS26",
+  },
+  fr: {
+    home:"Accueil", shop:"Boutique", search:"Rechercher", saved:"Sauvegardés", account:"Compte",
+    wishlist:"Liste de souhaits", myBag:"Mon sac", checkout:"Commander →",
+    addToBag:"Ajouter au sac", addedToBag:"Ajouté ✓",
+    freeShipping:"Livraison gratuite", freeReturns:"Retours gratuits",
+    newIn:"Nouveautés ✦", trendingNow:"Tendances 🔥", onSale:"En solde",
+    viewAll:"Voir tout", seeAll:"Voir tout", browse:"Parcourir",
+    noSaved:"Votre liste de souhaits est vide", saveItemsYouLove:"Sauvegardez vos favoris",
+    emptyBag:"Votre sac est vide", continueShopping:"Continuer vos achats",
+    freeShippingQualify:"Vous bénéficiez de la livraison gratuite!",
+    addMore:"Ajoutez", moreForFreeShipping:"de plus pour la livraison gratuite",
+    noResults:"Aucun résultat", tryDifferent:"Essayez un autre terme",
+    newArrivals:"Nouveautés", orders:"Commandes", myOrders:"Mes commandes",
+    addresses:"Adresses", paymentMethods:"Modes de paiement",
+    referFriend:"Parrainer un ami", notifications:"Notifications",
+    settings:"Paramètres", ourStory:"Notre histoire", returns:"Retours",
+    privacy:"Confidentialité", lookbook:"Lookbook", sustainability:"Durabilité",
+    requestToBuy:"Demande d'achat", yourName:"Votre nom",
+    yourEmail:"Votre e-mail", yourPhone:"Téléphone (optionnel)",
+    deliveryAddress:"Adresse de livraison", noteToSeller:"Note (optionnel)",
+    submitRequest:"Soumettre", requestSent:"Demande envoyée! ✓",
+    size:"Taille", colour:"Couleur", description:"Description",
+    loading:"Chargement…", language:"Langue",
+    noProducts:"Pas encore de produits",
+    noProductsBody:"Notre collection est en cours de curation. Revenez bientôt.",
+    signIn:"Se connecter", signUp:"S'inscrire", signOut:"Se déconnecter",
+    email:"E-mail", password:"Mot de passe", confirmPassword:"Confirmer le mot de passe",
+    editProfile:"Modifier le profil", profile:"Profil",
+    firstName:"Prénom", lastName:"Nom de famille", phone:"Téléphone",
+    saveChanges:"Enregistrer", cancel:"Annuler",
+    loginRequired:"Connexion requise",
+    loginRequiredBody:"Créez un compte gratuit pour accéder à cette fonctionnalité.",
+    createAccount:"Créer un compte", alreadyAccount:"Déjà un compte?",
+    noAccount:"Pas encore de compte?",
+    guestUser:"Invité", member:"Membre MSAMBWA",
+    loginToUnlock:"Connectez-vous pour accéder",
+    address:"Adresse", addAddress:"Ajouter une adresse",
+    street:"Rue", city:"Ville", country:"Pays", postcode:"Code postal",
+    notificationsDesc:"Gérez vos préférences de notification",
+    pushNotifications:"Notifications push", emailNotifications:"Notifications par e-mail",
+    orderUpdates:"Mises à jour des commandes", promotions:"Promotions", newArrivalsAlert:"Nouvelles arrivées",
+    settingsDesc:"Préférences de l'application",
+    darkMode:"Mode sombre", language:"Langue", currency:"Devise",
+    privacyPolicy:"Politique de confidentialité", termsOfService:"Conditions d'utilisation",
+    deleteAccount:"Supprimer le compte",
+    ourStoryTitle:"Notre Histoire", ourStoryBody:"MSAMBWA a été fondée avec une conviction simple : que la mode belle et réfléchie devrait être accessible à tous.",
+    returnsTitle:"Retours & Échanges", returnsBody:"Nous voulons que vous aimiez chaque pièce. Si vous n'êtes pas entièrement satisfait, nous offrons des retours sans tracas dans les 30 jours suivant la livraison.",
+    sustainabilityTitle:"Durabilité", sustainabilityBody:"Chez MSAMBWA, la durabilité n'est pas qu'un mot à la mode — elle est tissée dans tout ce que nous faisons.",
+    lookbookTitle:"Lookbook", lookbookSeason:"Collection SS26",
   },
 };
+
+const LANGS = [
+  { code:"en", label:"English",   flag:"🇬🇧" },
+  { code:"sw", label:"Kiswahili", flag:"🇰🇪" },
+  { code:"fr", label:"Français",  flag:"🇫🇷" },
+];
 
 const LangCtx = createContext({ lang:"en", setLang:()=>{}, t:TR.en });
 const useLang  = () => useContext(LangCtx);
@@ -723,48 +853,524 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist }) {
   );
 }
 
-/* ─── Account ───────────────────────────────────────────────── */
-function AccountScreen({ onNavigate }) {
-  const rows = [
-    { icon:"box",      label:"My Orders",       sub:"Purchase history",    go:"orders"   },
-    { icon:"heart",    label:"Wishlist",         sub:"Saved items",         go:"wishlist" },
-    { icon:"location", label:"Addresses",        sub:"Delivery addresses",  go:null       },
-    { icon:"card",     label:"Payment Methods",  sub:"Saved cards",         go:null       },
-    { icon:"gift",     label:"Refer a Friend",   sub:"Give $20, get $20",   go:null       },
-    { icon:"bell",     label:"Notifications",    sub:"Manage alerts",       go:null       },
-    { icon:"settings", label:"Settings",         sub:"Account preferences", go:null       },
-  ];
+/* ─── Auth Gate HOC ─────────────────────────────────────────── */
+function AuthGate({ user, onLogin, children, t }) {
+  if (user) return children;
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"28px 24px",marginBottom:24,display:"flex",alignItems:"center",gap:18 }}>
-        <div style={{ width:64,height:64,borderRadius:32,background:"rgba(255,255,255,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
-          <Icon name="person" size={28} color="rgba(255,255,255,0.7)"/>
+    <div style={{ animation:"fadeIn .25s ease", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 24px", gap:20, textAlign:"center" }}>
+      <div style={{ fontSize:56 }}>🔒</div>
+      <p style={{ fontSize:22, fontWeight:700, margin:0, letterSpacing:"-0.5px" }}>{t.loginRequired}</p>
+      <p style={{ fontSize:15, color:T.gray4, margin:0, maxWidth:280, lineHeight:1.6 }}>{t.loginRequiredBody}</p>
+      <Btn onClick={onLogin} style={{ borderRadius:14, padding:"14px 32px", fontSize:16 }}>{t.signIn} / {t.createAccount}</Btn>
+    </div>
+  );
+}
+
+/* ─── Customer Auth Modal ───────────────────────────────────── */
+function AuthModal({ onClose, onAuth, t }) {
+  const [mode, setMode]   = useState("login");
+  const [email, setEmail] = useState("");
+  const [pass,  setPass]  = useState("");
+  const [name,  setName]  = useState("");
+  const [show,  setShow]  = useState(false);
+  const [err,   setErr]   = useState("");
+  const [busy,  setBusy]  = useState(false);
+
+  const go = async () => {
+    if (!email || !pass) { setErr("Email and password are required."); return; }
+    setBusy(true); setErr("");
+    try {
+      let res;
+      if (mode === "login") {
+        res = await sb.auth.signInWithPassword({ email, password: pass });
+      } else {
+        res = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+      }
+      if (res.error) throw res.error;
+      onAuth(res.data.user || res.data.session?.user);
+      onClose();
+    } catch(e) { setErr(e.message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"flex-end" }}>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(8px)" }}/>
+      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,margin:"0 auto",background:T.white,borderRadius:"24px 24px 0 0",padding:"28px 24px 40px",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)",paddingBottom:"env(safe-area-inset-bottom,40px)" }}>
+        <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"-14px auto 20px" }}/>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24 }}>
+          <h2 style={{ fontSize:22,fontWeight:700,margin:0,letterSpacing:"-0.5px" }}>{mode==="login" ? t.signIn : t.createAccount}</h2>
+          <IconBtn icon="close" onClick={onClose} size={34} color={T.gray4}/>
         </div>
-        <div>
-          <p style={{ fontSize:20,fontWeight:700,color:T.white,letterSpacing:"-0.5px" }}>Guest User</p>
-          <p style={{ fontSize:13,color:"rgba(255,255,255,0.45)",marginTop:3 }}>MSAMBWA Member</p>
+        <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
+          {mode==="signup" && (
+            <input value={name} onChange={e=>setName(e.target.value)} placeholder={t.yourName} style={{ padding:"14px 16px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
+          )}
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t.email} style={{ padding:"14px 16px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
+          <div style={{ position:"relative" }}>
+            <input type={show?"text":"password"} value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder={t.password} style={{ width:"100%",padding:"14px 48px 14px 16px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif",boxSizing:"border-box" }}/>
+            <button onClick={()=>setShow(s=>!s)} style={{ position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",padding:4 }}>
+              <Icon name={show?"close":"search"} size={18} color={T.gray5}/>
+            </button>
+          </div>
+          {err && <p style={{ fontSize:13,color:T.red,background:"#fff0f0",padding:"10px 14px",borderRadius:10,margin:0 }}>{err}</p>}
+          <Btn full onClick={go} disabled={busy} style={{ borderRadius:12,padding:"15px",fontSize:16,marginTop:4 }}>
+            {busy ? <Spin size={18}/> : mode==="login" ? t.signIn : t.createAccount}
+          </Btn>
+        </div>
+        <p style={{ textAlign:"center",fontSize:14,color:T.gray4,marginTop:18 }}>
+          {mode==="login" ? t.noAccount : t.alreadyAccount}{" "}
+          <button onClick={()=>{ setMode(m=>m==="login"?"signup":"login"); setErr(""); }} style={{ background:"none",border:"none",color:T.blue,cursor:"pointer",fontWeight:600,fontSize:14,padding:0 }}>
+            {mode==="login" ? t.createAccount : t.signIn}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Account Screen ────────────────────────────────────────── */
+function AccountScreen({ onNavigate, user, onLogin, onLogout, t }) {
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || t.guestUser;
+
+  const publicRows = [
+    { icon:"box",      label:t.myOrders,      sub:"Track your purchases",      go:"orders"       },
+    { icon:"heart",    label:t.wishlist,       sub:"Your saved items",          go:"wishlist"     },
+    { icon:"share",    label:t.ourStory,       sub:"Who we are",                go:"our-story"    },
+    { icon:"truck",    label:t.returns,        sub:"30-day easy returns",       go:"returns"      },
+    { icon:"gift",     label:t.sustainability, sub:"Our commitment",            go:"sustainability"},
+    { icon:"grid",     label:t.lookbook,       sub:"SS26 Collection",           go:"lookbook"     },
+  ];
+
+  const privateRows = [
+    { icon:"person",   label:t.editProfile,   sub:"Name, email, phone",        go:"edit-profile",  auth:true },
+    { icon:"location", label:t.addresses,     sub:"Delivery addresses",        go:"addresses",     auth:true },
+    { icon:"bell",     label:t.notifications, sub:t.notificationsDesc,         go:"notifications", auth:true },
+    { icon:"settings", label:t.settings,      sub:t.settingsDesc,              go:"settings",      auth:false },
+    { icon:"card",     label:t.privacy,       sub:"Privacy & Terms",           go:"privacy",       auth:false },
+  ];
+
+  const Row = ({ icon, label, sub, go, auth }) => {
+    const locked = auth && !user;
+    return (
+      <button
+        onClick={()=> locked ? onLogin() : onNavigate(go)}
+        style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"15px 18px",background:"none",border:"none",cursor:"pointer",textAlign:"left" }}
+      >
+        <div style={{ width:38,height:38,borderRadius:10,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+          <Icon name={icon} size={18} color={T.black}/>
+        </div>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:15,fontWeight:600,margin:0,letterSpacing:"-0.2px" }}>{label}</p>
+          <p style={{ fontSize:12,color:T.gray4,margin:"2px 0 0" }}>{sub}</p>
+        </div>
+        {locked
+          ? <span style={{ fontSize:11,color:T.gray5,background:T.fill3,borderRadius:99,padding:"3px 10px",flexShrink:0 }}>{t.signIn}</span>
+          : <Icon name="chevronR" size={16} color={T.gray5}/>
+        }
+      </button>
+    );
+  };
+
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      {/* Profile hero */}
+      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"24px",marginBottom:24 }}>
+        <div style={{ display:"flex",alignItems:"center",gap:16,marginBottom: user ? 16 : 0 }}>
+          <div style={{ width:60,height:60,borderRadius:30,background:"rgba(255,255,255,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+            <Icon name="person" size={26} color="rgba(255,255,255,0.7)"/>
+          </div>
+          <div style={{ flex:1 }}>
+            <p style={{ fontSize:19,fontWeight:700,color:T.white,letterSpacing:"-0.4px",margin:0 }}>{displayName}</p>
+            <p style={{ fontSize:13,color:"rgba(255,255,255,0.45)",marginTop:3 }}>{user ? user.email : t.member}</p>
+          </div>
+        </div>
+        {!user && (
+          <button onClick={onLogin} style={{ width:"100%",background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",color:"#fff",borderRadius:12,padding:"12px",fontSize:14,fontWeight:600,cursor:"pointer",marginTop:4 }}>
+            {t.signIn} / {t.createAccount} →
+          </button>
+        )}
+        {user && (
+          <button onClick={onLogout} style={{ background:"rgba(255,59,48,0.15)",border:"1px solid rgba(255,59,48,0.3)",color:"#FF6B6B",borderRadius:12,padding:"9px 18px",fontSize:13,fontWeight:600,cursor:"pointer" }}>
+            {t.signOut}
+          </button>
+        )}
+      </div>
+
+      {/* Main rows */}
+      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
+        {publicRows.map((row,i)=>(
+          <div key={row.label}>
+            <Row {...row}/>
+            {i<publicRows.length-1&&<div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:24 }}>
+        {privateRows.map((row,i)=>(
+          <div key={row.label}>
+            <Row {...row}/>
+            {i<privateRows.length-1&&<div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>}
+          </div>
+        ))}
+      </div>
+
+      <p style={{ textAlign:"center",fontSize:12,color:T.gray6,marginBottom:8 }}>MSAMBWA · v1.0.0</p>
+    </div>
+  );
+}
+
+/* ─── Edit Profile Screen ───────────────────────────────────── */
+function EditProfileScreen({ user, onBack, t }) {
+  const [form, setForm] = useState({
+    firstName: user?.user_metadata?.full_name?.split(" ")[0] || "",
+    lastName:  user?.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "",
+    phone:     user?.user_metadata?.phone || "",
+    email:     user?.email || "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved,  setSaved]  = useState(false);
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const save = async () => {
+    setSaving(true);
+    await sb.auth.updateUser({ data: { full_name: `${form.firstName} ${form.lastName}`.trim(), phone: form.phone } });
+    setSaving(false); setSaved(true);
+    setTimeout(()=>setSaved(false), 2500);
+  };
+
+  const inp = (label, key, type="text", placeholder="") => (
+    <div style={{ marginBottom:14 }}>
+      <p style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",margin:"0 0 6px" }}>{label}</p>
+      <input type={type} value={form[key]} onChange={e=>set(key,e.target.value)} placeholder={placeholder}
+        style={{ width:"100%",padding:"14px 16px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",boxSizing:"border-box",fontFamily:"-apple-system,sans-serif" }}/>
+    </div>
+  );
+
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      {saved && (
+        <div style={{ background:"#e8faf0",borderRadius:14,padding:"12px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:10 }}>
+          <span style={{ fontSize:18 }}>✅</span>
+          <p style={{ fontSize:14,fontWeight:600,color:T.green,margin:0 }}>Profile saved!</p>
+        </div>
+      )}
+      <div style={{ background:T.white,borderRadius:20,padding:"20px",boxShadow:shadow.xs,marginBottom:20 }}>
+        {inp(t.firstName, "firstName", "text", "Jane")}
+        {inp(t.lastName,  "lastName",  "text", "Smith")}
+        {inp(t.phone,     "phone",     "tel",  "+1 555 000 0000")}
+        <div style={{ marginBottom:0 }}>
+          <p style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",margin:"0 0 6px" }}>{t.email}</p>
+          <p style={{ padding:"14px 16px",fontSize:15,background:T.fill3,borderRadius:12,color:T.gray5,margin:0 }}>{form.email}</p>
+          <p style={{ fontSize:11,color:T.gray5,margin:"5px 0 0" }}>Email cannot be changed here</p>
         </div>
       </div>
+      <Btn full onClick={save} disabled={saving} style={{ borderRadius:14,padding:"16px",fontSize:16 }}>
+        {saving ? <Spin size={18}/> : t.saveChanges}
+      </Btn>
+    </div>
+  );
+}
+
+/* ─── Addresses Screen ──────────────────────────────────────── */
+function AddressesScreen({ t }) {
+  const [addresses, setAddresses] = useState([]);
+  const [adding, setAdding]       = useState(false);
+  const [form, setForm]           = useState({ street:"", city:"", country:"", postcode:"" });
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const addAddress = () => {
+    if (!form.street || !form.city) return;
+    setAddresses(a=>[...a, { ...form, id: Date.now() }]);
+    setForm({ street:"", city:"", country:"", postcode:"" });
+    setAdding(false);
+  };
+
+  const inp = (label, key, placeholder) => (
+    <input value={form[key]} onChange={e=>set(key,e.target.value)} placeholder={`${label}…`}
+      style={{ width:"100%",padding:"12px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",boxSizing:"border-box",fontFamily:"-apple-system,sans-serif",marginBottom:10 }}/>
+  );
+
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      {addresses.length === 0 && !adding && (
+        <EmptyState icon="📍" title="No addresses saved" body="Add a delivery address to speed up checkout." action={<Btn onClick={()=>setAdding(true)} size="sm">{t.addAddress}</Btn>}/>
+      )}
+      {addresses.map((a,i) => (
+        <div key={a.id} style={{ background:T.fill4,borderRadius:16,padding:"16px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
+          <div>
+            <p style={{ fontSize:15,fontWeight:600,margin:"0 0 3px" }}>{a.street}</p>
+            <p style={{ fontSize:13,color:T.gray4,margin:0 }}>{a.city}{a.postcode ? `, ${a.postcode}` : ""}{a.country ? ` · ${a.country}` : ""}</p>
+          </div>
+          <button onClick={()=>setAddresses(arr=>arr.filter(x=>x.id!==a.id))} style={{ background:"none",border:"none",cursor:"pointer",padding:4 }}>
+            <Icon name="close" size={16} color={T.gray5}/>
+          </button>
+        </div>
+      ))}
+      {adding ? (
+        <div style={{ background:T.white,borderRadius:20,padding:"18px",boxShadow:shadow.xs }}>
+          <p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>{t.addAddress}</p>
+          {inp(t.street,   "street",   t.street)}
+          {inp(t.city,     "city",     t.city)}
+          {inp(t.postcode, "postcode", t.postcode)}
+          {inp(t.country,  "country",  t.country)}
+          <div style={{ display:"flex",gap:10,marginTop:4 }}>
+            <Btn full onClick={addAddress} style={{ borderRadius:12,padding:"13px" }}>Save</Btn>
+            <Btn full variant="gray" onClick={()=>setAdding(false)} style={{ borderRadius:12,padding:"13px" }}>{t.cancel}</Btn>
+          </div>
+        </div>
+      ) : (
+        addresses.length > 0 && (
+          <button onClick={()=>setAdding(true)} style={{ display:"flex",alignItems:"center",gap:10,background:T.fill4,borderRadius:16,padding:"16px",width:"100%",border:"none",cursor:"pointer",marginTop:4 }}>
+            <Icon name="plus" size={20} color={T.blue}/>
+            <span style={{ fontSize:15,fontWeight:600,color:T.blue }}>{t.addAddress}</span>
+          </button>
+        )
+      )}
+    </div>
+  );
+}
+
+/* ─── Notifications Screen ──────────────────────────────────── */
+function NotificationsScreen({ t }) {
+  const [prefs, setPrefs] = useState({ push:true, email:true, orders:true, promos:false, newArrivals:true });
+  const toggle = k => setPrefs(p=>({...p,[k]:!p[k]}));
+  const Toggle = ({ on, onChange }) => (
+    <div onClick={onChange} style={{ width:48,height:28,borderRadius:14,background:on?"#34C759":"#E5E5EA",cursor:"pointer",position:"relative",transition:"background .18s",flexShrink:0 }}>
+      <div style={{ position:"absolute",top:2,left:on?22:2,width:24,height:24,borderRadius:12,background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,.2)",transition:"left .18s" }}/>
+    </div>
+  );
+  const Row = ({ label, sub, k }) => (
+    <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px" }}>
+      <div>
+        <p style={{ fontSize:15,fontWeight:500,margin:0 }}>{label}</p>
+        {sub && <p style={{ fontSize:12,color:T.gray4,margin:"2px 0 0" }}>{sub}</p>}
+      </div>
+      <Toggle on={prefs[k]} onChange={()=>toggle(k)}/>
+    </div>
+  );
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
+        <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Channels</p>
+        <Row label={t.pushNotifications}  k="push"/>
+        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+        <Row label={t.emailNotifications} k="email"/>
+      </div>
       <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden" }}>
-        {rows.map((row,i)=>(
-          <div key={row.label}>
-            <button onClick={()=>row.go&&onNavigate(row.go)} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"16px 18px",background:"none",border:"none",cursor:row.go?"pointer":"default",textAlign:"left" }}>
-              <div style={{ width:38,height:38,borderRadius:10,background:T.white,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:shadow.xs }}>
-                <Icon name={row.icon} size={18} color={T.black}/>
-              </div>
-              <div style={{ flex:1 }}>
-                <p style={{ fontSize:15,fontWeight:600,margin:0,letterSpacing:"-0.2px" }}>{row.label}</p>
-                <p style={{ fontSize:12,color:T.gray4,margin:"2px 0 0" }}>{row.sub}</p>
-              </div>
-              {row.go&&<Icon name="chevronR" size={16} color={T.gray5}/>}
-            </button>
-            {i<rows.length-1&&<div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>}
+        <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Topics</p>
+        <Row label={t.orderUpdates}    sub="Status changes for your orders" k="orders"/>
+        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+        <Row label={t.promotions}      sub="Sales and special offers"       k="promos"/>
+        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+        <Row label={t.newArrivalsAlert} sub="New collection drops"           k="newArrivals"/>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Settings Screen ───────────────────────────────────────── */
+function SettingsScreen({ t, lang, setLang }) {
+  const Row = ({ label, children }) => (
+    <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px" }}>
+      <p style={{ fontSize:15,fontWeight:500,margin:0 }}>{label}</p>
+      {children}
+    </div>
+  );
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
+        <Row label={t.language}>
+          <div style={{ display:"flex",gap:8 }}>
+            {LANGS.map(l=>(
+              <button key={l.code} onClick={()=>setLang(l.code)} style={{ padding:"7px 14px",borderRadius:99,border:`1.5px solid ${lang===l.code?T.black:T.gray8}`,background:lang===l.code?T.black:T.white,color:lang===l.code?T.white:T.black,fontSize:13,fontWeight:lang===l.code?700:400,cursor:"pointer",transition:"all .15s" }}>
+                {l.flag} {l.code.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+        <Row label={t.currency}>
+          <select style={{ fontSize:14,color:T.blue,background:"transparent",border:"none",outline:"none",cursor:"pointer",fontFamily:"-apple-system,sans-serif" }}>
+            <option>USD ($)</option>
+            <option>GBP (£)</option>
+            <option>EUR (€)</option>
+            <option>KES (KSh)</option>
+          </select>
+        </Row>
+      </div>
+
+      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
+        <Row label={t.privacyPolicy}>
+          <Icon name="chevronR" size={16} color={T.gray5}/>
+        </Row>
+        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+        <Row label={t.termsOfService}>
+          <Icon name="chevronR" size={16} color={T.gray5}/>
+        </Row>
+      </div>
+
+      <p style={{ textAlign:"center",fontSize:12,color:T.gray6,marginTop:8 }}>MSAMBWA · v1.0.0 · Built with ❤️</p>
+    </div>
+  );
+}
+
+/* ─── Privacy Screen ────────────────────────────────────────── */
+function PrivacyScreen({ t }) {
+  const sections = [
+    { title:"What We Collect", body:"We collect information you provide directly, such as your name, email address, phone number, and delivery address when you create an account or make a purchase request. We also collect usage data to improve your experience." },
+    { title:"How We Use It", body:"Your information is used to process orders, communicate with you about your purchases, personalise your shopping experience, and send you updates you've opted into. We never sell your personal data to third parties." },
+    { title:"Cookies", body:"We use cookies to keep you logged in, remember your preferences, and analyse how our store is used. You can manage cookie preferences in your browser settings." },
+    { title:"Your Rights", body:"You have the right to access, correct, or delete your personal data at any time. Contact us at privacy@msambwa.com to make a request. We'll respond within 30 days." },
+    { title:"Contact", body:"Questions about privacy? Email us at privacy@msambwa.com or write to: MSAMBWA, Privacy Team, Nairobi, Kenya." },
+  ];
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <p style={{ fontSize:13,color:T.gray4,marginBottom:20,lineHeight:1.6 }}>Last updated: March 2026</p>
+      {sections.map(s => (
+        <div key={s.title} style={{ marginBottom:20 }}>
+          <p style={{ fontSize:16,fontWeight:700,marginBottom:8,letterSpacing:"-0.3px" }}>{s.title}</p>
+          <p style={{ fontSize:14,color:T.gray3,lineHeight:1.75,margin:0 }}>{s.body}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Our Story Screen ──────────────────────────────────────── */
+function OurStoryScreen({ t }) {
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"36px 24px",marginBottom:28,textAlign:"center" }}>
+        <p style={{ fontSize:40,margin:"0 0 16px" }}>✨</p>
+        <h2 style={{ fontSize:28,fontWeight:800,color:"#fff",letterSpacing:"-0.8px",margin:"0 0 10px" }}>{t.ourStoryTitle}</h2>
+        <p style={{ fontSize:14,color:"rgba(255,255,255,0.5)",margin:0 }}>Since 2024</p>
+      </div>
+      {t.ourStoryBody.split("\n\n").map((para,i) => (
+        <p key={i} style={{ fontSize:15,color:T.gray3,lineHeight:1.8,marginBottom:20 }}>{para}</p>
+      ))}
+      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginTop:8,marginBottom:20 }}>
+        {[["🌍","Ethical\nSourcing"],["✂️","Expert\nCraft"],["💚","Sustainable\nFuture"]].map(([e,l])=>(
+          <div key={l} style={{ background:T.fill4,borderRadius:16,padding:"18px 12px",textAlign:"center" }}>
+            <p style={{ fontSize:28,margin:"0 0 8px" }}>{e}</p>
+            <p style={{ fontSize:12,fontWeight:600,color:T.gray3,margin:0,whiteSpace:"pre-line",lineHeight:1.4 }}>{l}</p>
           </div>
         ))}
       </div>
     </div>
   );
 }
+
+/* ─── Returns Screen ────────────────────────────────────────── */
+function ReturnsScreen({ t }) {
+  const steps = [
+    { icon:"✉️", title:"Contact Us",    body:"Email hello@msambwa.com with your order number and reason for return." },
+    { icon:"📦", title:"Pack It Up",    body:"Place items in original packaging, unworn and with tags attached." },
+    { icon:"🚚", title:"Ship It Back",  body:"We'll email you a prepaid return label within 24 hours." },
+    { icon:"💳", title:"Get Refunded",  body:"Refunds processed within 5–7 business days of receiving your return." },
+  ];
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <div style={{ background:"#e8f4fd",borderRadius:20,padding:"20px",marginBottom:24,display:"flex",gap:14,alignItems:"flex-start" }}>
+        <span style={{ fontSize:28,flexShrink:0 }}>ℹ️</span>
+        <div>
+          <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px",color:T.blue }}>30-Day Returns</p>
+          <p style={{ fontSize:13,color:T.gray3,margin:0,lineHeight:1.6 }}>Items must be unworn, unwashed, and in original packaging with tags attached.</p>
+        </div>
+      </div>
+      <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>How it works</p>
+      {steps.map((s,i) => (
+        <div key={i} style={{ display:"flex",gap:16,marginBottom:20 }}>
+          <div style={{ width:44,height:44,borderRadius:22,background:T.fill4,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:22 }}>{s.icon}</div>
+          <div style={{ flex:1 }}>
+            <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px" }}>{s.title}</p>
+            <p style={{ fontSize:14,color:T.gray4,margin:0,lineHeight:1.6 }}>{s.body}</p>
+          </div>
+        </div>
+      ))}
+      <div style={{ background:T.fill4,borderRadius:16,padding:"16px",marginTop:8 }}>
+        <p style={{ fontSize:14,fontWeight:600,margin:"0 0 4px" }}>Need help?</p>
+        <p style={{ fontSize:13,color:T.gray4,margin:0 }}>hello@msambwa.com</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Sustainability Screen ─────────────────────────────────── */
+function SustainabilityScreen({ t }) {
+  const pillars = [
+    { emoji:"♻️", title:"Recyclable Packaging",  body:"100% of our packaging is made from recycled or recyclable materials. We've eliminated single-use plastics entirely." },
+    { emoji:"🌱", title:"Carbon Offset",          body:"We offset 100% of our shipping emissions through verified reforestation projects in East Africa." },
+    { emoji:"🤝", title:"Ethical Manufacturing",  body:"All manufacturing partners are audited annually for fair wages, safe conditions, and environmental compliance." },
+    { emoji:"👗", title:"Designed to Last",        body:"We design pieces with longevity in mind — the most sustainable garment is one you wear for years, not seasons." },
+  ];
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <div style={{ background:"linear-gradient(145deg,#1a4a2e,#2d7a47)",borderRadius:24,padding:"32px 24px",marginBottom:28,textAlign:"center" }}>
+        <p style={{ fontSize:40,margin:"0 0 12px" }}>🌿</p>
+        <h2 style={{ fontSize:26,fontWeight:800,color:"#fff",letterSpacing:"-0.6px",margin:"0 0 8px" }}>{t.sustainabilityTitle}</h2>
+        <p style={{ fontSize:14,color:"rgba(255,255,255,0.6)",margin:0 }}>Fashion that respects the planet</p>
+      </div>
+      {pillars.map((p,i) => (
+        <div key={i} style={{ background:T.fill4,borderRadius:18,padding:"18px",marginBottom:12,display:"flex",gap:14 }}>
+          <div style={{ width:48,height:48,borderRadius:14,background:"rgba(52,199,89,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:24 }}>{p.emoji}</div>
+          <div style={{ flex:1 }}>
+            <p style={{ fontSize:15,fontWeight:700,margin:"0 0 5px" }}>{p.title}</p>
+            <p style={{ fontSize:13,color:T.gray3,margin:0,lineHeight:1.65 }}>{p.body}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Lookbook Screen ───────────────────────────────────────── */
+function LookbookScreen({ products, onSelect, t }) {
+  const featured = products.slice(0, 6);
+  const imgs = [
+    "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80",
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80",
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80",
+    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80",
+  ];
+  return (
+    <div style={{ animation:"fadeIn .25s ease" }}>
+      <div style={{ marginBottom:24 }}>
+        <p style={{ fontSize:13,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:T.gray4,marginBottom:6 }}>{t.lookbookSeason}</p>
+        <h2 style={{ fontSize:28,fontWeight:800,letterSpacing:"-0.8px",marginBottom:4 }}>{t.lookbookTitle}</h2>
+        <p style={{ fontSize:14,color:T.gray4 }}>Explore the season's most refined pieces</p>
+      </div>
+      {/* Editorial grid */}
+      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:24 }}>
+        {imgs.map((src,i) => (
+          <div key={i} style={{ aspectRatio: i===0?"2/3":"3/4", borderRadius:18,overflow:"hidden",gridColumn:i===0?"1":"2",gridRow:i===0?"1/3":"auto" }}>
+            <img src={src} alt="" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+          </div>
+        ))}
+      </div>
+      {/* Shop the look */}
+      {featured.length > 0 && (
+        <>
+          <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>Shop the Look</p>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+            {featured.map(p=>(
+              <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
+                <div style={{ aspectRatio:"3/4",background:"#f2f2f7",borderRadius:18,overflow:"hidden",marginBottom:8 }}>
+                  {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/> : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36 }}>👗</div>}
+                </div>
+                <p style={{ fontSize:13,fontWeight:600,margin:"0 0 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
+                <PriceLine price={p.price} was={p.was}/>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
 
 /* ─── My Orders Screen ──────────────────────────────────────── */
 const ORDER_STATUS = {
@@ -1054,7 +1660,13 @@ function Logo({ height=40 }) {
 
 /* ─── Header ────────────────────────────────────────────────── */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
-  const titles = { shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account", orders:"My Orders" };
+  const titles = {
+    shop:"Shop", search:"Search", wishlist:"Wishlist", account:"Account",
+    orders:"My Orders", "edit-profile":"Edit Profile", addresses:"Addresses",
+    notifications:"Notifications", settings:"Settings", privacy:"Privacy",
+    "our-story":"Our Story", returns:"Returns", sustainability:"Sustainability",
+    lookbook:"Lookbook",
+  };
   const title = titles[screen] || "";
   return (
     <header style={{ background:"rgba(255,255,255,0.94)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none" }}>
@@ -1139,8 +1751,11 @@ function SaleModal({ onClose, onShop }) {
 
 /* ─── Root App ──────────────────────────────────────────────── */
 export default function Page() {
-  const [lang, setLang]         = useState("en");
+  const [lang, setLang]         = useState(() => typeof localStorage !== "undefined" ? localStorage.getItem("msambwa_lang")||"en" : "en");
   const t                        = TR[lang] || TR.en;
+
+  // Persist language choice
+  useEffect(() => { try { localStorage.setItem("msambwa_lang", lang); } catch(_) {} }, [lang]);
 
   /* Products from Supabase */
   const [products, setProducts] = useState([]);
@@ -1148,6 +1763,28 @@ export default function Page() {
 
   /* Persistent session */
   const [sessionId, setSid]     = useState(null);
+
+  /* Logged-in customer */
+  const [user, setUser]         = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
+
+  // Listen for auth changes
+  useEffect(() => {
+    sb.auth.getSession().then(({ data }) => {
+      const u = data.session?.user;
+      if (u && !u.is_anonymous) setUser(u);
+    });
+    const { data:{ subscription } } = sb.auth.onAuthStateChange((_, s) => {
+      const u = s?.user;
+      setUser(u && !u.is_anonymous ? u : null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await sb.auth.signOut();
+    setUser(null);
+  };
 
   /* Navigation */
   const [current,  setCurrent]  = useState({ screen:"home" });
@@ -1276,14 +1913,23 @@ export default function Page() {
       </div>
     );
     switch (current.screen) {
-      case "home":     return <HomeScreen {...screenProps}/>;
-      case "shop":     return <ShopScreen {...screenProps}/>;
-      case "search":   return <SearchScreen {...screenProps}/>;
-      case "wishlist": return <WishlistScreen {...screenProps}/>;
-      case "account":  return <AccountScreen onNavigate={navigate}/>;
-      case "orders":   return <MyOrdersScreen sessionId={sessionId}/>;
-      case "product":  return <ProductDetail p={current.product} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId}/>;
-      default:         return <HomeScreen {...screenProps}/>;
+      case "home":         return <HomeScreen {...screenProps}/>;
+      case "shop":         return <ShopScreen {...screenProps}/>;
+      case "search":       return <SearchScreen {...screenProps}/>;
+      case "wishlist":     return <WishlistScreen {...screenProps}/>;
+      case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} t={t}/>;
+      case "orders":       return <MyOrdersScreen sessionId={sessionId}/>;
+      case "edit-profile": return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><EditProfileScreen user={user} onBack={goBack} t={t}/></AuthGate>;
+      case "addresses":    return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><AddressesScreen t={t}/></AuthGate>;
+      case "notifications":return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><NotificationsScreen t={t}/></AuthGate>;
+      case "settings":     return <SettingsScreen t={t} lang={lang} setLang={setLang}/>;
+      case "privacy":      return <PrivacyScreen t={t}/>;
+      case "our-story":    return <OurStoryScreen t={t}/>;
+      case "returns":      return <ReturnsScreen t={t}/>;
+      case "sustainability":return <SustainabilityScreen t={t}/>;
+      case "lookbook":     return <LookbookScreen products={products} onSelect={p=>navigate("product",{product:p})} t={t}/>;
+      case "product":      return <ProductDetail p={current.product} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId}/>;
+      default:             return <HomeScreen {...screenProps}/>;
     }
   };
 
@@ -1295,6 +1941,8 @@ export default function Page() {
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
         {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty}/>}
+
+        {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={u=>{ if(u&&!u.is_anonymous) setUser(u); setShowAuth(false); }} t={t}/>}
 
         {showSale&&!cartOpen&&<SaleModal onClose={()=>setShowSale(false)} onShop={()=>{setShowSale(false);navigate("shop");}}/>}
 
