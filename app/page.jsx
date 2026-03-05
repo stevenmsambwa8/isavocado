@@ -714,7 +714,7 @@ function AccountScreen({ onNavigate }) {
 function Logo({ height = 38, alt = "Company Logo", ...props }) {
   return (
     <img
-      src="/logo.png"           // ← adjust path if needed (e.g. "./logo.png", "/assets/logo.png", import)
+      src="./app/components/logo.png" 
       alt={alt}
       height={height}
       style={{ display: "block" }}
