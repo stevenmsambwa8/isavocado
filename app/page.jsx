@@ -333,21 +333,57 @@ function EmptyState({ icon, title, body, action }) {
   );
 }
 
-/* ─── ProductCard ───────────────────────────────────────────── */
-function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted }) {
-  const thumb = (h, r=16) => (
-    <div style={{ height:h,background:"#f2f2f7",borderRadius:r,overflow:"hidden",position:"relative",flexShrink:0 }}>
-      {p.image_url
-        ? <img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
-        : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32 }}>👗</div>
-      }
-      {p.badge&&<span style={{ position:"absolute",top:8,left:8,background:p.badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:99 }}>{p.badge}</span>}
+/* ─── CardImageSlider — auto-slides through multiple images ─── */
+function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, children }) {
+  const [idx, setIdx]   = useState(0);
+  const timerRef        = useRef(null);
+  const imgs            = images?.length ? images : [];
+  const multi           = imgs.length > 1;
+
+  useEffect(() => {
+    if (!multi) return;
+    timerRef.current = setInterval(() => setIdx(i => (i + 1) % imgs.length), 2800);
+    return () => clearInterval(timerRef.current);
+  }, [multi, imgs.length]);
+
+  return (
+    <div style={{ aspectRatio, background:"#f2f2f7", borderRadius, overflow:"hidden", position:"relative", flexShrink:0 }}>
+      {imgs.length === 0 ? (
+        <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32 }}>👗</div>
+      ) : (
+        <>
+          {/* Slide strip */}
+          <div style={{ display:"flex", width:`${imgs.length * 100}%`, height:"100%", transition:"transform .55s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx * (100 / imgs.length)}%)` }}>
+            {imgs.map((src, i) => (
+              <div key={i} style={{ width:`${100 / imgs.length}%`, height:"100%", flexShrink:0 }}>
+                <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+              </div>
+            ))}
+          </div>
+          {/* Dot indicators — only shown when multiple images */}
+          {multi && (
+            <div style={{ position:"absolute", bottom:7, left:"50%", transform:"translateX(-50%)", display:"flex", gap:4, pointerEvents:"none" }}>
+              {imgs.map((_,i) => (
+                <div key={i} style={{ width: i===idx ? 14 : 5, height:5, borderRadius:3, background: i===idx ? "#fff" : "rgba(255,255,255,0.5)", transition:"width .3s, background .3s" }}/>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      {badge && <span style={{ position:"absolute",top:8,left:8,background:badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:99 }}>{badge}</span>}
+      {children}
     </div>
   );
+}
+
+/* ─── ProductCard ───────────────────────────────────────────── */
+function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted }) {
+  // Prefer image_urls array, fall back to single image_url
+  const images = p.image_urls?.length ? p.image_urls : p.image_url ? [p.image_url] : [];
 
   if (compact) return (
     <div onClick={()=>onSelect(p)} className="pressable" style={{ width:140,flexShrink:0,cursor:"pointer" }}>
-      {thumb(170)}
+      <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge}/>
       <p style={{ fontSize:13,fontWeight:600,marginBottom:3,marginTop:8,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
       <PriceLine price={p.price} was={p.was}/>
     </div>
@@ -355,15 +391,12 @@ function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted }) {
 
   if (grid) return (
     <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-      <div style={{ aspectRatio:"3/4",background:"#f2f2f7",borderRadius:20,overflow:"hidden",marginBottom:10,position:"relative" }}>
-        {p.image_url
-          ? <img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
-          : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:40 }}>👗</div>
-        }
-        {p.badge&&<span style={{ position:"absolute",top:10,left:10,background:p.badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:99 }}>{p.badge}</span>}
-        <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:10,right:10,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
-          <Icon name={wishlisted?"heart-fill":"heart"} size={16} color={wishlisted?T.red:T.gray5}/>
-        </button>
+      <div style={{ marginBottom:10 }}>
+        <CardImageSlider images={images} aspectRatio="3/4" borderRadius={20} badge={p.badge}>
+          <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:10,right:10,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+            <Icon name={wishlisted?"heart-fill":"heart"} size={16} color={wishlisted?T.red:T.gray5}/>
+          </button>
+        </CardImageSlider>
       </div>
       <p style={{ fontSize:13,fontWeight:700,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
       <p style={{ fontSize:11,color:T.gray4,marginBottom:5 }}>{p.category}</p>
@@ -593,13 +626,13 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId }) 
             <div
               ref={scrollRef}
               onScroll={onScroll}
-              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", WebkitOverflowScrolling:"touch", borderRadius:24 }}
+              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", WebkitOverflowScrolling:"touch", borderRadius:24, width:"100%" }}
             >
               {images.map((src, i) => (
                 <div
                   key={i}
                   onClick={() => setLB(i)}
-                  style={{ minWidth:"100%", aspectRatio:"4/5", flexShrink:0, scrollSnapAlign:"start", cursor:"zoom-in", position:"relative", overflow:"hidden", background:"#f2f2f7" }}
+                  style={{ minWidth:"100%", width:"100%", aspectRatio:"4/5", flexShrink:0, scrollSnapAlign:"start", cursor:"zoom-in", position:"relative", overflow:"hidden", background:"#f2f2f7" }}
                 >
                   <img src={src} alt={`${p.name} ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
                 </div>
