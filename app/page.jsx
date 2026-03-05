@@ -107,28 +107,28 @@ const Icon = ({ name, size=24, color="currentColor", strokeWidth=1.8 }) => {
 };
 
 const PRODUCTS = [
-  { id:1,  name:"Linen Overshirt",    cat:"Tops",        price:148, was:null, badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.8, reviews:124, desc:"Relaxed-fit overshirt in premium Belgian linen. Slightly oversized with a classic collar and chest pockets. The perfect layering piece.", material:"100% Belgian Linen", care:"Machine wash cold, tumble dry low", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
-  { id:2,  name:"Merino Turtleneck",  cat:"Tops",        price:195, was:null, badge:"New",  new:true,  colors:["#F0ECE4","#1A1A18","#8C6B4A"], sizes:["XS","S","M","L"],     rating:4.9, reviews:89,  desc:"Ultra-fine merino wool turtleneck. Naturally temperature-regulating, buttery soft, and wrinkle-resistant.", material:"100% Extra-fine Merino", care:"Hand wash cold or dry clean", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
-  { id:3,  name:"Wide-Leg Trousers",  cat:"Bottoms",     price:228, was:285,  badge:"Sale", new:false, colors:["#D4CFC8","#3D3830","#C4A882"], sizes:["XS","S","M","L","XL"], rating:4.7, reviews:203, desc:"Tailored wide-leg trousers with a high waist. Ponte-blend fabric that holds its shape and drapes beautifully.", material:"68% Viscose, 28% Polyamide, 4% Elastane", care:"Dry clean recommended", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#DED9D2,#CBBFB2)" },
-  { id:4,  name:"Cashmere Cardigan",  cat:"Tops",        price:345, was:null, badge:"New",  new:true,  colors:["#E2DDD6","#6B5E4E","#2C2C2A"], sizes:["XS","S","M","L"],     rating:5.0, reviews:57,  desc:"Hand-finished open-front cardigan in Grade-A cashmere. Ribbed cuffs and hem, relaxed silhouette.", material:"100% Grade-A Cashmere", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0ECE4,#DEDAD2)" },
-  { id:5,  name:"Silk Slip Dress",    cat:"Dresses",     price:268, was:null, badge:null,   new:false, colors:["#E8D5C4","#1A1A18","#8B7355"], sizes:["XS","S","M","L"],     rating:4.6, reviews:178, desc:"Bias-cut silk charmeuse slip dress with adjustable spaghetti straps. A timeless silhouette that moves beautifully.", material:"100% Silk Charmeuse", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F2E4D8,#E0CCBA)" },
-  { id:6,  name:"Tailored Blazer",    cat:"Outerwear",   price:420, was:null, badge:null,   new:false, colors:["#2C2C2A","#8C7355","#E0DBD2"], sizes:["XS","S","M","L","XL"], rating:4.9, reviews:94,  desc:"Single-breasted blazer in fine Italian wool blend. Structured shoulder, clean lapel, two-button closure.", material:"78% Wool, 18% Silk, 4% Cashmere", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#DEDAD4,#C8C0B6)" },
-  { id:7,  name:"Cropped Tank",       cat:"Tops",        price:68,  was:null, badge:null,   new:false, colors:["#F0ECE4","#1A1A18","#C4A882","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.5, reviews:312, desc:"Ribbed pima cotton tank with a cropped length. A clean minimal essential that pairs with everything.", material:"95% Pima Cotton, 5% Elastane", care:"Machine wash cold", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F5F2EC,#ECE6DE)" },
-  { id:8,  name:"Barrel Jeans",       cat:"Bottoms",     price:185, was:null, badge:"New",  new:true,  colors:["#6B8AB5","#2C2C2A","#8B7355"], sizes:["24","25","26","27","28","29","30"], rating:4.7, reviews:145, desc:"Relaxed barrel-leg jeans cut from Japanese selvedge denim with a subtle stretch.", material:"98% Cotton, 2% Elastane", care:"Machine wash cold, hang dry", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#D8E4F2,#C2D2E4)" },
-  { id:9,  name:"Wrap Midi Skirt",    cat:"Bottoms",     price:158, was:198,  badge:"Sale", new:false, colors:["#C4A882","#2C2C2A","#E8D5C4"], sizes:["XS","S","M","L"],     rating:4.8, reviews:201, desc:"Fluid wrap skirt in lightweight viscose crepe. Elegant midi length with adjustable tie closure.", material:"100% Viscose Crepe", care:"Hand wash cold", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE5D8,#DDD0BE)" },
-  { id:10, name:"Trench Coat",        cat:"Outerwear",   price:545, was:null, badge:null,   new:false, colors:["#C4A882","#2C2C2A","#E8E0D5"], sizes:["XS","S","M","L","XL"], rating:4.9, reviews:78,  desc:"Classic double-breasted trench in water-resistant cotton gabardine. A wardrobe investment.", material:"100% Cotton Gabardine", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#E8DDD0,#D8CEBE)" },
-  { id:11, name:"Knit Co-ord Set",    cat:"Sets",        price:295, was:null, badge:"New",  new:true,  colors:["#E8E0D5","#6B5E4E"], sizes:["XS","S","M","L"], rating:4.8, reviews:43, desc:"Matching fine-rib knit top and trouser set in merino-cashmere blend. Sold together, worn as separates.", material:"80% Merino, 20% Cashmere", care:"Hand wash cold", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#F0E8E0,#E0D5C8)" },
-  { id:12, name:"Leather Belt",       cat:"Accessories", price:88,  was:null, badge:null,   new:false, colors:["#2C2C2A","#8B7355","#C4A882"], sizes:["XS","S","M","L"],     rating:4.6, reviews:167, desc:"Full-grain leather belt with a minimalist rectangular buckle. Develops a beautiful patina over time.", material:"100% Full-grain Leather", care:"Clean with leather conditioner", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#D8D0C8,#C8C0B5)" },
-  { id:13, name:"Ribbed Midi Dress",  cat:"Dresses",     price:198, was:248,  badge:"Sale", new:false, colors:["#F0ECE4","#2C2C2A","#C4A882"], sizes:["XS","S","M","L"],     rating:4.7, reviews:89,  desc:"Fine-rib knit midi dress with a boat neckline and subtle flare. Effortlessly elegant.", material:"92% Viscose, 8% Elastane", care:"Machine wash cold", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D8D0C4)" },
-  { id:14, name:"Oversized Hoodie",   cat:"Tops",        price:125, was:null, badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#6B8AB5"], sizes:["XS","S","M","L","XL","XXL"], rating:4.8, reviews:256, desc:"Heavyweight cotton fleece hoodie with a relaxed oversized fit. Garment-dyed for a lived-in look.", material:"100% Organic Cotton Fleece", care:"Machine wash cold", ship:"Free shipping · Arrives in 3–5 days", grad:"linear-gradient(160deg,#EDE8E0,#D8CEBE)" },
+  { id:1,  name:"Linen Overshirt",    cat:"Tops",        price:148, was:null, badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.8, reviews:124, desc:"Relaxed-fit overshirt in premium Belgian linen. Slightly oversized with a classic collar and chest pockets.", material:"100% Belgian Linen", care:"Machine wash cold, tumble dry low", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&q=80" },
+  { id:2,  name:"Merino Turtleneck",  cat:"Tops",        price:195, was:null, badge:"New",  new:true,  colors:["#F0ECE4","#1A1A18","#8C6B4A"], sizes:["XS","S","M","L"],     rating:4.9, reviews:89,  desc:"Ultra-fine merino wool turtleneck. Naturally temperature-regulating, buttery soft, and wrinkle-resistant.", material:"100% Extra-fine Merino", care:"Hand wash cold or dry clean", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80" },
+  { id:3,  name:"Wide-Leg Trousers",  cat:"Bottoms",     price:228, was:285,  badge:"Sale", new:false, colors:["#D4CFC8","#3D3830","#C4A882"], sizes:["XS","S","M","L","XL"], rating:4.7, reviews:203, desc:"Tailored wide-leg trousers with a high waist. Ponte-blend fabric that holds its shape and drapes beautifully.", material:"68% Viscose, 28% Polyamide, 4% Elastane", care:"Dry clean recommended", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80" },
+  { id:4,  name:"Cashmere Cardigan",  cat:"Tops",        price:345, was:null, badge:"New",  new:true,  colors:["#E2DDD6","#6B5E4E","#2C2C2A"], sizes:["XS","S","M","L"],     rating:5.0, reviews:57,  desc:"Hand-finished open-front cardigan in Grade-A cashmere. Ribbed cuffs and hem, relaxed silhouette.", material:"100% Grade-A Cashmere", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80" },
+  { id:5,  name:"Silk Slip Dress",    cat:"Dresses",     price:268, was:null, badge:null,   new:false, colors:["#E8D5C4","#1A1A18","#8B7355"], sizes:["XS","S","M","L"],     rating:4.6, reviews:178, desc:"Bias-cut silk charmeuse slip dress with adjustable spaghetti straps. A timeless silhouette.", material:"100% Silk Charmeuse", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&q=80" },
+  { id:6,  name:"Tailored Blazer",    cat:"Outerwear",   price:420, was:null, badge:null,   new:false, colors:["#2C2C2A","#8C7355","#E0DBD2"], sizes:["XS","S","M","L","XL"], rating:4.9, reviews:94,  desc:"Single-breasted blazer in fine Italian wool blend. Structured shoulder, clean lapel, two-button closure.", material:"78% Wool, 18% Silk, 4% Cashmere", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80" },
+  { id:7,  name:"Cropped Tank",       cat:"Tops",        price:68,  was:null, badge:null,   new:false, colors:["#F0ECE4","#1A1A18","#C4A882","#8B7355"], sizes:["XS","S","M","L","XL"], rating:4.5, reviews:312, desc:"Ribbed pima cotton tank with a cropped length. A clean minimal essential that pairs with everything.", material:"95% Pima Cotton, 5% Elastane", care:"Machine wash cold", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80" },
+  { id:8,  name:"Barrel Jeans",       cat:"Bottoms",     price:185, was:null, badge:"New",  new:true,  colors:["#6B8AB5","#2C2C2A","#8B7355"], sizes:["24","25","26","27","28","29","30"], rating:4.7, reviews:145, desc:"Relaxed barrel-leg jeans cut from Japanese selvedge denim with a subtle stretch.", material:"98% Cotton, 2% Elastane", care:"Machine wash cold, hang dry", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80" },
+  { id:9,  name:"Wrap Midi Skirt",    cat:"Bottoms",     price:158, was:198,  badge:"Sale", new:false, colors:["#C4A882","#2C2C2A","#E8D5C4"], sizes:["XS","S","M","L"],     rating:4.8, reviews:201, desc:"Fluid wrap skirt in lightweight viscose crepe. Elegant midi length with adjustable tie closure.", material:"100% Viscose Crepe", care:"Hand wash cold", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1583496661160-fb5974ca91c0?w=600&q=80" },
+  { id:10, name:"Trench Coat",        cat:"Outerwear",   price:545, was:null, badge:null,   new:false, colors:["#C4A882","#2C2C2A","#E8E0D5"], sizes:["XS","S","M","L","XL"], rating:4.9, reviews:78,  desc:"Classic double-breasted trench in water-resistant cotton gabardine. A wardrobe investment.", material:"100% Cotton Gabardine", care:"Dry clean only", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=600&q=80" },
+  { id:11, name:"Knit Co-ord Set",    cat:"Sets",        price:295, was:null, badge:"New",  new:true,  colors:["#E8E0D5","#6B5E4E"], sizes:["XS","S","M","L"], rating:4.8, reviews:43, desc:"Matching fine-rib knit top and trouser set in merino-cashmere blend. Sold together, worn as separates.", material:"80% Merino, 20% Cashmere", care:"Hand wash cold", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&q=80" },
+  { id:12, name:"Leather Belt",       cat:"Accessories", price:88,  was:null, badge:null,   new:false, colors:["#2C2C2A","#8B7355","#C4A882"], sizes:["XS","S","M","L"],     rating:4.6, reviews:167, desc:"Full-grain leather belt with a minimalist rectangular buckle. Develops a beautiful patina over time.", material:"100% Full-grain Leather", care:"Clean with leather conditioner", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80" },
+  { id:13, name:"Ribbed Midi Dress",  cat:"Dresses",     price:198, was:248,  badge:"Sale", new:false, colors:["#F0ECE4","#2C2C2A","#C4A882"], sizes:["XS","S","M","L"],     rating:4.7, reviews:89,  desc:"Fine-rib knit midi dress with a boat neckline and subtle flare. Effortlessly elegant.", material:"92% Viscose, 8% Elastane", care:"Machine wash cold", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80" },
+  { id:14, name:"Oversized Hoodie",   cat:"Tops",        price:125, was:null, badge:null,   new:false, colors:["#E8E0D5","#2C2C2A","#6B8AB5"], sizes:["XS","S","M","L","XL","XXL"], rating:4.8, reviews:256, desc:"Heavyweight cotton fleece hoodie with a relaxed oversized fit. Garment-dyed for a lived-in look.", material:"100% Organic Cotton Fleece", care:"Machine wash cold", ship:"Free shipping · Arrives in 3–5 days", img:"https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=600&q=80" },
 ];
 
 const CATS = ["All","Tops","Bottoms","Dresses","Outerwear","Sets","Accessories"];
 
 const BANNERS = [
-  { id:1, title:"New Season", sub:"SS26 Collection", cta:"Explore", grad:"linear-gradient(135deg,#E8E0D5 0%,#C8BCAA 100%)", textDark:true },
-  { id:2, title:"Up to 40% off", sub:"Limited time sale", cta:"Shop Sale", grad:"linear-gradient(135deg,#1C1C1E 0%,#3A3A3C 100%)", textDark:false },
-  { id:3, title:"Free Shipping", sub:"On all orders over $200", cta:"Shop Now", grad:"linear-gradient(135deg,#D8E4F2 0%,#B8CADE 100%)", textDark:true },
+  { id:1, title:"New Season", sub:"SS26 Collection", cta:"Explore", img:"https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80", textDark:false },
+  { id:2, title:"Up to 40% off", sub:"Limited time sale", cta:"Shop Sale", img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", textDark:false },
+  { id:3, title:"Free Shipping", sub:"On all orders over $200", cta:"Shop Now", img:"https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80", textDark:false },
 ];
 
 const ORDERS = [
@@ -290,29 +290,27 @@ function HeroBanner({ onNavigate }) {
 
   return (
     <div ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
-      style={{ position:"relative", borderRadius:20, overflow:"hidden", marginBottom:16 }}>
+      style={{ position:"relative", borderRadius:24, overflow:"hidden", marginBottom:20 }}>
       <div ref={scrollRef} onScroll={onScroll}
         style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory",
           WebkitOverflowScrolling:"touch", scrollbarWidth:"none", msOverflowStyle:"none" }}>
         {BANNERS.map(b => (
-          <div key={b.id} style={{ flexShrink:0, minWidth:"100%", scrollSnapAlign:"start",
-            background:b.grad, padding:"52px 28px 44px", minHeight:240,
-            display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
-            <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase",
-              color:b.textDark?"rgba(0,0,0,0.36)":"rgba(255,255,255,0.5)", marginBottom:10 }}>{b.sub}</p>
-            <h2 style={{ fontSize:36, fontWeight:700, letterSpacing:"-1.2px", lineHeight:1.06, marginBottom:22,
-              color:b.textDark?T.black:T.white }}>{b.title}</h2>
-            <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start",
-              background:b.textDark?T.black:T.white, color:b.textDark?T.white:T.black,
-              border:"none", cursor:"pointer", padding:"12px 22px", borderRadius:99, fontSize:14, fontWeight:600, letterSpacing:"-0.1px" }}>{b.cta}</button>
+          <div key={b.id} style={{ flexShrink:0, minWidth:"100%", scrollSnapAlign:"start", position:"relative", minHeight:320 }}>
+            <img src={b.img} alt={b.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}/>
+            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 50%, transparent 100%)" }}/>
+            <div style={{ position:"relative", zIndex:1, padding:"200px 28px 36px", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+              <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(255,255,255,0.6)", marginBottom:8 }}>{b.sub}</p>
+              <h2 style={{ fontSize:38, fontWeight:700, letterSpacing:"-1.2px", lineHeight:1.05, marginBottom:24, color:"#fff" }}>{b.title}</h2>
+              <button onClick={()=>onNavigate("shop")} style={{ alignSelf:"flex-start", background:"#fff", color:"#000", border:"none", cursor:"pointer", padding:"13px 24px", borderRadius:99, fontSize:14, fontWeight:600, letterSpacing:"-0.2px" }}>{b.cta}</button>
+            </div>
           </div>
         ))}
       </div>
-      <div style={{ position:"absolute", bottom:16, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
+      <div style={{ position:"absolute", bottom:18, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
         {BANNERS.map((_,i) => (
           <button key={i} onClick={()=>go(i)}
-            style={{ width:i===idx?20:6, height:6, borderRadius:3, padding:0, border:"none", cursor:"pointer",
-              background:i===idx?"rgba(0,0,0,0.55)":"rgba(0,0,0,0.16)", transition:"width 0.3s ease, background 0.3s ease" }}/>
+            style={{ width:i===idx?22:6, height:6, borderRadius:3, padding:0, border:"none", cursor:"pointer",
+              background:i===idx?"rgba(255,255,255,0.95)":"rgba(255,255,255,0.4)", transition:"width 0.3s ease, background 0.3s ease" }}/>
         ))}
       </div>
     </div>
@@ -325,25 +323,23 @@ function ProductCard({ p, onSelect, onWishlist, wishlisted, compact, grid:inGrid
     ? { width:"100%", minWidth:0, cursor:"pointer" }
     : { width:fixedW, flexShrink:0, cursor:"pointer" };
   const imgStyle = inGrid
-    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:12 }
-    : { position:"relative", width:fixedW, height:compact?200:260, background:p.grad, borderRadius:16, overflow:"hidden", marginBottom:12 };
+    ? { position:"relative", width:"100%", aspectRatio:"3/4", background:"#f2f2f7", borderRadius:16, overflow:"hidden", marginBottom:12 }
+    : { position:"relative", width:fixedW, height:compact?200:260, background:"#f2f2f7", borderRadius:16, overflow:"hidden", marginBottom:12 };
 
   return (
     <div onClick={()=>onSelect(p)} className="pressable" style={outerStyle}>
       <div style={imgStyle}>
-        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <span style={{ fontSize:compact?18:22, fontWeight:300, color:"rgba(0,0,0,0.22)", textAlign:"center", padding:"0 12px", lineHeight:1.3, fontStyle:"italic" }}>{p.name}</span>
-        </div>
+        <img src={p.img} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
         {p.badge && (
-          <div style={{ position:"absolute", top:10, left:10, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:10, fontWeight:700, padding:"4px 9px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>
+          <div style={{ position:"absolute", top:10, left:10, background:p.badge==="Sale"?T.red:T.black, color:"#fff", fontSize:10, fontWeight:700, padding:"4px 10px", borderRadius:99, letterSpacing:"0.05em", textTransform:"uppercase" }}>{p.badge}</div>
         )}
         <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} className="pressable-sm"
-          style={{ position:"absolute", top:10, right:10, width:32, height:32, borderRadius:99, background:"rgba(255,255,255,0.92)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 1px 4px rgba(0,0,0,0.12)" }}>
-          <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray4}/>
+          style={{ position:"absolute", top:10, right:10, width:34, height:34, borderRadius:99, background:"rgba(255,255,255,0.9)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)" }}>
+          <Icon name={wishlisted?"heart-fill":"heart"} size={16} color={wishlisted?T.red:T.gray4}/>
         </button>
       </div>
-      <p style={{ fontSize:14, fontWeight:500, color:T.black, marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", letterSpacing:"-0.1px" }}>{p.name}</p>
-      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+      <p style={{ fontSize:14, fontWeight:500, color:"#000", marginBottom:3, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", letterSpacing:"-0.2px" }}>{p.name}</p>
+      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
         <RatingStars rating={p.rating} size={10}/>
         <span style={{ fontSize:11, color:T.gray4 }}>({p.reviews})</span>
       </div>
@@ -386,8 +382,8 @@ function CartDrawer({ cart, onClose, onRemove, onQty, onNavigate }) {
           ) : cart.map((item,i)=>(
             <div key={`${item.id}-${item.sz}`}>
               <div style={{ padding:"16px 0", display:"flex", gap:14 }}>
-                <div style={{ width:80, height:100, background:item.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.25)" }}>{item.name[0]}</span>
+                <div style={{ width:80, height:100, background:"#f2f2f7", borderRadius:14, flexShrink:0, overflow:"hidden" }}>
+                  <img src={item.img} alt={item.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <p style={{ fontSize:15, fontWeight:600, marginBottom:2 }}>{item.name}</p>
@@ -452,12 +448,12 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist }) {
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:p.grad, borderRadius:24, overflow:"hidden", marginBottom:24, display:"flex", alignItems:"center", justifyContent:"center" }}>
-        {p.badge&&<div style={{ position:"absolute", top:14, left:14, background:p.badge==="Sale"?T.red:T.black, color:T.white, fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>}
-        <span style={{ fontSize:56, fontWeight:300, color:"rgba(0,0,0,0.18)", textAlign:"center", padding:"0 24px", lineHeight:1.2, fontStyle:"italic" }}>{p.name}</span>
+      <div style={{ position:"relative", width:"100%", aspectRatio:"4/5", background:"#f2f2f7", borderRadius:24, overflow:"hidden", marginBottom:24 }}>
+        <img src={p.img} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+        {p.badge&&<div style={{ position:"absolute", top:16, left:16, background:p.badge==="Sale"?T.red:"#000", color:"#fff", fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, letterSpacing:"0.06em", textTransform:"uppercase" }}>{p.badge}</div>}
         <div style={{ position:"absolute", top:14, right:14, display:"flex", flexDirection:"column", gap:10 }}>
-          <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3}/>
-          <IconBtn icon="share" onClick={()=>{}} size={40} bg="rgba(255,255,255,0.9)" color={T.gray3}/>
+          <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
+          <IconBtn icon="share" onClick={()=>{}} size={40} bg="rgba(255,255,255,0.9)" color={T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
         </div>
       </div>
       <div style={{ marginBottom:20 }}>
@@ -540,7 +536,6 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
   const newIn    = products.filter(p=>p.new).slice(0,8);
   const trending = [...products].sort((a,b)=>b.reviews-a.reviews).slice(0,8);
   const onSale   = products.filter(p=>p.badge==="Sale").slice(0,6);
-  const catGrads = ["linear-gradient(160deg,#F0ECE4,#DDD4C5)","linear-gradient(160deg,#D8E4F0,#C2D2E4)","linear-gradient(160deg,#F0E4D8,#E0D0C0)","linear-gradient(160deg,#DED9D2,#CCC0B4)","linear-gradient(160deg,#F0E8E0,#E0D5C8)","linear-gradient(160deg,#D8D0C8,#C8C0B5)"];
 
   return (
     <div style={{ animation:"fadeIn 0.3s ease" }}>
@@ -548,25 +543,38 @@ function HomeScreen({ products, onNavigate, onSelect, onWishlist, wishlist }) {
       <div style={{ marginBottom:32, marginTop:8 }}>
         <SectionHeader title="Browse" action="See All" onAction={()=>onNavigate("shop")}/>
         <HScroll gap={10}>
-          {CATS.slice(1).map((cat,i)=>(
+          {[
+            {cat:"Tops",        img:"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=300&q=80"},
+            {cat:"Bottoms",     img:"https://images.unsplash.com/photo-1509631179647-0177331693ae?w=300&q=80"},
+            {cat:"Dresses",     img:"https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=300&q=80"},
+            {cat:"Outerwear",   img:"https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=300&q=80"},
+            {cat:"Sets",        img:"https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=300&q=80"},
+            {cat:"Accessories", img:"https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&q=80"},
+          ].map(({cat,img})=>(
             <button key={cat} onClick={()=>onNavigate("shop")} className="pressable-sm"
-              style={{ flexShrink:0, width:100, height:100, background:catGrads[i], borderRadius:20, border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6 }}>
-              <span style={{ fontSize:11, fontWeight:600, color:T.gray2, textTransform:"uppercase", letterSpacing:"0.05em" }}>{cat}</span>
+              style={{ flexShrink:0, width:100, height:120, borderRadius:20, border:"none", cursor:"pointer", position:"relative", overflow:"hidden" }}>
+              <img src={img} alt={cat} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)" }}/>
+              <span style={{ position:"absolute", bottom:9, left:0, right:0, textAlign:"center", fontSize:10, fontWeight:600, color:"#fff", textTransform:"uppercase", letterSpacing:"0.06em" }}>{cat}</span>
             </button>
           ))}
         </HScroll>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24 }}>
         {[
-          { label:"New Arrivals", sub:"SS26 drops", screen:"new-arrivals", grad:"linear-gradient(135deg,#1C1C1E,#3A3A3C)", dark:true },
-          { label:"Sale",         sub:"Up to 40% off", screen:"sale", grad:"linear-gradient(135deg,#FF3B30,#C0392B)", dark:true },
-          { label:t.lookbook,     sub:"Styled edits",  screen:"lookbook", grad:"linear-gradient(135deg,#EDE8E0,#D4C8B5)", dark:false },
-          { label:"Sustainability",sub:"Our values",   screen:"sustainability", grad:"linear-gradient(135deg,#2E4A2E,#1A2E1A)", dark:true },
+          { label:"New Arrivals", sub:"SS26 drops", screen:"new-arrivals", img:"https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&q=80" },
+          { label:"Sale",         sub:"Up to 40% off", screen:"sale", img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" },
+          { label:t.lookbook,     sub:"Styled edits",  screen:"lookbook", img:"https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80" },
+          { label:"Sustainability",sub:"Our values",   screen:"sustainability", img:"https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&q=80" },
         ].map(item=>(
           <button key={item.screen} onClick={()=>onNavigate(item.screen)} className="pressable-sm"
-            style={{ background:item.grad, borderRadius:20, padding:"20px 18px", border:"none", cursor:"pointer", textAlign:"left" }}>
-            <p style={{ fontSize:16, fontWeight:700, color:item.dark?T.white:T.black, letterSpacing:"-0.4px", marginBottom:3 }}>{item.label}</p>
-            <p style={{ fontSize:12, color:item.dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.45)", letterSpacing:"-0.1px" }}>{item.sub}</p>
+            style={{ borderRadius:20, border:"none", cursor:"pointer", textAlign:"left", overflow:"hidden", position:"relative", height:110 }}>
+            <img src={item.img} alt={item.label} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+            <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.38)" }}/>
+            <div style={{ position:"absolute", bottom:0, left:0, padding:"12px 14px" }}>
+              <p style={{ fontSize:15, fontWeight:700, color:"#fff", letterSpacing:"-0.3px", marginBottom:1 }}>{item.label}</p>
+              <p style={{ fontSize:11, color:"rgba(255,255,255,0.7)" }}>{item.sub}</p>
+            </div>
           </button>
         ))}
       </div>
@@ -669,8 +677,8 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist }) {
             <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)}/>
           ) : (
             <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.fill4, borderRadius:18, padding:14 }}>
-              <div style={{ width:80, height:100, background:p.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ fontSize:18, fontStyle:"italic", color:"rgba(0,0,0,0.22)" }}>{p.name[0]}</span>
+              <div style={{ width:80, height:100, background:"#f2f2f7", borderRadius:14, flexShrink:0, overflow:"hidden" }}>
+                <img src={p.img} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
               </div>
               <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
                 <p style={{ fontSize:15, fontWeight:700, marginBottom:4 }}>{p.name}</p>
@@ -919,10 +927,10 @@ function SaleScreen({ products, onSelect, onWishlist, wishlist }) {
 }
 
 const LOOKS = [
-  { id:1, title:"Morning Light", desc:"Effortless layers for golden hour starts.", products:[1,7,12], grad:"linear-gradient(160deg,#EDE8E0,#D4C8B5)" },
-  { id:2, title:"Urban Edge",    desc:"Polished silhouettes for the city commute.", products:[6,3,12], grad:"linear-gradient(160deg,#D8D0C8,#C4BAB0)" },
-  { id:3, title:"Weekend Ease",  desc:"Relaxed fits, elevated materials.", products:[14,8,9], grad:"linear-gradient(160deg,#D8E4F2,#C2D2E4)" },
-  { id:4, title:"The Edit",      desc:"Our curated selection for the season.", products:[2,11,5], grad:"linear-gradient(160deg,#F0ECE4,#DED4C6)" },
+  { id:1, title:"Morning Light", desc:"Effortless layers for golden hour starts.", products:[1,7,12], img:"https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80" },
+  { id:2, title:"Urban Edge",    desc:"Polished silhouettes for the city commute.", products:[6,3,12], img:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80" },
+  { id:3, title:"Weekend Ease",  desc:"Relaxed fits, elevated materials.", products:[14,8,9], img:"https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80" },
+  { id:4, title:"The Edit",      desc:"Our curated selection for the season.", products:[2,11,5], img:"https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80" },
 ];
 
 function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
@@ -936,8 +944,8 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
       <button onClick={()=>setActiveLook(null)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", marginBottom:16, color:T.gray3, fontSize:14, fontWeight:500 }}>
         <Icon name="back" size={18} color={T.gray3}/> All Looks
       </button>
-      <div style={{ aspectRatio:"4/3", background:look.grad, borderRadius:20, marginBottom:18, display:"flex", alignItems:"center", justifyContent:"center" }}>
-        <span style={{ fontSize:36, fontWeight:200, color:"rgba(0,0,0,0.18)", fontStyle:"italic" }}>{look.title}</span>
+      <div style={{ aspectRatio:"4/3", background:"#f2f2f7", borderRadius:20, marginBottom:18, overflow:"hidden" }}>
+        <img src={look.img} alt={look.title} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
       </div>
       <h2 style={{ fontSize:22, fontWeight:800, letterSpacing:-0.5, marginBottom:6 }}>{look.title}</h2>
       <p style={{ fontSize:14, color:T.gray4, marginBottom:20, lineHeight:1.6 }}>{look.desc}</p>
@@ -945,8 +953,8 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
       <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {lookProducts.map(p=>(
           <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex", gap:14, cursor:"pointer", background:T.fill4, borderRadius:18, padding:14 }}>
-            <div style={{ width:72, height:90, background:p.grad, borderRadius:14, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ fontSize:16, fontStyle:"italic", color:"rgba(0,0,0,0.22)" }}>{p.name[0]}</span>
+            <div style={{ width:72, height:90, background:"#f2f2f7", borderRadius:14, flexShrink:0, overflow:"hidden" }}>
+              <img src={p.img} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
             </div>
             <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
               <p style={{ fontSize:14, fontWeight:700, marginBottom:3 }}>{p.name}</p>
@@ -971,10 +979,12 @@ function LookbookScreen({ products, onSelect, onWishlist, wishlist }) {
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         {LOOKS.map((look, i) => (
           <button key={look.id} onClick={()=>setActiveLook(look.id)} className="pressable" style={{ width:"100%", background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
-            <div style={{ aspectRatio: i%2===0?"16/9":"4/3", background:look.grad, borderRadius:20, marginBottom:12, display:"flex", alignItems:"flex-end", padding:22 }}>
-              <div>
-                <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(0,0,0,0.4)", marginBottom:4 }}>Look {String(look.id).padStart(2,"0")}</p>
-                <p style={{ fontSize:22, fontWeight:800, color:T.black, letterSpacing:-0.5 }}>{look.title}</p>
+            <div style={{ aspectRatio: i%2===0?"16/9":"4/3", background:"#f2f2f7", borderRadius:20, marginBottom:12, overflow:"hidden", position:"relative" }}>
+              <img src={look.img} alt={look.title} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.58) 0%, transparent 55%)" }}/>
+              <div style={{ position:"absolute", bottom:0, left:0, padding:22 }}>
+                <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.6)", marginBottom:4 }}>Look {String(look.id).padStart(2,"0")}</p>
+                <p style={{ fontSize:22, fontWeight:700, color:"#fff", letterSpacing:"-0.5px" }}>{look.title}</p>
               </div>
             </div>
             <p style={{ fontSize:13, color:T.gray4 }}>{look.desc}</p>
