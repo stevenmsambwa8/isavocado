@@ -340,9 +340,10 @@ function MultiImagePicker({ slots, onAdd, onRemove, onReorder, compressingIdx })
           for (let i = 0; i < files.length; i++) {
             const f = files[i];
             const previewUrl = URL.createObjectURL(f);
-            onAdd({ id: Date.now() + i, preview: previewUrl, file: null, compressing: true }, slots.length + i);
+            const slotId = Date.now() + i; // capture once before await so both calls share the same ID
+            onAdd({ id: slotId, preview: previewUrl, file: null, compressing: true }, slots.length + i);
             const compressed = await compressImage(f);
-            onAdd({ id: Date.now() + i, preview: URL.createObjectURL(compressed), file: compressed, compressing: false }, slots.length + i, true);
+            onAdd({ id: slotId, preview: URL.createObjectURL(compressed), file: compressed, compressing: false }, slots.length + i, true);
           }
           e.target.value = '';
         }}
