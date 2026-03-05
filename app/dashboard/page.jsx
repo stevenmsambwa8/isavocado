@@ -135,6 +135,7 @@ function Ic({ n, size=20, color=T.label, w=1.8 }) {
     eye:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle {...p} cx="12" cy="12" r="3"/></svg>,
     eyeOff: <svg {...d} viewBox="0 0 24 24"><path {...p} d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path {...p} d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line {...p} x1="1" y1="1" x2="23" y2="23"/></svg>,
     out:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline {...p} points="16 17 21 12 16 7"/><line {...p} x1="21" y1="12" x2="9" y2="12"/></svg>,
+    gear:   <svg {...d} viewBox="0 0 24 24"><circle {...p} cx="12" cy="12" r="3"/><path {...p} d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
     star:   <svg {...d} viewBox="0 0 24 24"><polygon fill={color} stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     starE:  <svg {...d} viewBox="0 0 24 24"><polygon {...p} fill="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   };
@@ -356,7 +357,9 @@ function MultiImagePicker({ slots, onAdd, onRemove, onReorder, compressingIdx })
 /* ─── PRODUCT FORM ──────────────────────────────────────────── */
 const BLANK = { name:'', description:'', price:'', was:'', category:'Knitwear', sizes:[], badge:'', stock:'', rating:'0', reviews:'0', is_active:true };
 const CATS  = ['Knitwear','Tailoring','Dresses','Trousers','Tops','Outerwear','Accessories','Footwear','Sale'];
-const SIZES = ['XS','S','M','L','XL','XXL','One Size','6','7','8','9','10','11','12'];
+const SIZES_ALPHA   = ['XS','S','M','L','XL','XXL','3XL','4XL','5XL','6XL','7XL','8XL','9XL','10XL'];
+const SIZES_NUMERIC = Array.from({length:101}, (_,i) => String(i));
+const SIZES = [...SIZES_ALPHA, ...SIZES_NUMERIC];
 
 function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
   const [f, setF]  = useState({ ...BLANK, ...initial, rating: String(initial.rating ?? 0), reviews: String(initial.reviews ?? 0) });
@@ -416,9 +419,9 @@ function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
       </Card>
 
       <Card title="Pricing">
-        <FieldRow label="Price ($)" value={f.price} onChange={v=>set('price',v)} type="number" placeholder="0.00" error={err.price}/>
+        <FieldRow label="Price (TZS)" value={f.price} onChange={v=>set('price',v)} type="number" placeholder="0" error={err.price}/>
         <Sep/>
-        <FieldRow label="Original price (sale)" value={f.was} onChange={v=>set('was',v)} type="number" placeholder="0.00" last/>
+        <FieldRow label="Original / Sale Price (TZS)" value={f.was} onChange={v=>set('was',v)} type="number" placeholder="0" last/>
       </Card>
 
       <Card title="Details">
@@ -469,10 +472,24 @@ function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
       </Card>
 
       <Card title="Available Sizes">
-        <div style={{ padding:'14px 16px', display:'flex', flexWrap:'wrap', gap:8 }}>
-          {SIZES.map(s => (
-            <button key={s} onClick={()=>toggleSz(s)} className="tap" style={{ padding:'8px 16px', borderRadius:99, border:'none', background:f.sizes.includes(s)?T.blue:T.fill, color:f.sizes.includes(s)?T.white:T.label, fontSize:14, fontWeight:f.sizes.includes(s)?600:400, cursor:'pointer', transition:'all .12s' }}>{s}</button>
-          ))}
+        <div style={{ padding:'14px 16px 16px' }}>
+          <p style={{ fontSize:11, fontWeight:600, color:T.label3, letterSpacing:'0.05em', textTransform:'uppercase', margin:'0 0 8px' }}>Clothing</p>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:7, marginBottom:18 }}>
+            {SIZES_ALPHA.map(s => (
+              <button key={s} onClick={()=>toggleSz(s)} className="tap" style={{ padding:'7px 14px', borderRadius:99, border:'none', background:f.sizes.includes(s)?T.blue:T.fill, color:f.sizes.includes(s)?T.white:T.label, fontSize:14, fontWeight:f.sizes.includes(s)?700:400, cursor:'pointer', transition:'all .12s' }}>{s}</button>
+            ))}
+          </div>
+          <p style={{ fontSize:11, fontWeight:600, color:T.label3, letterSpacing:'0.05em', textTransform:'uppercase', margin:'0 0 8px' }}>Numeric (0 – 100)</p>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:5, maxHeight:150, overflowY:'auto', paddingRight:4 }}>
+            {SIZES_NUMERIC.map(s => (
+              <button key={s} onClick={()=>toggleSz(s)} className="tap" style={{ padding:'6px 10px', borderRadius:8, border:'none', background:f.sizes.includes(s)?T.blue:T.fill, color:f.sizes.includes(s)?T.white:T.label, fontSize:13, fontWeight:f.sizes.includes(s)?700:400, cursor:'pointer', transition:'all .12s', minWidth:40, textAlign:'center' }}>{s}</button>
+            ))}
+          </div>
+          {f.sizes.length > 0 && (
+            <p style={{ fontSize:12, color:T.blue, margin:'10px 0 0', lineHeight:1.5 }}>
+              Selected ({f.sizes.length}): {f.sizes.join(' · ')}
+            </p>
+          )}
         </div>
       </Card>
 
@@ -789,7 +806,7 @@ function Overview() {
     { label:'Products', value:stats.products,                  emoji:'📦', color:T.blue   },
     { label:'Orders',   value:stats.orders,                    emoji:'🧾', color:T.green  },
     { label:'Pending',  value:stats.pending,                   emoji:'⏳', color:T.orange },
-    { label:'Revenue',  value:`$${stats.revenue.toFixed(0)}`,  emoji:'💰', color:T.purple },
+    { label:'Revenue',  value:`TZS ${Number(stats.revenue||0).toLocaleString('en-US',{maximumFractionDigits:0})}`, emoji:'💰', color:T.purple },
   ];
 
   return (
@@ -875,11 +892,69 @@ function Auth({ onAuth }) {
   );
 }
 
+/* ─── SETTINGS PANEL ────────────────────────────────────────── */
+function SettingsPanel() {
+  const DEF = { delivery_enabled:true, delivery_cost:30000, free_delivery_threshold:500000 };
+  const [cfg,    setCfg]  = useState(DEF);
+  const [loaded, setLoad] = useState(false);
+  const [saving, setSave] = useState(false);
+  const [toast,  setToast]= useState(null);
+
+  useEffect(()=>{
+    sb.from('store_settings').select('*').eq('id',1).maybeSingle()
+      .then(({ data })=>{ if(data) setCfg({ delivery_enabled: data.delivery_enabled ?? true, delivery_cost: data.delivery_cost ?? 30000, free_delivery_threshold: data.free_delivery_threshold ?? 500000 }); setLoad(true); });
+  },[]);
+
+  const save = async () => {
+    setSave(true);
+    const { error } = await sb.from('store_settings').upsert({ id:1, ...cfg }, { onConflict:'id' });
+    setToast(error ? { msg:error.message, type:'error' } : { msg:'Delivery settings saved' });
+    setSave(false);
+  };
+
+  const set = (k,v) => setCfg(c=>({...c,[k]:v}));
+
+  if (!loaded) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
+
+  return (
+    <div style={{ animation:'fadeUp .28s ease' }}>
+      {toast && <Toast msg={toast.msg} type={toast.type||'success'} onDone={()=>setToast(null)}/>}
+
+      <Card title="Delivery" footer={cfg.delivery_enabled ? `Customers pay TZS ${Number(cfg.delivery_cost).toLocaleString()} on orders below TZS ${Number(cfg.free_delivery_threshold).toLocaleString()}` : 'Delivery is always free for customers'}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderBottom:`1px solid ${T.sep}` }}>
+          <div>
+            <p style={{ fontSize:15, color:T.label, margin:0, fontWeight:500 }}>Charge delivery fee</p>
+            <p style={{ fontSize:13, color:T.label3, margin:'2px 0 0' }}>Turn off to always offer free delivery</p>
+          </div>
+          <Toggle on={cfg.delivery_enabled} onChange={v=>set('delivery_enabled',v)}/>
+        </div>
+        {cfg.delivery_enabled && (<>
+          <div style={{ padding:'14px 16px', borderBottom:`1px solid ${T.sep}` }}>
+            <p style={{ fontSize:11, fontWeight:600, color:T.label3, letterSpacing:'0.05em', textTransform:'uppercase', margin:'0 0 6px' }}>Delivery Cost (TZS)</p>
+            <input type="number" value={cfg.delivery_cost} onChange={e=>set('delivery_cost',Number(e.target.value))}
+              style={{ width:'100%', border:'none', outline:'none', fontSize:22, fontWeight:700, color:T.label, background:'transparent', padding:0 }}/>
+            <p style={{ fontSize:12, color:T.label4, margin:'4px 0 0' }}>Charged when order is below the free threshold</p>
+          </div>
+          <div style={{ padding:'14px 16px' }}>
+            <p style={{ fontSize:11, fontWeight:600, color:T.label3, letterSpacing:'0.05em', textTransform:'uppercase', margin:'0 0 6px' }}>Free Delivery Threshold (TZS)</p>
+            <input type="number" value={cfg.free_delivery_threshold} onChange={e=>set('free_delivery_threshold',Number(e.target.value))}
+              style={{ width:'100%', border:'none', outline:'none', fontSize:22, fontWeight:700, color:T.label, background:'transparent', padding:0 }}/>
+            <p style={{ fontSize:12, color:T.label4, margin:'4px 0 0' }}>Orders at or above this amount get free delivery</p>
+          </div>
+        </>)}
+      </Card>
+
+      <Btn full loading={saving} onClick={save}>Save Settings</Btn>
+    </div>
+  );
+}
+
 /* ─── ROOT DASHBOARD ────────────────────────────────────────── */
 const TABS = [
-  { id:'overview', label:'Overview', icon:'chart'  },
-  { id:'products', label:'Products', icon:'box'    },
-  { id:'orders',   label:'Orders',   icon:'orders' },
+  { id:'overview', label:'Overview',  icon:'chart'  },
+  { id:'products', label:'Products',  icon:'box'    },
+  { id:'orders',   label:'Orders',    icon:'orders' },
+  { id:'settings', label:'Settings',  icon:'gear'   },
 ];
 
 export default function Dashboard() {
@@ -922,9 +997,10 @@ export default function Dashboard() {
 
       {/* Content */}
       <div style={{ padding:'20px 16px 96px' }}>
-        {tab==='overview' && <Overview/>}
-        {tab==='products' && <ProductsPanel/>}
-        {tab==='orders'   && <OrdersPanel/>}
+        {tab==='overview'  && <Overview/>}
+        {tab==='products'  && <ProductsPanel/>}
+        {tab==='orders'    && <OrdersPanel/>}
+        {tab==='settings'  && <SettingsPanel/>}
       </div>
 
       {/* Bottom tab bar */}
