@@ -759,7 +759,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
         </Btn>
       </div>
 
-      {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>
+      {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>}
 
       {/* ── Lightbox / Zoom ── */}
       {lightbox !== null && (
