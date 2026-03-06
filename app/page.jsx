@@ -147,7 +147,7 @@ const TR = {
     emptyBag:"Mfuko wako ni tupu", continueShopping:"Endelea Kununua",
     freeDeliveryQualify:"Unastahili usafirishaji bure!",
     addMore:"Ongeza", moreForFreeDelivery:"zaidi kwa usafirishaji bure",
-    delivery:"Delivery", noDeliveryNeeded:"Hakuna delivery", deliveryOptOut:"Nitakuja kuchukua / hakuna delivery",
+    delivery:"Uwasilishaji", noDeliveryNeeded:"Hakuna uwasilishaji", deliveryOptOut:"Nitakuja kuchukua / hakuna uwasilishaji",
     noResults:"Hakuna matokeo", tryDifferent:"Jaribu neno tofauti la utafutaji",
     newArrivals:"Waliofika Hivi Karibuni", orders:"Maagizo", myOrders:"Maagizo Yangu",
     addresses:"Anwani", paymentMethods:"Njia za Malipo",
@@ -264,10 +264,14 @@ const useLang  = () => useContext(LangCtx);
 
 /* ─── Design tokens ─────────────────────────────────────────── */
 const T = {
-  black:"#000", white:"#fff", gray2:"#2C2C2E", gray3:"#3A3A3C",
-  gray4:"#636366", gray5:"#8E8E93", gray6:"#AEAEB2", gray7:"#C7C7CC",
-  gray8:"#E5E5EA", gray9:"#F2F2F7", fill3:"#EFEFF4", fill4:"#F8F8FA",
-  blue:"#007AFF", red:"#FF3B30", green:"#34C759", yellow:"#FF9500",
+  black:"#0C1C1F", white:"#fff",
+  gray2:"#1A2E32", gray3:"#2B4A50", gray4:"#5B7C84", gray5:"#8AADB5",
+  gray6:"#AECDD3", gray7:"#C6DDE2", gray8:"#DFF0F3", gray9:"#EEF8FA",
+  fill3:"#E6F5F8", fill4:"#F2FAFC",
+  // Brand teal from logo
+  blue:"#1C7A8C",       // primary — dark teal (buttons, active states, links)
+  brandLight:"#4EC8E8", // sky blue accent (highlights, badges)
+  red:"#E03A4E", green:"#1D9B6A", yellow:"#F59A0E",
 };
 const shadow = { xs:"0 1px 4px rgba(0,0,0,.08)", xl:"0 16px 48px rgba(0,0,0,.14)", xxl:"0 24px 60px rgba(0,0,0,.18)" };
 const $p = v => `TZS ${Number(v).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 })}`;
@@ -1403,7 +1407,7 @@ function AuthModal({ onClose, onAuth, t }) {
 }
 
 /* ─── Account Screen ────────────────────────────────────────── */
-function AccountScreen({ onNavigate, user, onLogin, onLogout, t }) {
+function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t }) {
   const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || t.guestUser;
 
   const publicRows = [
@@ -1448,7 +1452,7 @@ function AccountScreen({ onNavigate, user, onLogin, onLogout, t }) {
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
       {/* Profile hero */}
-      <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"24px",marginBottom:24 }}>
+      <div style={{ background:`linear-gradient(145deg,${T.blue},${T.gray2})`,borderRadius:24,padding:"24px",marginBottom:24 }}>
         <div style={{ display:"flex",alignItems:"center",gap:16,marginBottom: user ? 16 : 0 }}>
           <div style={{ width:60,height:60,borderRadius:30,background:"rgba(255,255,255,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
             <Icon name="person" size={26} color="rgba(255,255,255,0.7)"/>
@@ -1488,6 +1492,16 @@ function AccountScreen({ onNavigate, user, onLogin, onLogout, t }) {
           </div>
         ))}
       </div>
+
+      {/* Help us improve */}
+      <button onClick={onFeedback} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,background:`linear-gradient(135deg,${T.blue},${T.brandLight||"#4EC8E8"})`,border:"none",borderRadius:20,padding:"18px 20px",cursor:"pointer",marginBottom:16,textAlign:"left" }}>
+        <span style={{ fontSize:28,flexShrink:0 }}>💬</span>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:15,fontWeight:700,color:"#fff",margin:0 }}>Help us improve</p>
+          <p style={{ fontSize:12,color:"rgba(255,255,255,0.75)",margin:"2px 0 0" }}>Share feedback — we read every message</p>
+        </div>
+        <Icon name="chevronR" size={16} color="rgba(255,255,255,0.8)"/>
+      </button>
 
       <p style={{ textAlign:"center",fontSize:12,color:T.gray6,marginBottom:8 }}>MSAMBWA · v1.0.0</p>
     </div>
@@ -1916,7 +1930,6 @@ function MyOrdersScreen({ sessionId }) {
   };
 
   const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-  const $$ = v => `$${Number(v||0).toFixed(2)}`;
 
   if (loading) return (
     <div style={{ display:"flex",alignItems:"center",justifyContent:"center",minHeight:"40vh" }}>
@@ -1968,7 +1981,7 @@ function MyOrdersScreen({ sessionId }) {
                   {order.selected_size && <span style={{ fontSize:13,color:T.gray3 }}>Size: <strong>{order.selected_size}</strong></span>}
                   <span style={{ fontSize:13,color:T.gray3 }}>Qty: <strong>{order.quantity}</strong></span>
                 </div>
-                <span style={{ fontSize:16,fontWeight:700,color:T.black }}>{$$(order.product_price)}</span>
+                <span style={{ fontSize:16,fontWeight:700,color:T.black }}>{$p(Number(order.product_price) * Number(order.quantity||1))}</span>
               </div>
 
               {/* Progress bar */}
@@ -1980,8 +1993,8 @@ function MyOrdersScreen({ sessionId }) {
                     const active = i <= curIdx && order.status !== "cancelled";
                     return (
                       <div key={s} style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4 }}>
-                        <div style={{ width:"100%",height:3,borderRadius:99,background:active?"#007AFF":T.gray8,transition:"background .3s" }}/>
-                        <span style={{ fontSize:9,color:active?"#007AFF":T.gray5,fontWeight:active?600:400,textTransform:"capitalize" }}>{s}</span>
+                        <div style={{ width:"100%",height:3,borderRadius:99,background:active?T.blue:T.gray8,transition:"background .3s" }}/>
+                        <span style={{ fontSize:9,color:active?T.blue:T.gray5,fontWeight:active?600:400,textTransform:"capitalize" }}>{s}</span>
                       </div>
                     );
                   })}
@@ -2032,7 +2045,7 @@ function MyOrdersScreen({ sessionId }) {
                 <div style={{ display:"flex",gap:16 }}>
                   {sel.selected_size && <p style={{ fontSize:13,color:T.gray3,margin:0 }}>Size: <strong>{sel.selected_size}</strong></p>}
                   <p style={{ fontSize:13,color:T.gray3,margin:0 }}>Qty: <strong>{sel.quantity}</strong></p>
-                  <p style={{ fontSize:15,fontWeight:700,margin:0,marginLeft:"auto" }}>{$$(sel.product_price)}</p>
+                  <p style={{ fontSize:15,fontWeight:700,margin:0,marginLeft:"auto" }}>{$p(Number(sel.product_price) * Number(sel.quantity||1))}</p>
                 </div>
               </div>
 
@@ -2226,6 +2239,96 @@ function BottomNav({ screen, onNavigate }) {
 }
 
 /* ─── Sale Modal ────────────────────────────────────────────── */
+/* ─── Help Us Improve Feedback Widget ───────────────────────── */
+function HelpFeedback({ onClose }) {
+  const [step,    setStep]   = useState("form");    // form | sent
+  const [rating,  setRating] = useState(0);
+  const [hovered, setHov]    = useState(0);
+  const [msg,     setMsg]    = useState("");
+  const [email,   setEmail]  = useState("");
+  const [busy,    setBusy]   = useState(false);
+  const [err,     setErr]    = useState("");
+
+  const submit = async () => {
+    if (!rating) { setErr("Please select a star rating."); return; }
+    setBusy(true); setErr("");
+    try {
+      const { error } = await sb.from('site_feedback').insert({
+        rating, message: msg.trim() || null,
+        email: email.trim() || null,
+        page: window.location.pathname || '/',
+      });
+      if (error) throw error;
+      setStep("sent");
+    } catch(e) {
+      setErr(e?.message || "Failed to send. Please try again.");
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:950,display:"flex",alignItems:"flex-end",justifyContent:"center" }}>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(6px)" }}/>
+      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,background:T.white,borderRadius:"24px 24px 0 0",padding:"24px 24px 40px",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)",paddingBottom:"max(40px,env(safe-area-inset-bottom,40px))" }}>
+        <div style={{ width:36,height:5,borderRadius:3,background:T.gray8,margin:"-8px auto 20px" }}/>
+
+        {step === "sent" ? (
+          <div style={{ textAlign:"center",paddingBottom:8 }}>
+            <div style={{ fontSize:52,marginBottom:12 }}>🙏</div>
+            <p style={{ fontSize:20,fontWeight:700,margin:"0 0 8px",color:T.black }}>Thank you!</p>
+            <p style={{ fontSize:14,color:T.gray4,lineHeight:1.6,marginBottom:24 }}>Your feedback helps us improve MSAMBWA for everyone.</p>
+            <button onClick={onClose} style={{ padding:"13px 32px",background:T.blue,color:"#fff",border:"none",borderRadius:14,fontSize:15,fontWeight:600,cursor:"pointer" }}>Close</button>
+          </div>
+        ) : (
+          <>
+            <p style={{ fontSize:20,fontWeight:700,margin:"0 0 4px",color:T.black }}>Help us improve 💬</p>
+            <p style={{ fontSize:14,color:T.gray4,marginBottom:20,lineHeight:1.5 }}>How's your experience with MSAMBWA? We read every message.</p>
+
+            {/* Star rating */}
+            <div style={{ display:"flex",gap:6,marginBottom:20 }}>
+              {[1,2,3,4,5].map(i => (
+                <button key={i} onClick={()=>setRating(i)} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(0)}
+                  style={{ background:"none",border:"none",cursor:"pointer",padding:0,fontSize:32,lineHeight:1,transition:"transform .12s",transform:i<=(hovered||rating)?"scale(1.15)":"scale(1)" }}>
+                  {i <= (hovered||rating) ? "⭐" : "☆"}
+                </button>
+              ))}
+              {rating > 0 && <span style={{ fontSize:13,color:T.gray4,marginLeft:6,alignSelf:"center" }}>
+                {["","😞 Poor","😐 Fair","🙂 Good","😊 Great","🤩 Excellent"][rating]}
+              </span>}
+            </div>
+
+            {/* Message */}
+            <textarea
+              value={msg} onChange={e=>setMsg(e.target.value)}
+              placeholder="What can we do better? (optional)"
+              style={{ width:"100%",resize:"none",minHeight:80,padding:"12px 14px",fontSize:14,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif",marginBottom:12,boxSizing:"border-box" }}
+            />
+
+            {/* Email */}
+            <input
+              type="email" value={email} onChange={e=>setEmail(e.target.value)}
+              placeholder="Your email (optional, if you'd like a reply)"
+              style={{ width:"100%",padding:"12px 14px",fontSize:14,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif",marginBottom:16,boxSizing:"border-box" }}
+            />
+
+            {err && <p style={{ fontSize:13,color:T.red,margin:"0 0 12px",padding:"10px 14px",background:`${T.red}12`,borderRadius:10 }}>{err}</p>}
+
+            <div style={{ display:"flex",gap:10 }}>
+              <button onClick={submit} disabled={busy}
+                style={{ flex:1,padding:"14px",background:T.blue,color:"#fff",border:"none",borderRadius:14,fontSize:15,fontWeight:600,cursor:"pointer",opacity:busy?0.7:1 }}>
+                {busy ? "Sending…" : "Send Feedback"}
+              </button>
+              <button onClick={onClose}
+                style={{ padding:"14px 20px",background:T.fill3,color:T.gray3,border:"none",borderRadius:14,fontSize:15,cursor:"pointer" }}>
+                Skip
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SaleModal({ onClose, onShop }) {
   return (
     <div style={{ position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"center",justifyContent:"center",padding:20 }}>
@@ -2241,7 +2344,7 @@ function SaleModal({ onClose, onShop }) {
         <div style={{ padding:"24px 24px 28px" }}>
           <h2 style={{ fontSize:28,fontWeight:700,letterSpacing:"-0.8px",marginBottom:8,color:"#000" }}>Up to 40% Off</h2>
           <p style={{ fontSize:15,color:"#636366",lineHeight:1.5,marginBottom:24 }}>Shop the SS26 Sale — select styles while stocks last.</p>
-          <button onClick={onShop} style={{ width:"100%",background:"#000",color:"#fff",border:"none",borderRadius:14,padding:"17px",fontSize:16,fontWeight:600,cursor:"pointer" }}>Shop the Sale →</button>
+          <button onClick={onShop} style={{ width:"100%",background:T.blue,color:"#fff",border:"none",borderRadius:14,padding:"17px",fontSize:16,fontWeight:600,cursor:"pointer" }}>Shop the Sale →</button>
           <button onClick={onClose} style={{ width:"100%",background:"none",border:"none",padding:"14px",fontSize:14,color:"#8e8e93",cursor:"pointer",marginTop:4 }}>Maybe later</button>
         </div>
       </div>
@@ -2299,6 +2402,7 @@ export default function Page() {
   const [cartOpen,    setCartOpen]    = useState(false);
   const [showSale,    setShowSale]    = useState(false);
   const [showCookies, setShowCookies] = useState(false);
+  const [showFeedback,setShowFeedback]= useState(false);
 
   /* ── Bootstrap session ── */
   useEffect(() => {
@@ -2362,10 +2466,26 @@ export default function Page() {
       .then(({ data }) => { setProducts(data||[]); setLoading(false); });
   }, []);
 
-  /* ── Show sale modal after 2s ── */
-  useEffect(() => { const t = setTimeout(()=>setShowSale(true), 2000); return ()=>clearTimeout(t); }, []);
+  /* ── Show sale modal after 2s — max once per 2 days ── */
   useEffect(() => {
-    if (!showSale) { const t = setTimeout(()=>setShowCookies(true), 800); return()=>clearTimeout(t); }
+    try {
+      const last = localStorage.getItem('msambwa_sale_ts');
+      const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+      if (last && Date.now() - Number(last) < TWO_DAYS_MS) return; // shown within last 2 days, skip
+    } catch(_) {}
+    const t = setTimeout(() => {
+      setShowSale(true);
+      try { localStorage.setItem('msambwa_sale_ts', String(Date.now())); } catch(_) {}
+    }, 2000);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* ── Cookie banner — show only once ever ── */
+  useEffect(() => {
+    if (showSale) return;
+    try { if (localStorage.getItem('msambwa_cookies_ok')) return; } catch(_) {}
+    const t = setTimeout(() => setShowCookies(true), 800);
+    return () => clearTimeout(t);
   }, [showSale]);
 
   /* ── Navigation ── */
@@ -2438,7 +2558,7 @@ export default function Page() {
       case "shop":         return <ShopScreen {...screenProps}/>;
       case "search":       return <SearchScreen {...screenProps}/>;
       case "wishlist":     return <WishlistScreen {...screenProps}/>;
-      case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} t={t}/>;
+      case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} onFeedback={()=>setShowFeedback(true)} t={t}/>;
       case "orders":       return <MyOrdersScreen sessionId={sessionId}/>;
       case "edit-profile": return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><EditProfileScreen user={user} onBack={goBack} t={t}/></AuthGate>;
       case "addresses":    return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><AddressesScreen t={t}/></AuthGate>;
@@ -2465,18 +2585,20 @@ export default function Page() {
 
         {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={u=>{ if(u&&!u.is_anonymous) setUser(u); setShowAuth(false); }} t={t}/>}
 
+        {showFeedback&&<HelpFeedback onClose={()=>setShowFeedback(false)}/>}
+
         {showSale&&!cartOpen&&<SaleModal onClose={()=>setShowSale(false)} onShop={()=>{setShowSale(false);navigate("shop");}}/>}
 
         {!showSale&&showCookies&&(
-          <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(28,28,30,0.96)",backdropFilter:"blur(20px)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
+          <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(12,28,31,0.96)",backdropFilter:"blur(20px)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
             <div style={{ display:"flex",gap:14,alignItems:"flex-start" }}>
               <span style={{ fontSize:26,flexShrink:0 }}>🍪</span>
               <div style={{ flex:1 }}>
                 <p style={{ fontSize:15,fontWeight:600,color:"#fff",marginBottom:5 }}>We use cookies</p>
                 <p style={{ fontSize:13,color:"rgba(255,255,255,0.55)",lineHeight:1.5,marginBottom:16 }}>We use cookies to personalise your experience.</p>
                 <div style={{ display:"flex",gap:10 }}>
-                  <button onClick={()=>setShowCookies(false)} style={{ flex:1,background:"#fff",color:"#000",border:"none",borderRadius:12,padding:"12px",fontSize:14,fontWeight:600,cursor:"pointer" }}>Accept</button>
-                  <button onClick={()=>setShowCookies(false)} style={{ flex:1,background:"rgba(255,255,255,0.12)",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:14,cursor:"pointer" }}>Decline</button>
+                  <button onClick={()=>{ try{localStorage.setItem('msambwa_cookies_ok','1');}catch(_){} setShowCookies(false); }} style={{ flex:1,background:T.blue,color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:14,fontWeight:600,cursor:"pointer" }}>Accept</button>
+                  <button onClick={()=>{ try{localStorage.setItem('msambwa_cookies_ok','0');}catch(_){} setShowCookies(false); }} style={{ flex:1,background:"rgba(255,255,255,0.12)",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:14,cursor:"pointer" }}>Decline</button>
                 </div>
               </div>
             </div>
