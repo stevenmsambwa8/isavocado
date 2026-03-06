@@ -57,7 +57,7 @@ if (typeof document !== 'undefined' && !document.getElementById('__d_css')) {
 }
 
 /* ─── Helpers ───────────────────────────────────────────────── */
-const money   = v => `$${Number(v||0).toFixed(2)}`;
+const money   = v => `TSHS ${Number(v||0).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 })}`;
 const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
 
 /* ─── Image compression to ≤83 KB ──────────────────────────── */
@@ -629,7 +629,7 @@ function ProductsPanel() {
                     {p.badge && <span style={{ fontSize:11, fontWeight:700, background:`${T.blue}18`, color:T.blue, padding:'2px 7px', borderRadius:99, flexShrink:0 }}>{p.badge}</span>}
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                    <span style={{ fontSize:14, fontWeight:600, color:T.label }}>${p.price}</span>
+                    <span style={{ fontSize:14, fontWeight:600, color:T.label }}>{money(p.price)}</span>
                     <span style={{ fontSize:12, color:T.label3 }}>{p.category}</span>
                     {p.rating > 0 && (
                       <span style={{ fontSize:12, color:T.label3, display:'flex', alignItems:'center', gap:2 }}>
@@ -736,8 +736,8 @@ function OrdersPanel() {
                   <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{o.buyer_name} · {o.buyer_email}</p>
                 </div>
                 <div style={{ textAlign:'right', flexShrink:0 }}>
-                  <p style={{ fontSize:15, fontWeight:700, color:T.label, margin:'0 0 2px' }}>{money(o.product_price)}</p>
-                  <p style={{ fontSize:12, color:T.label3, margin:0 }}>{fmtDate(o.created_at)}</p>
+                  <p style={{ fontSize:15, fontWeight:700, color:T.label, margin:'0 0 2px' }}>{money(o.product_price * (o.quantity||1))}</p>
+                  <p style={{ fontSize:11, color:T.label3, margin:0 }}>×{o.quantity||1} · {fmtDate(o.created_at)}</p>
                 </div>
               </button>
               {i < visible.length-1 && <Sep/>}
@@ -749,7 +749,11 @@ function OrdersPanel() {
       {sel && (
         <Sheet title="Purchase Request" onClose={()=>setSel(null)}>
           <Card title="Product">
-            <Row label={sel.product_name} sub={[sel.selected_size&&`Size ${sel.selected_size}`,`Qty ${sel.quantity}`].filter(Boolean).join(' · ')} right={<span style={{fontSize:15,fontWeight:700,color:T.label}}>{money(sel.product_price)}</span>} last/>
+            <Row
+              label={sel.product_name}
+              sub={[sel.selected_size && `Size ${sel.selected_size}`, `Qty ${sel.quantity||1}`, `${money(sel.product_price)} each`].filter(Boolean).join(' · ')}
+              right={<span style={{fontSize:15,fontWeight:700,color:T.label}}>{money(sel.product_price * (sel.quantity||1))}</span>}
+              last/>
           </Card>
           <Card title="Buyer">
             <Row label={sel.buyer_name} sub={sel.buyer_email}/>
