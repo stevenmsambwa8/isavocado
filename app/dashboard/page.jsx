@@ -136,6 +136,7 @@ function Ic({ n, size=20, color=T.label, w=1.8 }) {
     eyeOff: <svg {...d} viewBox="0 0 24 24"><path {...p} d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path {...p} d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line {...p} x1="1" y1="1" x2="23" y2="23"/></svg>,
     out:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline {...p} points="16 17 21 12 16 7"/><line {...p} x1="21" y1="12" x2="9" y2="12"/></svg>,
     gear:   <svg {...d} viewBox="0 0 24 24"><circle {...p} cx="12" cy="12" r="3"/><path {...p} d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+    msg:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
     star:   <svg {...d} viewBox="0 0 24 24"><polygon fill={color} stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     starE:  <svg {...d} viewBox="0 0 24 24"><polygon {...p} fill="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   };
@@ -669,12 +670,14 @@ function ProductsPanel() {
 const S_LIST = ['pending','confirmed','shipped','delivered','cancelled'];
 
 function OrdersPanel() {
-  const [orders,setOrders]     = useState([]);
-  const [loading,setLoading]   = useState(true);
-  const [sel,setSel]           = useState(null);
-  const [filter,setFilter]     = useState('all');
-  const [updating,setUpdating] = useState(false);
-  const [toast,setToast]       = useState(null);
+  const [orders,  setOrders]  = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sel,     setSel]     = useState(null);
+  const [filter,  setFilter]  = useState('all');
+  const [updating,setUpdating]= useState(false);
+  const [deleting,setDeleting]= useState(false);
+  const [confirm, setConfirm] = useState(null); // 'one' | 'all'
+  const [toast,   setToast]   = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -694,6 +697,35 @@ function OrdersPanel() {
     setUpdating(false);
   };
 
+  const deleteOne = async () => {
+    if (!sel) return;
+    setDeleting(true);
+    const { error } = await sb.from('purchase_requests').delete().eq('id', sel.id);
+    if (error) { setToast({ msg:'Failed to delete', type:'error' }); }
+    else {
+      setOrders(os => os.filter(o => o.id !== sel.id));
+      setSel(null);
+      setToast({ msg:'Request deleted' });
+    }
+    setDeleting(false);
+    setConfirm(null);
+  };
+
+  const deleteAll = async () => {
+    const ids = visible.map(o => o.id);
+    if (!ids.length) return;
+    setDeleting(true);
+    const { error } = await sb.from('purchase_requests').delete().in('id', ids);
+    if (error) { setToast({ msg:'Failed to delete', type:'error' }); }
+    else {
+      setOrders(os => os.filter(o => !ids.includes(o.id)));
+      setSel(null);
+      setToast({ msg:`${ids.length} request${ids.length!==1?'s':''} deleted` });
+    }
+    setDeleting(false);
+    setConfirm(null);
+  };
+
   const visible = filter==='all' ? orders : orders.filter(o=>o.status===filter);
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
@@ -702,8 +734,32 @@ function OrdersPanel() {
     <div style={{ animation:'fadeUp .28s ease' }}>
       {toast && <Toast msg={toast.msg} type={toast.type||'success'} onDone={()=>setToast(null)}/>}
 
-      {/* Filter chips */}
-      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:2, marginBottom:20 }}>
+      {/* Confirm dialog */}
+      {confirm && (
+        <div style={{ position:'fixed',inset:0,zIndex:999,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}>
+          <div onClick={()=>setConfirm(null)} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',backdropFilter:'blur(4px)' }}/>
+          <div style={{ position:'relative',zIndex:1,background:T.white,borderRadius:20,padding:'24px 22px',width:'100%',maxWidth:340,animation:'fadeUp .2s ease' }}>
+            <p style={{ fontSize:18,fontWeight:700,color:T.label,margin:'0 0 8px' }}>
+              {confirm==='all' ? `Delete ${visible.length} request${visible.length!==1?'s':''}?` : 'Delete this request?'}
+            </p>
+            <p style={{ fontSize:14,color:T.label3,margin:'0 0 22px',lineHeight:1.5 }}>
+              {confirm==='all' ? 'This will permanently delete all visible requests.' : 'This cannot be undone.'}
+            </p>
+            <div style={{ display:'flex',gap:10 }}>
+              <button onClick={confirm==='all'?deleteAll:deleteOne} disabled={deleting}
+                style={{ flex:1,padding:'13px',background:T.red,color:T.white,border:'none',borderRadius:12,fontSize:15,fontWeight:600,cursor:'pointer',opacity:deleting?0.7:1 }}>
+                {deleting?'Deleting…':'Delete'}
+              </button>
+              <button onClick={()=>setConfirm(null)} style={{ flex:1,padding:'13px',background:T.fill,color:T.label,border:'none',borderRadius:12,fontSize:15,cursor:'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filter chips + delete all */}
+      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:2, marginBottom:20, alignItems:'center' }}>
         {['all',...S_LIST].map(v => {
           const cnt = v==='all' ? orders.length : orders.filter(o=>o.status===v).length;
           const active = filter===v;
@@ -713,6 +769,11 @@ function OrdersPanel() {
             </button>
           );
         })}
+        {visible.length > 0 && (
+          <button onClick={()=>setConfirm('all')} className="tap" style={{ marginLeft:'auto',flexShrink:0,padding:'8px 14px',borderRadius:99,border:`1px solid ${T.red}`,background:'transparent',color:T.red,fontSize:13,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:6 }}>
+            <Ic n="trash" size={14} color={T.red} w={2}/> Delete all
+          </button>
+        )}
       </div>
 
       {visible.length === 0 ? (
@@ -733,7 +794,7 @@ function OrdersPanel() {
                     <p style={{ fontSize:15, fontWeight:600, color:T.label, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{o.product_name}</p>
                     <Pill status={o.status}/>
                   </div>
-                  <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{o.buyer_name} · {o.buyer_email}</p>
+                  <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{o.buyer_name} · {o.buyer_phone||o.buyer_email}</p>
                 </div>
                 <div style={{ textAlign:'right', flexShrink:0 }}>
                   <p style={{ fontSize:15, fontWeight:700, color:T.label, margin:'0 0 2px' }}>{money(o.product_price * (o.quantity||1))}</p>
@@ -782,6 +843,10 @@ function OrdersPanel() {
               </div>
             ))}
           </Card>
+          {/* Delete this request */}
+          <button onClick={()=>setConfirm('one')} style={{ width:'100%',padding:'14px',background:`${T.red}10`,color:T.red,border:`1px solid ${T.red}30`,borderRadius:14,fontSize:15,fontWeight:600,cursor:'pointer',marginTop:4,display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+            <Ic n="trash" size={16} color={T.red} w={2}/> Delete request
+          </button>
         </Sheet>
       )}
     </div>
@@ -953,11 +1018,117 @@ function SettingsPanel() {
   );
 }
 
+/* ─── FEEDBACK PANEL ─────────────────────────────────────────── */
+function FeedbackPanel() {
+  const [items,   setItems]  = useState([]);
+  const [loading, setLoad]   = useState(true);
+  const [sel,     setSel]    = useState(null);
+  const [deleting,setDel]    = useState(false);
+  const [toast,   setToast]  = useState(null);
+
+  const load = async () => {
+    setLoad(true);
+    const { data } = await sb.from('site_feedback').select('*').order('created_at',{ascending:false});
+    setItems(data||[]);
+    setLoad(false);
+  };
+  useEffect(()=>{ load(); },[]);
+
+  const del = async (id) => {
+    setDel(true);
+    await sb.from('site_feedback').delete().eq('id',id);
+    setItems(is=>is.filter(i=>i.id!==id));
+    setSel(null);
+    setToast({ msg:'Deleted' });
+    setDel(false);
+  };
+
+  const stars = n => '★'.repeat(n) + '☆'.repeat(5-n);
+  const avg = items.length ? (items.reduce((s,i)=>s+(i.rating||0),0)/items.length).toFixed(1) : '—';
+
+  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
+
+  return (
+    <div style={{ animation:'fadeUp .28s ease' }}>
+      {toast && <Toast msg={toast.msg} type={toast.type||'success'} onDone={()=>setToast(null)}/>}
+
+      {/* Summary */}
+      <Card style={{ marginBottom:20 }}>
+        <div style={{ padding:'18px 16px', display:'flex', gap:24 }}>
+          <div style={{ textAlign:'center' }}>
+            <p style={{ fontSize:36,fontWeight:700,color:T.label,margin:0 }}>{avg}</p>
+            <p style={{ fontSize:13,color:T.label3,margin:'2px 0 0' }}>Avg rating</p>
+          </div>
+          <div style={{ textAlign:'center' }}>
+            <p style={{ fontSize:36,fontWeight:700,color:T.label,margin:0 }}>{items.length}</p>
+            <p style={{ fontSize:13,color:T.label3,margin:'2px 0 0' }}>Responses</p>
+          </div>
+          <div style={{ textAlign:'center' }}>
+            <p style={{ fontSize:36,fontWeight:700,color:T.label,margin:0 }}>{items.filter(i=>i.message).length}</p>
+            <p style={{ fontSize:13,color:T.label3,margin:'2px 0 0' }}>With message</p>
+          </div>
+        </div>
+      </Card>
+
+      {items.length === 0 ? (
+        <div style={{ textAlign:'center',paddingTop:72 }}>
+          <p style={{ fontSize:48,margin:'0 0 12px' }}>💬</p>
+          <p style={{ fontSize:20,fontWeight:700,color:T.label,margin:'0 0 8px' }}>No feedback yet</p>
+          <p style={{ fontSize:15,color:T.label3 }}>Customer feedback will appear here.</p>
+        </div>
+      ) : (
+        <Card title={`${items.length} response${items.length!==1?'s':''}`}>
+          {items.map((item,i)=>(
+            <div key={item.id}>
+              <button onClick={()=>setSel(item)} className="rowbtn" style={{ width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:T.white,border:'none',cursor:'pointer',textAlign:'left' }}>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:2 }}>
+                    <span style={{ fontSize:14,color:'#f59a0e',letterSpacing:1 }}>{stars(item.rating||0)}</span>
+                    {item.email&&<span style={{ fontSize:12,color:T.label3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.email}</span>}
+                  </div>
+                  {item.message&&<p style={{ fontSize:13,color:T.label3,margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.message}</p>}
+                </div>
+                <p style={{ fontSize:11,color:T.label4,margin:0,flexShrink:0 }}>{fmtDate(item.created_at)}</p>
+              </button>
+              {i<items.length-1&&<Sep/>}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {sel && (
+        <Sheet title="Feedback" onClose={()=>setSel(null)}>
+          <Card title="Rating">
+            <div style={{ padding:'14px 16px' }}>
+              <p style={{ fontSize:28,color:'#f59a0e',margin:'0 0 4px',letterSpacing:2 }}>{stars(sel.rating||0)}</p>
+              <p style={{ fontSize:13,color:T.label3,margin:0 }}>{sel.rating}/5 stars</p>
+            </div>
+          </Card>
+          {sel.message&&(
+            <Card title="Message">
+              <div style={{ padding:'14px 16px' }}>
+                <p style={{ fontSize:15,color:T.label,margin:0,lineHeight:1.6 }}>{sel.message}</p>
+              </div>
+            </Card>
+          )}
+          <Card title="Contact">
+            <Row label={sel.email||'Anonymous'} sub={fmtDate(sel.created_at)} last/>
+          </Card>
+          <button onClick={()=>del(sel.id)} disabled={deleting} style={{ width:'100%',padding:'14px',background:`${T.red}10`,color:T.red,border:`1px solid ${T.red}30`,borderRadius:14,fontSize:15,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+            <Ic n="trash" size={16} color={T.red} w={2}/> {deleting?'Deleting…':'Delete response'}
+          </button>
+        </Sheet>
+      )}
+    </div>
+  );
+}
+
 /* ─── ROOT DASHBOARD ────────────────────────────────────────── */
 const TABS = [
   { id:'overview', label:'Overview',  icon:'chart'  },
   { id:'products', label:'Products',  icon:'box'    },
   { id:'orders',   label:'Orders',    icon:'orders' },
+  { id:'feedback', label:'Feedback',  icon:'msg'    },
   { id:'settings', label:'Settings',  icon:'gear'   },
 ];
 
@@ -1004,6 +1175,7 @@ export default function Dashboard() {
         {tab==='overview'  && <Overview/>}
         {tab==='products'  && <ProductsPanel/>}
         {tab==='orders'    && <OrdersPanel/>}
+        {tab==='feedback'  && <FeedbackPanel/>}
         {tab==='settings'  && <SettingsPanel/>}
       </div>
 
