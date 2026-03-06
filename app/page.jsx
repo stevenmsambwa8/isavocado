@@ -276,6 +276,20 @@ const T = {
 const shadow = { xs:"0 1px 4px rgba(0,0,0,.08)", xl:"0 16px 48px rgba(0,0,0,.14)", xxl:"0 24px 60px rgba(0,0,0,.18)" };
 const $p = v => `TZS ${Number(v).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 })}`;
 
+const productUrl = (id) => {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}${window.location.pathname}#product=${id}`;
+};
+const shareProduct = async (prod, e) => {
+  e?.stopPropagation();
+  const url = productUrl(prod.id);
+  if (navigator?.share) {
+    try { await navigator.share({ title: prod.name, text: `Check out ${prod.name} on MSAMBWA`, url }); } catch(_) {}
+  } else {
+    try { await navigator.clipboard.writeText(url); } catch(_) {}
+  }
+};
+
 /* ─── Atoms ─────────────────────────────────────────────────── */
 function Spin({ size=24 }) {
   return (
@@ -433,29 +447,43 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, ch
 
 /* ─── ProductCard ───────────────────────────────────────────── */
 function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user, onLoginPrompt }) {
-  // Prefer image_urls array, fall back to single image_url
   const images = p.image_urls?.length ? p.image_urls : p.image_url ? [p.image_url] : [];
 
   if (compact) return (
-    <div onClick={()=>onSelect(p)} className="pressable" style={{ width:140,flexShrink:0,cursor:"pointer" }}>
-      <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge}/>
-      <p style={{ fontSize:13,fontWeight:600,marginBottom:3,marginTop:8,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
-      <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
+    <div style={{ width:140, flexShrink:0, position:"relative" }}>
+      <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
+        <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge}/>
+      </div>
+      {/* Share icon top-left */}
+      <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:8,left:8,width:28,height:28,borderRadius:14,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+        <Icon name="share" size={13} color={T.gray3}/>
+      </button>
+      <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
+        <p style={{ fontSize:13,fontWeight:600,marginBottom:3,marginTop:8,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
+        <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
+      </div>
     </div>
   );
 
   if (grid) return (
-    <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
+    <div style={{ cursor:"pointer" }}>
       <div style={{ marginBottom:10 }}>
         <CardImageSlider images={images} aspectRatio="3/4" borderRadius={20} badge={p.badge}>
-          <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:10,right:10,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+          {/* Share — BEFORE heart */}
+          <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:10,right:50,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+            <Icon name="share" size={15} color={T.gray4}/>
+          </button>
+          {/* Heart */}
+          <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:10,right:10,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
             <Icon name={wishlisted?"heart-fill":"heart"} size={16} color={wishlisted?T.red:T.gray5}/>
           </button>
         </CardImageSlider>
       </div>
-      <p style={{ fontSize:13,fontWeight:700,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
-      <p style={{ fontSize:11,color:T.gray4,marginBottom:5 }}>{p.category}</p>
-      <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
+      <div onClick={()=>onSelect(p)} className="pressable">
+        <p style={{ fontSize:13,fontWeight:700,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
+        <p style={{ fontSize:11,color:T.gray4,marginBottom:5 }}>{p.category}</p>
+        <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
+      </div>
     </div>
   );
   return null;
@@ -601,18 +629,26 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
   const total        = subtotal + deliveryFee;
   const showFreeBar  = delivery_enabled && !noDelivery;
 
-  const buyerName  = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
-  const buyerEmail = user?.email || null;
+  const buyerName  = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
+  const buyerEmail = user?.email || "";
+
+  // Guest-only fields
+  const [guestName,  setGuestName]  = useState(buyerName);
+  const [guestEmail, setGuestEmail] = useState(buyerEmail);
 
   const submitOrder = async () => {
+    const finalName  = user ? buyerName  : guestName.trim();
+    const finalEmail = user ? buyerEmail : guestEmail.trim();
     if (!phone.trim()) { setErr(t.cartPhoneLabel + " is required."); return; }
+    if (!user && !finalName) { setErr("Please enter your name."); return; }
     setLoad(true); setErr("");
     try {
       for (const item of cart) {
         const payload = {
           product_id: item.id, product_name: item.name, product_price: Number(item.price),
           selected_size: item.sz || null, quantity: Number(item.qty),
-          buyer_name: buyerName, buyer_email: buyerEmail,
+          buyer_name:  finalName  || "Guest",
+          buyer_email: finalEmail || null,
           buyer_phone: phone.trim(), note: note.trim() || null, status: "pending",
         };
         let { error } = await sb.from("purchase_requests").insert({ ...payload, session_id: sessionId || null });
@@ -685,6 +721,20 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
             </div>
 
             <p style={{ fontSize:13,color:T.gray4,marginBottom:18,lineHeight:1.5 }}>{t.cartCheckoutSub}</p>
+
+            {/* Guest-only: name + email */}
+            {!user && (<>
+              <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
+                <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>Your Name *</label>
+                <input type="text" value={guestName} onChange={e=>setGuestName(e.target.value)} placeholder="Full name"
+                  style={{ padding:"13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${err&&!guestName.trim()?T.red:T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
+              </div>
+              <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
+                <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>Email (optional)</label>
+                <input type="email" value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} placeholder="your@email.com"
+                  style={{ padding:"13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
+              </div>
+            </>)}
 
             {/* Phone */}
             <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
@@ -865,8 +915,9 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
             {/* Badge */}
             {p.badge && <div style={{ position:"absolute", top:16, left:16, background:p.badge==="Sale"?T.red:"#000", color:"#fff", fontSize:11, fontWeight:700, padding:"5px 12px", borderRadius:99, textTransform:"uppercase" }}>{p.badge}</div>}
 
-            {/* Wishlist + zoom hint */}
+            {/* Share + Wishlist */}
             <div style={{ position:"absolute", top:14, right:14, display:"flex", flexDirection:"column", gap:10 }}>
+              <IconBtn icon="share" onClick={e=>shareProduct(p,e)} size={40} bg="rgba(255,255,255,0.9)" color={T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
               <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
             </div>
 
@@ -2460,10 +2511,25 @@ export default function Page() {
       });
   }, [sessionId]);
 
-  /* ── Load products ── */
+  /* ── Load products + handle deep-link hash ── */
   useEffect(() => {
     sb.from('products').select('*').eq('is_active', true).order('created_at', { ascending:false })
-      .then(({ data }) => { setProducts(data||[]); setLoading(false); });
+      .then(({ data }) => {
+        const prods = data || [];
+        setProducts(prods);
+        setLoading(false);
+        // Deep-link: URL ending in #product=<uuid> opens that product directly
+        try {
+          const m = window.location.hash.match(/^#product=([a-f0-9-]+)$/i);
+          if (m) {
+            const found = prods.find(pr => pr.id === m[1]);
+            if (found) {
+              window.history.replaceState({}, "", window.location.pathname + window.location.search);
+              setCurrent({ screen:"product", product: found });
+            }
+          }
+        } catch(_) {}
+      });
   }, []);
 
   /* ── Show sale modal after 2s — max once per 2 days ── */
