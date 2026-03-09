@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useMemo, useCallback, memo, createContext, useContext, Component } from "react";
 import { createClient } from '@supabase/supabase-js';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 /* ─── Error Boundary ────────────────────────────────────────── */
 class ErrorBoundary extends Component {
@@ -3122,6 +3123,8 @@ function PageInner() {
           </div>
         )}
       </div>
+
+      <PWAInstallPrompt />
     </LangCtx.Provider>
   );
 }
