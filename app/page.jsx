@@ -90,278 +90,7 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
 }
 
 /* ─── Lang context ──────────────────────────────────────────── */
-const TR = {
-  en: {
-    home:"Home", shop:"Shop", search:"Search", saved:"Saved", account:"Account",
-    wishlist:"Wishlist", myBag:"My Bag", checkout:"Checkout →",
-    addToBag:"Add to Bag", addedToBag:"Added",
-    freeDelivery:"Free Delivery", freeReturns:"Free Returns",
-    newIn:"New In", trendingNow:"Trending Now", onSale:"On Sale",
-    viewAll:"View All", seeAll:"See All", browse:"Browse",
-    priceOnRequest:"Members only", addToBagReveal:"Add to Bag", requestReveal:"Request to Buy",
-    signInToContinue:"Sign in to continue",
-    cartCheckoutTitle:"Send Order Request", cartCheckoutSub:"We'll reach out to confirm your order.",
-    cartPhoneLabel:"Your Phone Number", cartNotePlaceholder:"Anything we should know about your order…",
-    cartSubmit:"Send Request", cartSent:"Order Request Sent!", cartSentBody:"We'll contact you shortly to confirm.",
-    limitedTime:"Limited Time", upTo40:"Up to 40% off", whileStocks:"Select styles. While stocks last.", shopSale:"Shop Sale →",
-    shopOpeningSoon:"Shop opening soon", curatingCollection:"Our collection is being curated. Check back shortly for new arrivals.",
-    shopEmpty:"Shop is empty", shopEmptyBody:"Products will appear here once added by the team.",
-    sortFeatured:"Browse", sortNew:"New In", sortLow:"Lowest Price", sortHigh:"Highest Price", sortRating:"Top Rated",
-    items:"items", tryCategory:"Try a different category.",
-    trending:"Trending", searchPlaceholder:"Search products…",
-    noResultsFor:"No results for", nothingMatched:"Nothing matched",
-    savedItems:"saved items", wishlistEmpty:"Your wishlist is empty", wishlistEmptyBody:"Tap the heart on any product to save it here.",
-    noSaved:"Your wishlist is empty", saveItemsYouLove:"Save items you love",
-    emptyBag:"Your bag is empty", continueShopping:"Continue Shopping",
-    freeDeliveryQualify:"You qualify for free delivery!",
-    addMore:"Add", moreForFreeDelivery:"more for free delivery",
-    delivery:"Delivery", noDeliveryNeeded:"No delivery needed", deliveryOptOut:"I'll collect / no delivery needed",
-    noResults:"No results", tryDifferent:"Try a different search term",
-    newArrivals:"New Arrivals", orders:"Orders", myOrders:"My Orders",
-    addresses:"Addresses", paymentMethods:"Payment Methods",
-    referFriend:"Refer a Friend", notifications:"Notifications",
-    settings:"Settings", ourStory:"Our Story", returns:"Returns",
-    privacy:"Privacy", lookbook:"Lookbook", sustainability:"Sustainability",
-    requestToBuy:"Request to Buy", yourName:"Your Name",
-    yourEmail:"Your Email", yourPhone:"Phone (optional)",
-    deliveryAddress:"Delivery Address", noteToSeller:"Note (optional)",
-    submitRequest:"Submit Request", requestSent:"Request Sent!",
-    size:"Size", colour:"Colour", description:"Description", reviewsLabel:"reviews",
-    loading:"Loading…", language:"Language",
-    noProducts:"No products yet",
-    noProductsBody:"Our collection is being curated. Check back soon.",
-    signIn:"Sign In", signUp:"Sign Up", signOut:"Sign Out",
-    email:"Email", password:"Password", confirmPassword:"Confirm Password",
-    editProfile:"Edit Profile", profile:"Profile",
-    firstName:"First Name", lastName:"Last Name", phone:"Phone",
-    saveChanges:"Save Changes", cancel:"Cancel",
-    loginRequired:"Sign in required",
-    loginRequiredBody:"Create a free account to access this feature.",
-    createAccount:"Create Account", alreadyAccount:"Already have an account?",
-    noAccount:"No account yet?",
-    guestUser:"Guest", member:"MSAMBWA Member",
-    loginToUnlock:"Sign in to unlock",
-    address:"Address", addAddress:"Add Address",
-    street:"Street", city:"City", country:"Country", postcode:"Postcode",
-    notificationsDesc:"Manage your notification preferences",
-    pushNotifications:"Push Notifications", emailNotifications:"Email Notifications",
-    orderUpdates:"Order Updates", promotions:"Promotions", newArrivalsAlert:"New Arrivals",
-    settingsDesc:"App preferences",
-    darkMode:"Dark Mode", language:"Language", currency:"Currency",
-    privacyPolicy:"Privacy Policy", termsOfService:"Terms of Service",
-    deleteAccount:"Delete Account",
-    ourStoryTitle:"Our Story", ourStoryBody:"MSAMBWA was founded with a simple belief: that beautiful, considered fashion should be accessible to everyone. We source our pieces from ethical manufacturers across the globe, ensuring every garment tells a story of craftsmanship and care.\n\nOur name, MSAMBWA, means 'spirit' in Swahili — a reminder that we put soul into everything we do. From our carefully curated collections to our personal customer service, we believe fashion is more than clothing — it's how you carry yourself through the world.",
-    returnsTitle:"Returns & Exchanges", returnsBody:"We want you to love every piece. If you're not completely satisfied, we offer hassle-free returns within 30 days of delivery.\n\nTo start a return, contact us at hello@msambwa.com with your order number and reason for return. Items must be unworn, unwashed, and in original packaging with tags attached.\n\nRefunds are processed within 5–7 business days of receiving your return.",
-    sustainabilityTitle:"Sustainability", sustainabilityBody:"At MSAMBWA, sustainability isn't just a buzzword — it's woven into everything we do. We partner only with manufacturers who meet our strict ethical and environmental standards.\n\nOur packaging is 100% recyclable. We offset our carbon emissions through verified reforestation projects. And we design pieces to last — because the most sustainable garment is one you wear for years, not seasons.",
-    lookbookTitle:"Lookbook", lookbookSeason:"SS26 Collection",
-    /* ── Hero slide copy ── */
-    heroNewLabel:"SS26 Collection", heroNewTitle:"Refined pieces\nfor modern living.", heroNewSub:"New arrivals — just dropped", heroNewCta:"Explore New In →",
-    heroHotLabel:"Trending Now", heroHotTitle:"Everyone's\ntalking about it.", heroHotSub:"Most loved styles right now", heroHotCta:"Shop Trending →",
-    heroSaleLabel:"Limited Time Sale", heroSaleTitle:"Up to 40% Off\nSelect Styles.", heroSaleSub:"Shop before it ends", heroSaleCta:"Shop Sale →",
-    /* ── Add to bag image picker ── */
-    pickExactImage:"Pick the exact item", pickExactImageSub:"Select which photo matches what you want to order",
-    pickRequired:"Please select the exact item picture first.",
-    subtotal:"Subtotal", total:"Total", free:"Free",
-    pinchZoom:"Pinch or double-tap to zoom",
-    helpFeedback:"Help us improve", helpFeedbackSub:"Share feedback — we read every message",
-    version:"v1.0.0",
-    /* ── Post-purchase account nudge ── */
-    createAccountNudgeTitle:"Save your details for next time",
-    createAccountNudgeBody:"Your request was sent. Add a password to turn your email into a full account — track orders, save addresses and more.",
-    createAccountNudgePasswordLabel:"Choose a password",
-    createAccountNudgePasswordPlaceholder:"At least 8 characters",
-    createAccountNudgeCreate:"Create Account",
-    createAccountNudgeSkip:"No thanks",
-    createAccountNudgeDontShow:"Don't show again",
-    createAccountNudgeSuccess:"Account created! Welcome.",
-    createAccountNudgeError:"Couldn't create account. Try again.",
-    /* ── Purchase modal pre-fill ── */
-    requestFormPrefilled:"Your details have been pre-filled from your account.",
-    requestFormGuestNote:"Tip: create an account to save your details for faster checkout.",
-  },
-  sw: {
-    home:"Nyumbani", shop:"Duka", search:"Tafuta", saved:"Zilizohifadhiwa", account:"Akaunti",
-    wishlist:"Orodha ya Matakwa", myBag:"Mfuko Wangu", checkout:"Malipo →",
-    addToBag:"Ongeza Kwenye Mfuko", addedToBag:"Imeongezwa",
-    freeDelivery:"Usafirishaji Bure", freeReturns:"Kurudisha Bure",
-    newIn:"Mpya", trendingNow:"Inayoongoza Sasa", onSale:"Punguzo",
-    viewAll:"Angalia Zote", seeAll:"Angalia Zote", browse:"Tazama",
-    priceOnRequest:"Wanachama tu", addToBagReveal:"Ongeza Mfukoni", requestReveal:"Ombi la Kununua",
-    signInToContinue:"Ingia kuendelea",
-    cartCheckoutTitle:"Tuma Ombi la Agizo", cartCheckoutSub:"Tutawasiliana nawe kuthibitisha agizo lako.",
-    cartPhoneLabel:"Nambari Yako ya Simu", cartNotePlaceholder:"Kuna kitu chochote tunachopaswa kujua kuhusu agizo lako…",
-    cartSubmit:"Tuma Ombi", cartSent:"Ombi la Agizo Limetumwa!", cartSentBody:"Tutawasiliana nawe hivi karibuni kuthibitisha.",
-    limitedTime:"Wakati Mdogo", upTo40:"Hadi 40% punguzo", whileStocks:"Mitindo iliyochaguliwa. Hadi stoki itakapokwisha.", shopSale:"Nunua Punguzo →",
-    shopOpeningSoon:"Duka linafunguliwa hivi karibuni", curatingCollection:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
-    shopEmpty:"Duka ni tupu", shopEmptyBody:"Bidhaa zitaonekana hapa zikishaongezwa.",
-    sortFeatured:"Tazama", sortNew:"Mpya", sortLow:"Bei ya Chini", sortHigh:"Bei ya Juu", sortRating:"Zilizopimwa Zaidi",
-    items:"bidhaa", tryCategory:"Jaribu aina tofauti.",
-    trending:"Inayoongoza", searchPlaceholder:"Tafuta bidhaa…",
-    noResultsFor:"Hakuna matokeo kwa", nothingMatched:"Hakuna kilicholingana",
-    savedItems:"vitu vilivyohifadhiwa", wishlistEmpty:"Orodha yako ya matakwa ni tupu", wishlistEmptyBody:"Gusa moyo kwenye bidhaa yoyote kuihifadhi hapa.",
-    noSaved:"Orodha yako ya matakwa ni tupu", saveItemsYouLove:"Hifadhi vitu unavyovipenda",
-    emptyBag:"Mfuko wako ni tupu", continueShopping:"Endelea Kununua",
-    freeDeliveryQualify:"Unastahili usafirishaji bure!",
-    addMore:"Ongeza", moreForFreeDelivery:"zaidi kwa usafirishaji bure",
-    delivery:"Uwasilishaji", noDeliveryNeeded:"Hakuna uwasilishaji", deliveryOptOut:"Nitakuja kuchukua / hakuna uwasilishaji",
-    noResults:"Hakuna matokeo", tryDifferent:"Jaribu neno tofauti la utafutaji",
-    newArrivals:"Waliofika Hivi Karibuni", orders:"Maagizo", myOrders:"Maagizo Yangu",
-    addresses:"Anwani", paymentMethods:"Njia za Malipo",
-    referFriend:"Mwambie Rafiki", notifications:"Arifa",
-    settings:"Mipangilio", ourStory:"Hadithi Yetu", returns:"Kurudisha",
-    privacy:"Faragha", lookbook:"Albamu", sustainability:"Uendelevu",
-    requestToBuy:"Ombi la Kununua", yourName:"Jina Lako",
-    yourEmail:"Barua Pepe Yako", yourPhone:"Simu (si lazima)",
-    deliveryAddress:"Anwani ya Usafirishaji", noteToSeller:"Kumbuka (si lazima)",
-    submitRequest:"Wasilisha Ombi", requestSent:"Ombi Limetumwa!",
-    size:"Ukubwa", colour:"Rangi", description:"Maelezo", reviewsLabel:"maoni",
-    loading:"Inapakia…", language:"Lugha",
-    noProducts:"Hakuna bidhaa bado",
-    noProductsBody:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
-    signIn:"Ingia", signUp:"Jisajili", signOut:"Toka",
-    email:"Barua Pepe", password:"Nenosiri", confirmPassword:"Thibitisha Nenosiri",
-    editProfile:"Hariri Wasifu", profile:"Wasifu",
-    firstName:"Jina la Kwanza", lastName:"Jina la Familia", phone:"Simu",
-    saveChanges:"Hifadhi Mabadiliko", cancel:"Ghairi",
-    loginRequired:"Inahitajika Kuingia",
-    loginRequiredBody:"Fungua akaunti bila malipo kupata huduma hii.",
-    createAccount:"Fungua Akaunti", alreadyAccount:"Una akaunti tayari?",
-    noAccount:"Huna akaunti bado?",
-    guestUser:"Mgeni", member:"Mwanachama wa MSAMBWA",
-    loginToUnlock:"Ingia ili ufungue",
-    address:"Anwani", addAddress:"Ongeza Anwani",
-    street:"Mtaa", city:"Mji", country:"Nchi", postcode:"Msimbo wa Posta",
-    notificationsDesc:"Simamia mapendeleo yako ya arifa",
-    pushNotifications:"Arifa za Push", emailNotifications:"Arifa za Barua Pepe",
-    orderUpdates:"Masasisho ya Maagizo", promotions:"Matangazo", newArrivalsAlert:"Waliofika Wapya",
-    settingsDesc:"Mapendeleo ya programu",
-    darkMode:"Hali ya Giza", language:"Lugha", currency:"Sarafu",
-    privacyPolicy:"Sera ya Faragha", termsOfService:"Masharti ya Huduma",
-    deleteAccount:"Futa Akaunti",
-    ourStoryTitle:"Hadithi Yetu", ourStoryBody:"MSAMBWA ilianzishwa na imani moja rahisi: kwamba mitindo nzuri na ya kufikiria inapaswa kupatikana kwa kila mtu.",
-    returnsTitle:"Kurudisha na Kubadilishana", returnsBody:"Tunataka upende kila kipande. Ikiwa hukuridhika kabisa, tunakupa kurudisha bila shida ndani ya siku 30 za uwasilishaji.",
-    sustainabilityTitle:"Uendelevu", sustainabilityBody:"Katika MSAMBWA, uendelevu si tu neno — umefumwa katika kila kitu tunachofanya.",
-    lookbookTitle:"Albamu", lookbookSeason:"Mkusanyiko wa SS26",
-    /* ── Hero slide copy ── */
-    heroNewLabel:"Mkusanyiko SS26", heroNewTitle:"Vipande bora\nkwa maisha ya kisasa.", heroNewSub:"Waliofika wapya — wamepatikana", heroNewCta:"Angalia Mpya →",
-    heroHotLabel:"Inayoongoza Sasa", heroHotTitle:"Kila mtu\nanapenda hivi.", heroHotSub:"Mitindo inayopendwa zaidi sasa hivi", heroHotCta:"Nunua Inayoongoza →",
-    heroSaleLabel:"Punguzo la Muda Mfupi", heroSaleTitle:"Hadi 40% Punguzo\nMitindo Iliyochaguliwa.", heroSaleSub:"Nunua kabla haijamalizika", heroSaleCta:"Nunua Punguzo →",
-    /* ── Add to bag image picker ── */
-    pickExactImage:"Chagua kipande halisi", pickExactImageSub:"Chagua picha inayolingana na unachotaka kuagiza",
-    pickRequired:"Tafadhali chagua picha halisi ya bidhaa kwanza.",
-    subtotal:"Jumla Ndogo", total:"Jumla", free:"Bure",
-    pinchZoom:"Pinch au gonga mara mbili kuzoom",
-    helpFeedback:"Tusaidie kuboresha", helpFeedbackSub:"Shiriki maoni — tunasoma kila ujumbe",
-    version:"v1.0.0",
-    /* ── Post-purchase account nudge ── */
-    createAccountNudgeTitle:"Hifadhi maelezo yako kwa wakati ujao",
-    createAccountNudgeBody:"Ombi lako limetumwa. Ongeza nenosiri ili kubadilisha barua pepe yako kuwa akaunti kamili — fuatilia maagizo, hifadhi anwani na zaidi.",
-    createAccountNudgePasswordLabel:"Chagua nenosiri",
-    createAccountNudgePasswordPlaceholder:"Angalau herufi 8",
-    createAccountNudgeCreate:"Fungua Akaunti",
-    createAccountNudgeSkip:"Hapana asante",
-    createAccountNudgeDontShow:"Usionyeshe tena",
-    createAccountNudgeSuccess:"Akaunti imeundwa! Karibu.",
-    createAccountNudgeError:"Haikuweza kuunda akaunti. Jaribu tena.",
-    /* ── Purchase modal pre-fill ── */
-    requestFormPrefilled:"Maelezo yako yamejazwa mapema kutoka kwa akaunti yako.",
-    requestFormGuestNote:"Kidokezo: fungua akaunti kuhifadhi maelezo yako kwa malipo ya haraka.",
-  },
-  fr: {
-    home:"Accueil", shop:"Boutique", search:"Rechercher", saved:"Sauvegardés", account:"Compte",
-    wishlist:"Liste de souhaits", myBag:"Mon sac", checkout:"Commander →",
-    addToBag:"Ajouter au sac", addedToBag:"Ajouté",
-    freeDelivery:"Livraison gratuite", freeReturns:"Retours gratuits",
-    newIn:"Nouveautés", trendingNow:"Tendances", onSale:"En solde",
-    viewAll:"Voir tout", seeAll:"Voir tout", browse:"Parcourir",
-    priceOnRequest:"Membres uniquement", addToBagReveal:"Ajouter au sac", requestReveal:"Demande d'achat",
-    signInToContinue:"Connectez-vous pour continuer",
-    cartCheckoutTitle:"Envoyer la demande", cartCheckoutSub:"Nous vous contacterons pour confirmer votre commande.",
-    cartPhoneLabel:"Votre numéro de téléphone", cartNotePlaceholder:"Quelque chose que nous devrions savoir sur votre commande…",
-    cartSubmit:"Envoyer", cartSent:"Demande envoyée!", cartSentBody:"Nous vous contacterons prochainement pour confirmer.",
-    limitedTime:"Durée limitée", upTo40:"Jusqu'à -40%", whileStocks:"Styles sélectionnés. Jusqu'à épuisement des stocks.", shopSale:"Voir les soldes →",
-    shopOpeningSoon:"Ouverture prochaine", curatingCollection:"Notre collection est en cours de sélection. Revenez bientôt.",
-    shopEmpty:"La boutique est vide", shopEmptyBody:"Les produits apparaîtront ici une fois ajoutés.",
-    sortFeatured:"Parcourir", sortNew:"Nouveautés", sortLow:"Prix croissant", sortHigh:"Prix décroissant", sortRating:"Mieux notés",
-    items:"articles", tryCategory:"Essayez une autre catégorie.",
-    trending:"Tendances", searchPlaceholder:"Rechercher…",
-    noResultsFor:"Aucun résultat pour", nothingMatched:"Rien ne correspond à",
-    savedItems:"articles sauvegardés", wishlistEmpty:"Votre liste de souhaits est vide", wishlistEmptyBody:"Appuyez sur le cœur d'un produit pour le sauvegarder ici.",
-    noSaved:"Votre liste de souhaits est vide", saveItemsYouLove:"Sauvegardez vos favoris",
-    emptyBag:"Votre sac est vide", continueShopping:"Continuer vos achats",
-    freeDeliveryQualify:"Vous bénéficiez de la livraison gratuite!",
-    addMore:"Ajoutez", moreForFreeDelivery:"de plus pour la livraison gratuite",
-    delivery:"Livraison", noDeliveryNeeded:"Pas de livraison", deliveryOptOut:"Je viendrai chercher / pas de livraison",
-    noResults:"Aucun résultat", tryDifferent:"Essayez un autre terme",
-    newArrivals:"Nouveautés", orders:"Commandes", myOrders:"Mes commandes",
-    addresses:"Adresses", paymentMethods:"Modes de paiement",
-    referFriend:"Parrainer un ami", notifications:"Notifications",
-    settings:"Paramètres", ourStory:"Notre histoire", returns:"Retours",
-    privacy:"Confidentialité", lookbook:"Lookbook", sustainability:"Durabilité",
-    requestToBuy:"Demande d'achat", yourName:"Votre nom",
-    yourEmail:"Votre e-mail", yourPhone:"Téléphone (optionnel)",
-    deliveryAddress:"Adresse de livraison", noteToSeller:"Note (optionnel)",
-    submitRequest:"Soumettre", requestSent:"Demande envoyée!",
-    size:"Taille", colour:"Couleur", description:"Description", reviewsLabel:"avis",
-    loading:"Chargement…", language:"Langue",
-    noProducts:"Pas encore de produits",
-    noProductsBody:"Notre collection est en cours de curation. Revenez bientôt.",
-    signIn:"Se connecter", signUp:"S'inscrire", signOut:"Se déconnecter",
-    email:"E-mail", password:"Mot de passe", confirmPassword:"Confirmer le mot de passe",
-    editProfile:"Modifier le profil", profile:"Profil",
-    firstName:"Prénom", lastName:"Nom de famille", phone:"Téléphone",
-    saveChanges:"Enregistrer", cancel:"Annuler",
-    loginRequired:"Connexion requise",
-    loginRequiredBody:"Créez un compte gratuit pour accéder à cette fonctionnalité.",
-    createAccount:"Créer un compte", alreadyAccount:"Déjà un compte?",
-    noAccount:"Pas encore de compte?",
-    guestUser:"Invité", member:"Membre MSAMBWA",
-    loginToUnlock:"Connectez-vous pour accéder",
-    address:"Adresse", addAddress:"Ajouter une adresse",
-    street:"Rue", city:"Ville", country:"Pays", postcode:"Code postal",
-    notificationsDesc:"Gérez vos préférences de notification",
-    pushNotifications:"Notifications push", emailNotifications:"Notifications par e-mail",
-    orderUpdates:"Mises à jour des commandes", promotions:"Promotions", newArrivalsAlert:"Nouvelles arrivées",
-    settingsDesc:"Préférences de l'application",
-    darkMode:"Mode sombre", language:"Langue", currency:"Devise",
-    privacyPolicy:"Politique de confidentialité", termsOfService:"Conditions d'utilisation",
-    deleteAccount:"Supprimer le compte",
-    ourStoryTitle:"Notre Histoire", ourStoryBody:"MSAMBWA a été fondée avec une conviction simple : que la mode belle et réfléchie devrait être accessible à tous.",
-    returnsTitle:"Retours & Échanges", returnsBody:"Nous voulons que vous aimiez chaque pièce. Si vous n'êtes pas entièrement satisfait, nous offrons des retours sans tracas dans les 30 jours suivant la livraison.",
-    sustainabilityTitle:"Durabilité", sustainabilityBody:"Chez MSAMBWA, la durabilité n'est pas qu'un mot à la mode — elle est tissée dans tout ce que nous faisons.",
-    lookbookTitle:"Lookbook", lookbookSeason:"Collection SS26",
-    /* ── Hero slide copy ── */
-    heroNewLabel:"Collection SS26", heroNewTitle:"Des pièces raffinées\npour la vie moderne.", heroNewSub:"Nouvelles arrivées — vient de tomber", heroNewCta:"Découvrir les nouveautés →",
-    heroHotLabel:"Tendances du moment", heroHotTitle:"Tout le monde\nen parle.", heroHotSub:"Les styles les plus aimés en ce moment", heroHotCta:"Voir les tendances →",
-    heroSaleLabel:"Offre limitée", heroSaleTitle:"Jusqu'à -40%\nStyles sélectionnés.", heroSaleSub:"Profitez avant la fin", heroSaleCta:"Voir les soldes →",
-    /* ── Add to bag image picker ── */
-    pickExactImage:"Choisissez l'article exact", pickExactImageSub:"Sélectionnez la photo correspondant à ce que vous souhaitez commander",
-    pickRequired:"Veuillez d'abord sélectionner la photo exacte de l'article.",
-    subtotal:"Sous-total", total:"Total", free:"Gratuit",
-    pinchZoom:"Pincez ou double-tapez pour zoomer",
-    helpFeedback:"Aidez-nous à nous améliorer", helpFeedbackSub:"Partagez vos commentaires — nous lisons chaque message",
-    version:"v1.0.0",
-    /* ── Post-purchase account nudge ── */
-    createAccountNudgeTitle:"Enregistrez vos coordonnées pour la prochaine fois",
-    createAccountNudgeBody:"Votre demande a été envoyée. Ajoutez un mot de passe pour transformer votre e-mail en compte complet — suivez vos commandes, enregistrez vos adresses et plus encore.",
-    createAccountNudgePasswordLabel:"Choisissez un mot de passe",
-    createAccountNudgePasswordPlaceholder:"Au moins 8 caractères",
-    createAccountNudgeCreate:"Créer un compte",
-    createAccountNudgeSkip:"Non merci",
-    createAccountNudgeDontShow:"Ne plus afficher",
-    createAccountNudgeSuccess:"Compte créé ! Bienvenue.",
-    createAccountNudgeError:"Impossible de créer le compte. Réessayez.",
-    /* ── Purchase modal pre-fill ── */
-    requestFormPrefilled:"Vos coordonnées ont été pré-remplies depuis votre compte.",
-    requestFormGuestNote:"Astuce : créez un compte pour enregistrer vos coordonnées et accélérer vos prochaines commandes.",
-  },
-};
-
-const LANGS = [
-  { code:"en", label:"English" },
-  { code:"sw", label:"Kiswahili" },
-  { code:"fr", label:"Français" },
-];
+import { TR, LANGS } from './translations';
 
 const LangCtx = createContext({ lang:"en", setLang:()=>{}, t:TR.en });
 const useLang  = () => useContext(LangCtx);
@@ -2415,14 +2144,14 @@ function ReturnsScreen({ t }) {
     { icon:"chat",     title:"Contact Us",    body:"Email hello@msambwa.com with your order number and reason for return." },
     { icon:"box",      title:"Pack It Up",    body:"Place items in original packaging, unworn and with tags attached." },
     { icon:"truck",    title:"Ship It Back",  body:"We'll email you a prepaid return label within 24 hours." },
-    { icon:"card",     title:"Get Refunded",  body:"Refunds processed within 5–7 business days of receiving your return." },
+    { icon:"card",     title:"Get Refunded",  body:"Refunds processed within 3–5 business days of receiving your return." },
   ];
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
       <div style={{ background:"#e8f4fd",borderRadius:20,padding:"20px",marginBottom:24,display:"flex",gap:14,alignItems:"flex-start" }}>
         <div style={{ width:38,height:38,borderRadius:10,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name="info" size={18} color={T.gray4}/></div>
         <div>
-          <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px",color:T.blue }}>30-Day Returns</p>
+          <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px",color:T.blue }}>3–5 Day Returns</p>
           <p style={{ fontSize:13,color:T.gray3,margin:0,lineHeight:1.6 }}>Items must be unworn, unwashed, and in original packaging with tags attached.</p>
         </div>
       </div>
@@ -2474,37 +2203,84 @@ function SustainabilityScreen({ t }) {
 
 /* ─── Lookbook Screen ───────────────────────────────────────── */
 function LookbookScreen({ products, onSelect, t }) {
-  const featured = products.slice(0, 6);
-  const imgs = [
-    "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80",
-    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80",
-    "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80",
-    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80",
-  ];
+  // Use products that have images; first 8 for the hero mosaic, next 6 for "shop the look"
+  const withImg = products.filter(p => p.image_url || p.image_urls?.length);
+  const heroProds  = withImg.slice(0, 4);   // up to 4 for editorial mosaic
+  const shopProds  = withImg.slice(0, 6);   // up to 6 for shop grid
+
+  const getImg = p => p.image_url || p.image_urls?.[0] || null;
+
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
-      <div style={{ marginBottom:24 }}>
+      {/* Header */}
+      <div style={{ marginBottom:20 }}>
         <p style={{ fontSize:13,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:T.gray4,marginBottom:6 }}>{t.lookbookSeason}</p>
         <h2 style={{ fontSize:28,fontWeight:800,letterSpacing:"-0.8px",marginBottom:4 }}>{t.lookbookTitle}</h2>
         <p style={{ fontSize:14,color:T.gray4 }}>Explore the season's most refined pieces</p>
       </div>
-      {/* Editorial grid */}
-      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:24 }}>
-        {imgs.map((src,i) => (
-          <div key={i} style={{ aspectRatio: i===0?"2/3":"3/4", borderRadius:18,overflow:"hidden",gridColumn:i===0?"1":"2",gridRow:i===0?"1/3":"auto" }}>
-            <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+
+      {/* Editorial mosaic — product images */}
+      {heroProds.length >= 2 ? (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:24, gridTemplateRows:"auto auto" }}>
+          {/* Large left tile spans 2 rows */}
+          <div
+            onClick={()=>onSelect(heroProds[0])}
+            className="pressable"
+            style={{ gridColumn:"1", gridRow:"1 / 3", borderRadius:20, overflow:"hidden", cursor:"pointer",
+                     background:T.fill3, aspectRatio:"2/3", position:"relative" }}>
+            <img src={getImg(heroProds[0])} alt={heroProds[0].name}
+                 loading="lazy" decoding="async"
+                 style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
+            <div style={{ position:"absolute",bottom:0,left:0,right:0,padding:"28px 12px 12px",
+                          background:"linear-gradient(transparent,rgba(0,0,0,0.55))" }}>
+              <p style={{ fontSize:12,fontWeight:700,color:"#fff",margin:0,
+                          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{heroProds[0].name}</p>
+            </div>
           </div>
-        ))}
-      </div>
-      {/* Shop the look */}
-      {featured.length > 0 && (
+          {/* Right column — up to 3 smaller tiles */}
+          {heroProds.slice(1).map((p,i) => (
+            <div key={p.id}
+              onClick={()=>onSelect(p)}
+              className="pressable"
+              style={{ gridColumn:"2", borderRadius:18, overflow:"hidden", cursor:"pointer",
+                       background:T.fill3, aspectRatio:"3/4", position:"relative" }}>
+              <img src={getImg(p)} alt={p.name}
+                   loading="lazy" decoding="async"
+                   style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
+              <div style={{ position:"absolute",bottom:0,left:0,right:0,padding:"18px 10px 8px",
+                            background:"linear-gradient(transparent,rgba(0,0,0,0.5))" }}>
+                <p style={{ fontSize:11,fontWeight:700,color:"#fff",margin:0,
+                            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : heroProds.length === 1 ? (
+        /* single product fallback */
+        <div onClick={()=>onSelect(heroProds[0])} className="pressable"
+          style={{ borderRadius:20,overflow:"hidden",marginBottom:24,aspectRatio:"4/3",background:T.fill3,cursor:"pointer" }}>
+          <img src={getImg(heroProds[0])} alt={heroProds[0].name}
+               style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
+        </div>
+      ) : (
+        /* no products yet placeholder */
+        <div style={{ borderRadius:20,background:T.fill4,height:220,display:"flex",alignItems:"center",
+                      justifyContent:"center",marginBottom:24 }}>
+          <p style={{ fontSize:14,color:T.gray5 }}>{t.noProducts}</p>
+        </div>
+      )}
+
+      {/* Shop the Look grid */}
+      {shopProds.length > 0 && (
         <>
           <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>Shop the Look</p>
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
-            {featured.map(p=>(
+            {shopProds.map(p=>(
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-                <div style={{ aspectRatio:"3/4",background:"#f2f2f7",borderRadius:18,overflow:"hidden",marginBottom:8 }}>
-                  {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/> : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}><Icon name="bag" size={30} color={T.gray6}/></div>}
+                <div style={{ aspectRatio:"3/4",background:T.fill3,borderRadius:18,overflow:"hidden",marginBottom:8 }}>
+                  {getImg(p)
+                    ? <img src={getImg(p)} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+                    : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="bag" size={30} color={T.gray6}/></div>}
                 </div>
                 <p style={{ fontSize:13,fontWeight:600,margin:"0 0 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
                 <PriceLine price={p.price} was={p.was}/>
