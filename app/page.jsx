@@ -5,29 +5,19 @@ import './layout.css';
 
 /* ─── Error Boundary ────────────────────────────────────────── */
 class ErrorBoundary extends Component {
-  constructor(props) { super(props); this.state = { hasError:false, error:null, info:null }; }
+  constructor(props) { super(props); this.state = { hasError:false, error:null }; }
   static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
-  componentDidCatch(e, info) { console.error("MSAMBWA Error:", e, info); this.setState({ info }); }
+  componentDidCatch(e, info) { console.error("MSAMBWA Error:", e, info); }
   render() {
     if (!this.state.hasError) return this.props.children;
-    const msg = this.state.error?.message || String(this.state.error);
-    const stack = this.state.error?.stack || "";
-    const component = this.state.info?.componentStack || "";
     return (
-      <div style={{ padding:20,fontFamily:"monospace",background:"#fff",minHeight:"100vh" }}>
-        <div style={{ background:"#fff0f0",borderRadius:12,padding:16,marginBottom:16 }}>
-          <p style={{ fontSize:16,fontWeight:700,color:"#E03A4E",margin:"0 0 8px" }}>Runtime Error</p>
-          <p style={{ fontSize:13,color:"#333",margin:0,wordBreak:"break-all" }}>{msg}</p>
+      <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:32,textAlign:"center",background:"#fff" }}>
+        <div style={{ width:72,height:72,borderRadius:24,background:"#fff0f0",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20 }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E03A4E" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
-        <details open style={{ marginBottom:12 }}>
-          <summary style={{ fontSize:12,color:"#666",cursor:"pointer",marginBottom:8 }}>Stack trace</summary>
-          <pre style={{ fontSize:10,color:"#555",overflowX:"auto",background:"#f5f5f5",padding:12,borderRadius:8,lineHeight:1.5 }}>{stack}</pre>
-        </details>
-        <details style={{ marginBottom:16 }}>
-          <summary style={{ fontSize:12,color:"#666",cursor:"pointer",marginBottom:8 }}>Component tree</summary>
-          <pre style={{ fontSize:10,color:"#555",overflowX:"auto",background:"#f5f5f5",padding:12,borderRadius:8,lineHeight:1.5 }}>{component}</pre>
-        </details>
-        <button onClick={()=>window.location.reload()} style={{ background:"#1C7A8C",color:"#fff",border:"none",borderRadius:10,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer" }}>Reload</button>
+        <p style={{ fontSize:20,fontWeight:700,marginBottom:8,color:"#0C1C1F" }}>Something went wrong</p>
+        <p style={{ fontSize:14,color:"#8AADB5",marginBottom:24,maxWidth:280,lineHeight:1.6 }}>We hit an unexpected error. Tap below to reload.</p>
+        <button onClick={()=>window.location.reload()} style={{ background:"#1C7A8C",color:"#fff",border:"none",borderRadius:14,padding:"14px 32px",fontSize:15,fontWeight:600,cursor:"pointer" }}>Reload Store</button>
       </div>
     );
   }
@@ -540,7 +530,7 @@ function LazyImg({ src, alt="", style:st, ...rest }) {
     </div>
   );
 }
-function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, children }) {
+function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, soldOut=false, children }) {
   const [idx, setIdx]     = useState(0);
   const [visible, setVis] = useState(false);
   const timerRef          = useRef(null);
@@ -587,7 +577,7 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, ch
         </>
       )}
       {badge && <span style={{ position:"absolute",top:8,left:8,background:badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:99 }}>{badge}</span>}
-      {p?.in_stock === false && <div style={{ position:"absolute",inset:0,background:"rgba(255,255,255,0.55)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"inherit" }}><span style={{ fontSize:11,fontWeight:700,color:"#fff",background:"rgba(0,0,0,0.6)",padding:"4px 10px",borderRadius:99 }}>SOLD OUT</span></div>}
+      {soldOut && <div style={{ position:"absolute",inset:0,background:"rgba(255,255,255,0.55)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"inherit" }}><span style={{ fontSize:11,fontWeight:700,color:"#fff",background:"rgba(0,0,0,0.6)",padding:"4px 10px",borderRadius:99 }}>SOLD OUT</span></div>}
       {children}
     </div>
   );
@@ -600,7 +590,7 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (compact) return (
     <div style={{ width:140, flexShrink:0, position:"relative" }}>
       <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-        <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge}/>
+        <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge} soldOut={p.in_stock===false}/>
       </div>
       {/* Share icon top-left */}
       <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:8,left:8,width:28,height:28,borderRadius:14,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
@@ -616,7 +606,7 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (grid) return (
     <div style={{ cursor:"pointer" }}>
       <div style={{ marginBottom:10 }} onClick={()=>onSelect(p)} className="pressable">
-        <CardImageSlider images={images} aspectRatio="3/4" borderRadius={20} badge={p.badge}>
+        <CardImageSlider images={images} aspectRatio="3/4" borderRadius={20} badge={p.badge} soldOut={p.in_stock===false}>
           {/* Share — BEFORE heart */}
           <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:10,right:50,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
             <Icon name="share" size={15} color={T.gray4}/>
