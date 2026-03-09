@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useMemo, useCallback, memo, createContext, useContext, Component } from "react";
 import { createClient } from '@supabase/supabase-js';
-import './layout.css';
 
 /* ─── Error Boundary ────────────────────────────────────────── */
 class ErrorBoundary extends Component {
@@ -1225,7 +1224,7 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
       )}
     </div>
   );
-}
+});
 
 /* ─── Image Lightbox with pinch-to-zoom ─────────────────────── */
 function ImageLightbox({ images, startIndex, onClose }) {
