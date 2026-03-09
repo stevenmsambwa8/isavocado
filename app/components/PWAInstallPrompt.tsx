@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /* ─────────────────────────────────────────────────────────────
    PWAInstallPrompt
@@ -27,21 +27,16 @@ const C = {
   white: '#ffffff',
 };
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-};
-
 export default function PWAInstallPrompt() {
   const [show,        setShow]        = useState(false);
   const [isIOS,       setIsIOS]       = useState(false);
-  const [deferredEvt, setDeferred]    = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredEvt, setDeferred]    = useState(null);
   const [installing,  setInstalling]  = useState(false);
 
   useEffect(() => {
-    // Already running as installed PWA — don't show
+    // Already running PWA — don't show
     if (window.matchMedia('(display-mode: standalone)').matches) return;
-    if ((window.navigator as any).standalone === true) return;      // iOS standalone
+    if ((window.navigator).standalone === true) return;      // iOS standalone
 
     // Check cooldown and max dismissals
     try {
@@ -63,9 +58,9 @@ export default function PWAInstallPrompt() {
     }
 
     // Android / Desktop Chrome: listen for the install event
-    const handler = (e: Event) => {
+    const handler = (e) => {
       e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
+      setDeferred(e);
       // Small delay so the page is fully interactive first
       setTimeout(() => setShow(true), 1500);
     };
