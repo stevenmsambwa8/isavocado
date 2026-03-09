@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, memo, createContext, useContext, Component } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo, createContext, useContext, Component } from "react";
 import { createClient } from '@supabase/supabase-js';
 import './layout.css';
 
@@ -85,6 +85,9 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
     .pressable:active { transform:scale(0.97); transition:transform .1s; }
     .sk { background:linear-gradient(90deg,#eef8fa 25%,#dff0f3 50%,#eef8fa 75%); background-size:800px 100%; animation:shimmer 1.4s infinite linear; border-radius:10px; }
     img { content-visibility:auto; }
+    /* GPU-composited layers for animated elements */
+    .slide-panel { will-change:transform; }
+    .card-slider  { will-change:transform; }
   `;
   document.head.appendChild(el);
 }
@@ -318,19 +321,19 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, so
 
   useEffect(() => {
     if (!multi || !visible) { clearInterval(timerRef.current); return; }
-    timerRef.current = setInterval(() => setIdx(i => (i + 1) % imgs.length), 2800);
+    timerRef.current = setInterval(() => setIdx(i => (i + 1) % imgs.length), 3800);
     return () => clearInterval(timerRef.current);
   }, [multi, visible, imgs.length]);
 
   return (
-    <div ref={rootRef} style={{ aspectRatio, background:"#f2f2f7", borderRadius, overflow:"hidden", position:"relative", flexShrink:0, contain:"layout style" }}>
+    <div ref={rootRef} style={{ aspectRatio, background:"#f2f2f7", borderRadius, overflow:"hidden", position:"relative", flexShrink:0, contain:"layout style paint", contentVisibility:"auto" }}>
       {imgs.length === 0 ? (
         <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}>
           <Icon name="bag" size={28} color={T.gray6}/>
         </div>
       ) : (
         <>
-          <div style={{ display:"flex", width:`${imgs.length * 100}%`, height:"100%", transition:"transform .55s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx * (100 / imgs.length)}%)` }}>
+          <div className="card-slider" style={{ display:"flex", width:`${imgs.length * 100}%`, height:"100%", transition:"transform .45s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx * (100 / imgs.length)}%)` }}>
             {imgs.map((src, i) => (
               <div key={i} style={{ width:`${100 / imgs.length}%`, height:"100%", flexShrink:0 }}>
                 <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
@@ -469,7 +472,7 @@ function AccountNudge({ email, onDone }) {
 
   return (
     <div style={{ position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"flex-end",justifyContent:"center" }}>
-      <div onClick={()=>skip(false)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(6px)",animation:"fadeIn .2s ease" }}/>
+      <div onClick={()=>skip(false)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",animation:"fadeIn .2s ease" }}/>
       <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:540,background:T.white,borderRadius:"24px 24px 0 0",padding:"0 0 env(safe-area-inset-bottom,24px)",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)" }}>
         <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"14px auto 0" }}/>
         <div style={{ padding:"22px 24px 32px" }}>
@@ -618,7 +621,7 @@ function PurchaseModal({ product, onClose, sessionId, user }) {
   return (
     <>
       <div style={{ position:'fixed',inset:0,zIndex:700,display:'flex',alignItems:'flex-end',justifyContent:'center' }}>
-        <div onClick={onClose} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',backdropFilter:'blur(6px)' }}/>
+        <div onClick={onClose} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.52)' }}/>
         <div style={{ position:'relative',zIndex:1,width:'100%',maxWidth:540,background:T.white,borderRadius:'24px 24px 0 0',maxHeight:'92vh',overflowY:'auto',animation:'slideUp .3s cubic-bezier(.32,0,.28,1)' }}>
           <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:'14px auto 0' }}/>
           <div style={{ padding:'20px 24px 40px' }}>
@@ -719,7 +722,7 @@ function PurchaseModal({ product, onClose, sessionId, user }) {
       )}
     </>
   );
-}
+});
 
 /* ─── Cart Drawer ────────────────────────────────────────────── */
 function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSettings }) {
@@ -778,8 +781,8 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
 
   return (
     <>
-      <div onClick={onClose} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.36)",zIndex:500,backdropFilter:"blur(4px)" }}/>
-      <div style={{ position:"fixed",top:0,right:0,bottom:0,width:"min(440px,100vw)",background:"rgba(255,255,255,0.97)",backdropFilter:"blur(40px)",zIndex:600,display:"flex",flexDirection:"column",animation:"slideInR 0.36s cubic-bezier(.32,0,.28,1)",borderRadius:"20px 0 0 20px",boxShadow:shadow.xxl }}>
+      <div onClick={onClose} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500 }}/>
+      <div style={{ position:"fixed",top:0,right:0,bottom:0,width:"min(440px,100vw)",background:"#ffffff",zIndex:600,display:"flex",flexDirection:"column",animation:"slideInR 0.36s cubic-bezier(.32,0,.28,1)",borderRadius:"20px 0 0 20px",boxShadow:shadow.xxl }}>
         <div style={{ width:40,height:4,borderRadius:2,background:T.gray7,margin:"14px auto 0" }}/>
 
         {/* ── Header ── */}
@@ -953,7 +956,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
 }
 
 /* ─── Product Detail ────────────────────────────────────────── */
-function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt, products=[] }) {
+const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt, products=[] }) {
   const { t } = useLang();
   const [szs, setSzs]         = useState([]);
   const [done, setDone]       = useState(false);
@@ -1014,7 +1017,7 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
   const showPrice = user || priceRevealed;
 
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
+    <div style={{ animation:"fadeIn 0.18s ease" }}>
 
       {/* ── Image Gallery ── */}
       <div style={{ position:"relative", marginBottom:20, borderRadius:24, overflow:"hidden" }}>
@@ -1046,13 +1049,13 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
 
             {/* Share + Wishlist */}
             <div style={{ position:"absolute", top:14, right:14, display:"flex", flexDirection:"column", gap:10 }}>
-              <IconBtn icon="share" onClick={e=>shareProduct(p,e)} size={40} bg="rgba(255,255,255,0.9)" color={T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
-              <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3} style={{ backdropFilter:"blur(8px)" }}/>
+              <IconBtn icon="share" onClick={e=>shareProduct(p,e)} size={40} bg="rgba(255,255,255,0.9)" color={T.gray3}/>
+              <IconBtn icon={wishlisted?"heart-fill":"heart"} onClick={()=>onWishlist(p.id)} size={40} bg="rgba(255,255,255,0.9)" color={wishlisted?T.red:T.gray3}/>
             </div>
 
             {/* Zoom hint */}
             {images.length > 0 && (
-              <div style={{ position:"absolute", bottom:14, right:14, background:"rgba(0,0,0,0.35)", borderRadius:99, padding:"4px 10px", backdropFilter:"blur(6px)" }}>
+              <div style={{ position:"absolute", bottom:14, right:14, background:"rgba(0,0,0,0.55)", borderRadius:99, padding:"4px 10px" }}>
                 <p style={{ fontSize:11, color:"#fff", margin:0 }}>Tap to zoom</p>
               </div>
             )}
@@ -1445,7 +1448,7 @@ function HeroSlider({ onNavigate, products }) {
       onTouchEnd={e=>onDragEnd(e.changedTouches[0].clientX)}
     >
       {/* ── Slide strip ── */}
-      <div style={{ display:"flex", width:`${SLIDE_COUNT*100}%`, height:"100%", transition:"transform .42s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*(100/SLIDE_COUNT)}%)` }}>
+      <div className="slide-panel" style={{ display:"flex", width:`${SLIDE_COUNT*100}%`, height:"100%", transition:"transform .38s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*(100/SLIDE_COUNT)}%)` }}>
         {slides.map((sl) => {
           const hasImg = !!sl.heroImg;
           return (
@@ -1471,7 +1474,7 @@ function HeroSlider({ onNavigate, products }) {
               {/* ── Text block pinned to bottom ── */}
               <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"0 22px 22px", zIndex:2 }}>
                 {/* Label pill */}
-                <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:`${sl.accentColor}22`, border:`1px solid ${sl.accentColor}55`, borderRadius:99, padding:"5px 12px", marginBottom:12, backdropFilter:"blur(8px)" }}>
+                <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:`${sl.accentColor}22`, border:`1px solid ${sl.accentColor}55`, borderRadius:99, padding:"5px 12px", marginBottom:12 }}>
                   <span style={{ width:6, height:6, borderRadius:3, background:sl.accentColor, display:"inline-block", flexShrink:0 }}/>
                   <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:sl.accentColor }}>{sl.label}</span>
                 </div>
@@ -1503,8 +1506,8 @@ function HeroSlider({ onNavigate, products }) {
               </div>
 
               {/* Left/right arrows — subtle */}
-              <button onClick={e=>{e.stopPropagation();go(slides.indexOf(sl)-1);resetTimer();}} style={{ position:"absolute",left:10,top:"40%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.28)",backdropFilter:"blur(6px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:99,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:20,zIndex:3 }}>‹</button>
-              <button onClick={e=>{e.stopPropagation();go(slides.indexOf(sl)+1);resetTimer();}} style={{ position:"absolute",right:10,top:"40%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.28)",backdropFilter:"blur(6px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:99,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:20,zIndex:3 }}>›</button>
+              <button onClick={e=>{e.stopPropagation();go(slides.indexOf(sl)-1);resetTimer();}} style={{ position:"absolute",left:10,top:"40%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.42)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:99,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:20,zIndex:3 }}>‹</button>
+              <button onClick={e=>{e.stopPropagation();go(slides.indexOf(sl)+1);resetTimer();}} style={{ position:"absolute",right:10,top:"40%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.42)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:99,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:20,zIndex:3 }}>›</button>
             </div>
           );
         })}
@@ -1512,16 +1515,16 @@ function HeroSlider({ onNavigate, products }) {
     </div>
   );
 }
-function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user, onLoginPrompt }) {
+const HomeScreen = memo(function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user, onLoginPrompt }) {
   const { t } = useLang();
-  const newP  = products.filter(p=>p.badge==='New').slice(0,8);
-  const saleP = products.filter(p=>p.badge==='Sale').slice(0,8);
-  const trend = products.slice(0,6);
+  const newP  = useMemo(() => products.filter(p=>p.badge==='New').slice(0,8), [products]);
+  const saleP = useMemo(() => products.filter(p=>p.badge==='Sale').slice(0,8), [products]);
+  const trend = useMemo(() => products.slice(0,6), [products]);
 
   if (products.length===0) return <EmptyState icon="bag" title={t.shopOpeningSoon} body={t.curatingCollection}/>;
 
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
+    <div style={{ animation:"fadeIn 0.18s ease" }}>
       <HeroSlider onNavigate={onNavigate} products={products}/>
 
       {newP.length>0&&(
@@ -1553,10 +1556,10 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user
       )}
     </div>
   );
-}
+});
 
 /* ─── Shop ──────────────────────────────────────────────────── */
-function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
+const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
   const { t } = useLang();
   const [cat,setCat]   = useState("All");
   const [sort,setSort] = useState("featured");
@@ -1576,7 +1579,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
   if (products.length===0) return <EmptyState icon="bag" title={t.shopEmpty} body={t.shopEmptyBody}/>;
 
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
+    <div style={{ animation:"fadeIn 0.18s ease" }}>
       <HScroll gap={8}>{cats.map(c=><Chip key={c} label={c} active={cat===c} onClick={()=>setCat(c)}/>)}</HScroll>
       <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",margin:"16px 0 20px" }}>
         <span style={{ fontSize:14,color:T.gray4 }}>{filtered.length} {t.items}</span>
@@ -1614,14 +1617,21 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
       )}
     </div>
   );
-}
+});
 
 /* ─── Search ────────────────────────────────────────────────── */
 function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
   const { t } = useLang();
   const [q, setQ] = useState("");
+  const [dq, setDq] = useState("");
+  const debRef = useRef(null);
+  const onSearchChange = (v) => {
+    setQ(v);
+    clearTimeout(debRef.current);
+    debRef.current = setTimeout(() => setDq(v), 180);
+  };
   const res = useMemo(() => {
-    const ql = q.trim().toLowerCase();
+    const ql = dq.trim().toLowerCase();
     if (ql.length < 2) return [];
     return products.filter(p =>
       p.name?.toLowerCase().includes(ql) ||
@@ -1629,11 +1639,11 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
       p.description?.toLowerCase().includes(ql) ||
       p.badge?.toLowerCase().includes(ql)
     );
-  }, [q, products]);
+  }, [dq, products]);
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
+    <div style={{ animation:"fadeIn 0.18s ease" }}>
       <div style={{ position:"relative",marginBottom:22 }}>
-        <input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.searchPlaceholder} style={{ width:"100%",padding:"15px 20px 15px 48px",fontSize:16,background:T.fill4,border:"none",borderRadius:14,outline:"none",color:T.black,boxSizing:"border-box" }}/>
+        <input value={q} onChange={e=>onSearchChange(e.target.value)} placeholder={t.searchPlaceholder} style={{ width:"100%",padding:"15px 20px 15px 48px",fontSize:16,background:T.fill4,border:"none",borderRadius:14,outline:"none",color:T.black,boxSizing:"border-box" }}/>
         <span style={{ position:"absolute",left:16,top:"50%",transform:"translateY(-50%)" }}><Icon name="search" size={19} color={T.gray4}/></span>
         {q&&<button onClick={()=>setQ("")} style={{ position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer" }}><Icon name="close" size={16} color={T.gray4}/></button>}
       </div>
@@ -1660,7 +1670,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLogi
   const { t } = useLang();
   const items = products.filter(p=>wishlist.includes(p.id));
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
+    <div style={{ animation:"fadeIn 0.18s ease" }}>
       <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} {t.savedItems}</p>
       {items.length===0 ? <EmptyState icon="heart" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
         <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
@@ -1675,7 +1685,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLogi
 function AuthGate({ user, onLogin, children, t }) {
   if (user) return children;
   return (
-    <div style={{ animation:"fadeIn .25s ease", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 24px", gap:20, textAlign:"center" }}>
+    <div style={{ animation:"fadeIn .18s ease", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 24px", gap:20, textAlign:"center" }}>
       <div style={{ width:64,height:64,borderRadius:20,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="lock" size={28} color={T.gray4}/></div>
       <p style={{ fontSize:22, fontWeight:700, margin:0, letterSpacing:"-0.5px" }}>{t.loginRequired}</p>
       <p style={{ fontSize:15, color:T.gray4, margin:0, maxWidth:280, lineHeight:1.6 }}>{t.loginRequiredBody}</p>
@@ -1713,7 +1723,7 @@ function AuthModal({ onClose, onAuth, t }) {
 
   return (
     <div style={{ position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"flex-end" }}>
-      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(8px)" }}/>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.55)" }}/>
       <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,margin:"0 auto",background:T.white,borderRadius:"24px 24px 0 0",padding:"28px 24px 40px",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)",paddingBottom:"env(safe-area-inset-bottom,40px)" }}>
         <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"-14px auto 20px" }}/>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24 }}>
@@ -1791,7 +1801,7 @@ function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t }) {
   };
 
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       {/* Profile hero */}
       <div style={{ background:`linear-gradient(145deg,${T.blue},${T.gray2})`,borderRadius:24,padding:"24px",marginBottom:24 }}>
         <div style={{ display:"flex",alignItems:"center",gap:16,marginBottom: user ? 16 : 0 }}>
@@ -1877,7 +1887,7 @@ function EditProfileScreen({ user, onBack, t }) {
   );
 
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       {saved && (
         <div style={{ background:"#e8faf0",borderRadius:14,padding:"12px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:10 }}>
           <Icon name="check" size={18} color={T.green}/>
@@ -1941,7 +1951,7 @@ function AddressesScreen({ t, user }) {
   );
 
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       {addresses.length === 0 && !adding && (
         <EmptyState icon="location" title="No addresses saved" body="Add a delivery address to speed up checkout." action={<Btn onClick={()=>setAdding(true)} size="sm">{t.addAddress}</Btn>}/>
       )}
@@ -2026,7 +2036,7 @@ function NotificationsScreen({ t, user }) {
     </div>
   );
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       {saving && <p style={{ fontSize:12,color:T.gray4,textAlign:"right",marginBottom:8 }}>Saving…</p>}
       <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
         <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Channels</p>
@@ -2055,7 +2065,7 @@ function SettingsScreen({ t, lang, setLang }) {
     </div>
   );
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
         <Row label={t.language}>
           <div style={{ display:"flex",gap:8 }}>
@@ -2102,7 +2112,7 @@ function PrivacyScreen({ t }) {
     { title:"Contact", body:"Questions about privacy? Email us at privacy@msambwa.com or write to: MSAMBWA, Privacy Team, Nairobi, Kenya." },
   ];
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       <p style={{ fontSize:13,color:T.gray4,marginBottom:20,lineHeight:1.6 }}>Last updated: March 2026</p>
       {sections.map(s => (
         <div key={s.title} style={{ marginBottom:20 }}>
@@ -2117,7 +2127,7 @@ function PrivacyScreen({ t }) {
 /* ─── Our Story Screen ──────────────────────────────────────── */
 function OurStoryScreen({ t }) {
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"36px 24px",marginBottom:28,textAlign:"center" }}>
         <div style={{ width:52,height:52,borderRadius:16,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 0 16px" }}><Icon name="share" size={24} color={T.gray3}/></div>
         <h2 style={{ fontSize:28,fontWeight:800,color:"#fff",letterSpacing:"-0.8px",margin:"0 0 10px" }}>{t.ourStoryTitle}</h2>
@@ -2147,7 +2157,7 @@ function ReturnsScreen({ t }) {
     { icon:"card",     title:"Get Refunded",  body:"Refunds processed within 3–5 business days of receiving your return." },
   ];
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       <div style={{ background:"#e8f4fd",borderRadius:20,padding:"20px",marginBottom:24,display:"flex",gap:14,alignItems:"flex-start" }}>
         <div style={{ width:38,height:38,borderRadius:10,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name="info" size={18} color={T.gray4}/></div>
         <div>
@@ -2182,7 +2192,7 @@ function SustainabilityScreen({ t }) {
     { icon:"bag",      title:"Designed to Last",        body:"We design pieces with longevity in mind — the most sustainable garment is one you wear for years, not seasons." },
   ];
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       <div style={{ background:"linear-gradient(145deg,#1a4a2e,#2d7a47)",borderRadius:24,padding:"32px 24px",marginBottom:28,textAlign:"center" }}>
         <div style={{ width:52,height:52,borderRadius:16,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 0 12px" }}><Icon name="truck" size={24} color={T.gray3}/></div>
         <h2 style={{ fontSize:26,fontWeight:800,color:"#fff",letterSpacing:"-0.6px",margin:"0 0 8px" }}>{t.sustainabilityTitle}</h2>
@@ -2211,7 +2221,7 @@ function LookbookScreen({ products, onSelect, t }) {
   const getImg = p => p.image_url || p.image_urls?.[0] || null;
 
   return (
-    <div style={{ animation:"fadeIn .25s ease" }}>
+    <div style={{ animation:"fadeIn .18s ease" }}>
       {/* Header */}
       <div style={{ marginBottom:20 }}>
         <p style={{ fontSize:13,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:T.gray4,marginBottom:6 }}>{t.lookbookSeason}</p>
@@ -2382,7 +2392,7 @@ function MyOrdersScreen({ sessionId }) {
   );
 
   return (
-    <div style={{ animation:"fadeIn 0.25s ease" }}>
+    <div style={{ animation:"fadeIn 0.18s ease" }}>
       {/* Toast */}
       {toast && (
         <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:toast.type==="error"?"#FF3B30":"rgba(28,28,30,0.92)",color:"#fff",padding:"12px 20px",borderRadius:99,fontSize:14,fontWeight:500,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.2)",animation:"slideUp .2s ease" }}>
@@ -2445,7 +2455,7 @@ function MyOrdersScreen({ sessionId }) {
       {/* Order Detail Sheet */}
       {sel && (
         <div style={{ position:"fixed",inset:0,zIndex:700,display:"flex",alignItems:"flex-end" }}>
-          <div onClick={()=>setSel(null)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(5px)" }}/>
+          <div onClick={()=>setSel(null)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)" }}/>
           <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,margin:"0 auto",background:T.white,borderRadius:"24px 24px 0 0",maxHeight:"88dvh",overflowY:"auto",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)",paddingBottom:"env(safe-area-inset-bottom,24px)" }}>
             <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"14px auto 0" }}/>
 
@@ -2529,7 +2539,7 @@ function MyOrdersScreen({ sessionId }) {
       {/* Confirm Dialog */}
       {confirm && (
         <div style={{ position:"fixed",inset:0,zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
-          <div onClick={()=>setConfirm(null)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(8px)" }}/>
+          <div onClick={()=>setConfirm(null)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.55)" }}/>
           <div style={{ position:"relative",zIndex:1,background:T.white,borderRadius:22,padding:"28px 24px",width:"100%",maxWidth:340,animation:"scaleIn .22s cubic-bezier(.34,1.56,.64,1)" }}>
             <p style={{ fontSize:20,fontWeight:700,marginBottom:10,letterSpacing:"-0.4px" }}>
               {confirm.action === "cancel" ? "Cancel Order?" : "Remove Order?"}
@@ -2594,7 +2604,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
   };
   const title = titles[screen] || "";
   return (
-    <header style={{ background:"rgba(255,255,255,0.94)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none" }}>
+    <header style={{ background:"rgba(255,255,255,0.94)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none" }}>
       <div style={{ height:64,display:"flex",alignItems:"center",padding:"0 8px",position:"relative" }}>
         <div style={{ display:"flex",alignItems:"center",minWidth:100,flexShrink:0 }}>
           {canGoBack ? (
@@ -2661,7 +2671,7 @@ function BottomNav({ screen, onNavigate }) {
     { id:"account",  icon:"person", label:t.account },
   ];
   return (
-    <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.94)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",padding:"8px 0 20px",zIndex:300 }}>
+    <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.94)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",padding:"8px 0 20px",zIndex:300 }}>
       {tabs.map(tab=>{
         const active = screen===tab.id;
         return (
@@ -2704,7 +2714,7 @@ function HelpFeedback({ onClose }) {
 
   return (
     <div style={{ position:"fixed",inset:0,zIndex:950,display:"flex",alignItems:"flex-end",justifyContent:"center" }}>
-      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(6px)" }}/>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)" }}/>
       <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,background:T.white,borderRadius:"24px 24px 0 0",padding:"24px 24px 40px",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)",paddingBottom:"max(40px,env(safe-area-inset-bottom,40px))" }}>
         <div style={{ width:36,height:5,borderRadius:3,background:T.gray8,margin:"-8px auto 20px" }}/>
 
@@ -2769,7 +2779,7 @@ function HelpFeedback({ onClose }) {
 function SaleModal({ onClose, onShop }) {
   return (
     <div style={{ position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"center",justifyContent:"center",padding:20 }}>
-      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(8px)" }}/>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.55)" }}/>
       <div style={{ position:"relative",zIndex:1,background:"#fff",borderRadius:28,overflow:"hidden",width:"100%",maxWidth:380,animation:"scaleIn 0.28s cubic-bezier(0.34,1.56,0.64,1)" }}>
         <div style={{ position:"relative",height:220 }}>
           <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80" alt="Sale" style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
@@ -2881,20 +2891,24 @@ function PageInner() {
     });
   }, []);
 
-  /* ── Persist cart to localStorage + Supabase whenever it changes ── */
+  /* ── Persist cart to localStorage (immediate) + Supabase (debounced 1.2s) ── */
+  const cartSyncRef = useRef(null);
   useEffect(() => {
     if (!sessionId) return;
     try {
       localStorage.setItem(`cart_${sessionId}`, JSON.stringify(cart));
       localStorage.setItem(`cart_${sessionId}_ts`, String(Date.now()));
     } catch(_) {}
-    // Best-effort sync to Supabase (only works if anonymous_sessions table exists)
-    try {
-      sb.from('anonymous_sessions')
-        .update({ cart, last_seen: new Date().toISOString() })
-        .eq('id', sessionId)
-        .then(() => {});
-    } catch(_) {}
+    // Debounce Supabase sync — batch rapid changes (e.g. qty++)
+    clearTimeout(cartSyncRef.current);
+    cartSyncRef.current = setTimeout(() => {
+      try {
+        sb.from('anonymous_sessions')
+          .update({ cart, last_seen: new Date().toISOString() })
+          .eq('id', sessionId)
+          .then(() => {});
+      } catch(_) {}
+    }, 1200);
   }, [cart, sessionId]);
 
   /* ── Store settings (fetched once, shared) ── */
@@ -3014,10 +3028,12 @@ function PageInner() {
 
   /* ── Wishlist (synced to Supabase) ── */
   const [wishToast, setWishToast] = useState(null);
+  const wishToastKey = useRef(0);
   const toggleWishlist = async id => {
     const has = wishlist.includes(id);
     setWishlist(w => has ? w.filter(x=>x!==id) : [...w,id]);
     // Show brief toast
+    wishToastKey.current += 1;
     setWishToast(has ? "Removed from saved" : "Saved to wishlist");
     clearTimeout(window.__wishToastTimer);
     window.__wishToastTimer = setTimeout(() => setWishToast(null), 2000);
@@ -3029,9 +3045,11 @@ function PageInner() {
     }
   };
 
-  const cartCount  = cart.reduce((s,i)=>s+i.qty, 0);
+  const cartCount  = useMemo(() => cart.reduce((s,i)=>s+i.qty, 0), [cart]);
   const canGoBack  = history.length > 0;
-  const screenProps = { products, onSelect: p=>navigate("product",{product:p}), onWishlist:toggleWishlist, wishlist, onNavigate:navigate, user, onLoginPrompt:()=>setShowAuth(true) };
+  const onSelect   = useCallback(p=>navigate("product",{product:p}), []);
+  const onLoginPrompt = useCallback(()=>setShowAuth(true), []);
+  const screenProps = useMemo(() => ({ products, onSelect, onWishlist:toggleWishlist, wishlist, onNavigate:navigate, user, onLoginPrompt }), [products, wishlist, user]);
 
   const renderScreen = () => {
     if (loading) return <HomeSkeleton/>;
@@ -3082,13 +3100,13 @@ function PageInner() {
         {showSale&&!cartOpen&&<SaleModal onClose={()=>setShowSale(false)} onShop={()=>{setShowSale(false);navigate("shop");}}/>}
 
         {wishToast && (
-          <div key={wishToast} style={{ position:"fixed",bottom:84,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"rgba(28,28,30,0.93)",color:"#fff",padding:"11px 18px",borderRadius:99,fontSize:13,fontWeight:600,whiteSpace:"nowrap",boxShadow:"0 4px 24px rgba(0,0,0,0.25)",animation:"fadeIn .18s ease",pointerEvents:"none",display:"flex",alignItems:"center",gap:7,backdropFilter:"blur(12px)" }}>
+          <div key={wishToastKey.current} style={{ position:"fixed",bottom:84,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"rgba(28,28,30,0.97)",color:"#fff",padding:"11px 18px",borderRadius:99,fontSize:13,fontWeight:600,whiteSpace:"nowrap",boxShadow:"0 4px 24px rgba(0,0,0,0.25)",animation:"fadeIn .18s ease",pointerEvents:"none",display:"flex",alignItems:"center",gap:7 }}>
             <Icon name="heart-fill" size={13} color={T.red}/>{wishToast}
           </div>
         )}
 
         {!showSale&&showCookies&&(
-          <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(12,28,31,0.96)",backdropFilter:"blur(20px)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
+          <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(12,28,31,0.98)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
             <div style={{ display:"flex",gap:14,alignItems:"flex-start" }}>
               <div style={{ width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
                 <Icon name="settings" size={18} color="rgba(255,255,255,0.7)"/>
