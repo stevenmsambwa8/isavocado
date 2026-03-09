@@ -522,12 +522,15 @@ function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
 
 /* ─── PRODUCTS PANEL ────────────────────────────────────────── */
 function ProductsPanel() {
-  const [products,setProducts] = useState([]);
-  const [loading,setLoading]   = useState(true);
-  const [editing,setEditing]   = useState(null);
-  const [saving,setSaving]     = useState(false);
-  const [deleting,setDeleting] = useState(null);
-  const [toast,setToast]       = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [editing,  setEditing]  = useState(null);
+  const [saving,   setSaving]   = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [toast,    setToast]    = useState(null);
+  const [search,   setSearch]   = useState('');
+  const [catFilter,setCatFilter]= useState('All');
+  const [confirm,  setConfirm]  = useState(null); // product id to confirm delete
 
   const showToast = (msg, type='success') => setToast({ msg, type });
 
@@ -537,7 +540,6 @@ function ProductsPanel() {
     setProducts(data||[]);
     setLoading(false);
   };
-
   useEffect(() => { load(); }, []);
   useEffect(() => {
     const h = () => setEditing({});
@@ -576,23 +578,12 @@ function ProductsPanel() {
         const { data } = await sb.from('products').insert(payload).select().single();
         id = data.id;
       }
-      // Upload any new files and build final URLs array
       const urls = [];
       for (let i = 0; i < slots.length; i++) {
         const slot = slots[i];
-        if (slot.file) {
-          // New upload
-          const url = await uploadImg(slot.file, id, i);
-          urls.push(url);
-        } else {
-          // Already-uploaded URL (kept from existing)
-          urls.push(slot.preview);
-        }
+        urls.push(slot.file ? await uploadImg(slot.file, id, i) : slot.preview);
       }
-      await sb.from('products').update({
-        image_url:  urls[0] || null,   // keep legacy column for compatibility
-        image_urls: urls,
-      }).eq('id', id);
+      await sb.from('products').update({ image_url: urls[0]||null, image_urls: urls }).eq('id', id);
       showToast(editing?.id ? 'Product updated' : 'Product added');
       setEditing(null);
       load();
@@ -600,13 +591,28 @@ function ProductsPanel() {
     finally    { setSaving(false); }
   };
 
-  const del = async id => {
+  const del = async (id) => {
     setDeleting(id);
     await sb.from('products').delete().eq('id', id);
-    showToast('Deleted');
-    load();
+    setProducts(ps => ps.filter(p => p.id !== id));
+    showToast('Product deleted');
     setDeleting(null);
+    setConfirm(null);
   };
+
+  const toggleField = async (id, field, current) => {
+    const val = !current;
+    await sb.from('products').update({ [field]: val }).eq('id', id);
+    setProducts(ps => ps.map(p => p.id===id ? {...p, [field]:val} : p));
+  };
+
+  const allCats = ['All', ...Array.from(new Set(products.map(p=>p.category).filter(Boolean)))];
+  const visible = products.filter(p => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || p.name?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q);
+    const matchCat    = catFilter==='All' || p.category===catFilter;
+    return matchSearch && matchCat;
+  });
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
 
@@ -614,70 +620,164 @@ function ProductsPanel() {
     <div style={{ animation:'fadeUp .28s ease' }}>
       {toast && <Toast msg={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
 
+      {/* Confirm delete dialog */}
+      {confirm && (
+        <div style={{ position:'fixed',inset:0,zIndex:999,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}>
+          <div onClick={()=>setConfirm(null)} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.4)',backdropFilter:'blur(4px)' }}/>
+          <div style={{ position:'relative',zIndex:1,background:T.white,borderRadius:20,padding:'24px 22px',width:'100%',maxWidth:320,animation:'fadeUp .2s ease' }}>
+            <p style={{ fontSize:18,fontWeight:700,color:T.label,margin:'0 0 8px' }}>Delete product?</p>
+            <p style={{ fontSize:14,color:T.label3,margin:'0 0 22px',lineHeight:1.5 }}>
+              {products.find(p=>p.id===confirm)?.name} will be permanently removed.
+            </p>
+            <div style={{ display:'flex',gap:10 }}>
+              <button onClick={()=>del(confirm)} disabled={!!deleting}
+                style={{ flex:1,padding:'13px',background:T.red,color:T.white,border:'none',borderRadius:12,fontSize:15,fontWeight:600,cursor:'pointer',opacity:deleting?0.7:1 }}>
+                {deleting?'Deleting…':'Delete'}
+              </button>
+              <button onClick={()=>setConfirm(null)} style={{ flex:1,padding:'13px',background:T.fill,color:T.label,border:'none',borderRadius:12,fontSize:15,cursor:'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {products.length === 0 ? (
         <div style={{ textAlign:'center', paddingTop:72 }}>
-          <div style={{ width:72, height:72, borderRadius:20, background:T.fill, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
+          <div style={{ width:72,height:72,borderRadius:20,background:T.fill,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px' }}>
             <Ic n="box" size={32} color={T.label3}/>
           </div>
-          <p style={{ fontSize:20, fontWeight:700, color:T.label, margin:'0 0 8px' }}>No products yet</p>
-          <p style={{ fontSize:15, color:T.label3, margin:'0 0 28px', lineHeight:1.5 }}>Tap + to add your first product.</p>
+          <p style={{ fontSize:20,fontWeight:700,color:T.label,margin:'0 0 8px' }}>No products yet</p>
+          <p style={{ fontSize:15,color:T.label3,margin:'0 0 28px',lineHeight:1.5 }}>Tap + to add your first product.</p>
           <Btn onClick={()=>setEditing({})}>Add Product</Btn>
         </div>
       ) : (
-        <Card title={`${products.length} product${products.length!==1?'s':''}`}>
-          {products.map((p, i) => (
-            <div key={p.id}>
-              <div style={{ background:T.white, padding:'13px 16px', display:'flex', alignItems:'center', gap:12 }}>
-                {/* Thumbnail */}
-                <div style={{ width:52, height:60, borderRadius:10, background:T.fill, flexShrink:0, overflow:'hidden', position:'relative' }}>
-                  {p.image_url
-                    ? <img src={p.image_url} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                    : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="box" size={22} color={T.label3}/></div>
-                  }
-                  {p.image_urls?.length > 1 && (
-                    <div style={{ position:'absolute', bottom:3, right:3, background:'rgba(0,0,0,.6)', borderRadius:5, padding:'1px 5px' }}>
-                      <p style={{ fontSize:9, color:'#fff', margin:0, fontWeight:700 }}>+{p.image_urls.length - 1}</p>
-                    </div>
-                  )}
-                </div>
-                {/* Info */}
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
-                    <p style={{ fontSize:15, fontWeight:600, color:T.label, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</p>
-                    {p.badge && <span style={{ fontSize:11, fontWeight:700, background:`${T.blue}18`, color:T.blue, padding:'2px 7px', borderRadius:99, flexShrink:0 }}>{p.badge}</span>}
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                    <span style={{ fontSize:14, fontWeight:600, color:T.label }}>{money(p.price)}</span>
-                    <span style={{ fontSize:12, color:T.label3 }}>{p.category}</span>
-                    {p.rating > 0 && (
-                      <span style={{ fontSize:12, color:T.label3, display:'flex', alignItems:'center', gap:2 }}>
-                        ★ {p.rating} ({p.reviews})
-                      </span>
+        <>
+          {/* Search bar */}
+          <div style={{ position:'relative', marginBottom:12 }}>
+            <div style={{ position:'absolute',left:14,top:'50%',transform:'translateY(-50%)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.label4} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products…"
+              style={{ width:'100%',padding:'11px 14px 11px 40px',borderRadius:12,background:T.white,border:'none',outline:'none',fontSize:15,color:T.label,boxSizing:'border-box',boxShadow:'0 1px 3px rgba(0,0,0,.06)' }}/>
+            {search && (
+              <button onClick={()=>setSearch('')} style={{ position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',padding:2 }}>
+                <Ic n="close" size={14} color={T.label4}/>
+              </button>
+            )}
+          </div>
+
+          {/* Category filter chips */}
+          {allCats.length > 2 && (
+            <div style={{ display:'flex',gap:7,overflowX:'auto',marginBottom:16,paddingBottom:2,scrollbarWidth:'none' }}>
+              {allCats.map(c=>(
+                <button key={c} onClick={()=>setCatFilter(c)} className="tap"
+                  style={{ padding:'7px 14px',borderRadius:99,border:'none',flexShrink:0,background:catFilter===c?T.blue:T.white,color:catFilter===c?T.white:T.label3,fontSize:13,fontWeight:catFilter===c?600:400,cursor:'pointer',boxShadow:catFilter===c?'none':'0 1px 3px rgba(0,0,0,.06)' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Stats row */}
+          <div style={{ display:'flex',gap:10,marginBottom:18 }}>
+            {[
+              { label:'Total',    val:products.length,                           color:T.blue   },
+              { label:'Active',   val:products.filter(p=>p.is_active).length,    color:T.green  },
+              { label:'Sold Out', val:products.filter(p=>p.in_stock===false).length, color:T.red },
+              { label:'Hidden',   val:products.filter(p=>!p.is_active).length,   color:T.label3 },
+            ].map(s=>(
+              <div key={s.label} style={{ flex:1,background:T.white,borderRadius:12,padding:'10px 8px',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,.05)' }}>
+                <p style={{ fontSize:20,fontWeight:700,color:s.color,margin:'0 0 1px' }}>{s.val}</p>
+                <p style={{ fontSize:10,color:T.label3,margin:0 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Product cards */}
+          <p style={{ fontSize:13,color:T.label3,margin:'0 0 10px 2px' }}>
+            {visible.length} of {products.length} product{products.length!==1?'s':''}
+          </p>
+          <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+            {visible.map(p => (
+              <div key={p.id} style={{ background:T.white,borderRadius:16,overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,.06)' }}>
+                {/* Main row */}
+                <div style={{ display:'flex',gap:12,padding:'14px 14px 10px' }}>
+                  {/* Image */}
+                  <div style={{ width:64,height:76,borderRadius:12,background:T.fill,flexShrink:0,overflow:'hidden',position:'relative' }}>
+                    {p.image_url
+                      ? <img src={p.image_url} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                      : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="box" size={24} color={T.label3}/></div>
+                    }
+                    {p.image_urls?.length>1&&(
+                      <div style={{ position:'absolute',bottom:3,right:3,background:'rgba(0,0,0,.65)',borderRadius:5,padding:'1px 5px' }}>
+                        <p style={{ fontSize:9,color:'#fff',margin:0,fontWeight:700 }}>+{p.image_urls.length-1}</p>
+                      </div>
                     )}
-                    <span style={{ fontSize:12, color:T.label3 }}>· {p.stock ?? 0} in stock</span>
-                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 7px', borderRadius:99, background: p.in_stock!==false ? `${T.green}14` : `${T.red}14`, color: p.in_stock!==false ? T.green : T.red }}>
-                      {p.in_stock!==false ? 'Live' : 'Sold Out'}
-                    </span>
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex:1,minWidth:0 }}>
+                    <div style={{ display:'flex',alignItems:'flex-start',gap:6,marginBottom:4 }}>
+                      <p style={{ fontSize:15,fontWeight:700,color:T.label,margin:0,flex:1,lineHeight:1.3 }}>{p.name}</p>
+                      {p.badge && <span style={{ fontSize:10,fontWeight:700,background:`${T.blue}18`,color:T.blue,padding:'2px 7px',borderRadius:99,flexShrink:0,marginTop:1 }}>{p.badge}</span>}
+                    </div>
+                    <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:6 }}>
+                      <span style={{ fontSize:15,fontWeight:700,color:T.label }}>{money(p.price)}</span>
+                      {p.was && <span style={{ fontSize:12,color:T.label3,textDecoration:'line-through' }}>{money(p.was)}</span>}
+                    </div>
+                    <div style={{ display:'flex',alignItems:'center',gap:6,flexWrap:'wrap' }}>
+                      <span style={{ fontSize:11,color:T.label4,background:T.fill,padding:'2px 8px',borderRadius:6 }}>{p.category}</span>
+                      <span style={{ fontSize:11,color:T.label4 }}>{p.stock ?? 0} in stock</span>
+                      {p.sizes?.length>0 && <span style={{ fontSize:11,color:T.label4 }}>{p.sizes.length} size{p.sizes.length!==1?'s':''}</span>}
+                    </div>
                   </div>
                 </div>
-                {/* Actions */}
-                <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                  <button onClick={async()=>{ await sb.from('products').update({in_stock:p.in_stock===false}).eq('id',p.id); load(); }} className="tap" style={{ fontSize:10, fontWeight:700, padding:'4px 9px', borderRadius:99, background:p.in_stock!==false?`${T.green}14`:`${T.red}14`, color:p.in_stock!==false?T.green:T.red, border:'none', cursor:'pointer' }}>
-                    {p.in_stock!==false?'IN STOCK':'SOLD OUT'}
+
+                {/* Control bar */}
+                <div style={{ display:'flex',alignItems:'center',borderTop:`1px solid ${T.sep}`,padding:'8px 14px',gap:8 }}>
+
+                  {/* In Stock pill toggle */}
+                  <button onClick={()=>toggleField(p.id,'in_stock',p.in_stock!==false)} className="tap"
+                    style={{ fontSize:11,fontWeight:700,padding:'5px 11px',borderRadius:99,border:'none',cursor:'pointer',
+                      background:p.in_stock!==false?`${T.green}14`:`${T.red}14`,
+                      color:p.in_stock!==false?T.green:T.red }}>
+                    {p.in_stock!==false?'In Stock':'Sold Out'}
                   </button>
-                  <Toggle on={p.is_active} onChange={async () => { await sb.from('products').update({is_active:!p.is_active}).eq('id',p.id); load(); }}/>
-                  <button onClick={()=>setEditing(p)} className="tap" style={{ width:34,height:34,borderRadius:10,background:T.fill,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                    <Ic n="edit" size={15} color={T.blue}/>
+
+                  {/* Visible toggle */}
+                  <div style={{ display:'flex',alignItems:'center',gap:5 }}>
+                    <span style={{ fontSize:11,color:T.label3 }}>Visible</span>
+                    <Toggle on={!!p.is_active} onChange={()=>toggleField(p.id,'is_active',!!p.is_active)}/>
+                  </div>
+
+                  {/* Spacer */}
+                  <div style={{ flex:1 }}/>
+
+                  {/* Edit */}
+                  <button onClick={()=>setEditing(p)} className="tap"
+                    style={{ display:'flex',alignItems:'center',gap:5,padding:'7px 12px',borderRadius:10,background:T.fill,border:'none',cursor:'pointer' }}>
+                    <Ic n="edit" size={14} color={T.blue} w={2}/>
+                    <span style={{ fontSize:12,fontWeight:600,color:T.blue }}>Edit</span>
                   </button>
-                  <button onClick={()=>del(p.id)} disabled={deleting===p.id} className="tap" style={{ width:34,height:34,borderRadius:10,background:`${T.red}14`,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                    {deleting===p.id ? <Spin size={14} color={T.red}/> : <Ic n="trash" size={15} color={T.red}/>}
+
+                  {/* Delete */}
+                  <button onClick={()=>setConfirm(p.id)} className="tap"
+                    style={{ width:32,height:32,borderRadius:10,background:`${T.red}12`,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                    <Ic n="trash" size={14} color={T.red} w={2}/>
                   </button>
                 </div>
               </div>
-              {i < products.length-1 && <Sep/>}
+            ))}
+          </div>
+
+          {visible.length === 0 && search && (
+            <div style={{ textAlign:'center',paddingTop:48 }}>
+              <p style={{ fontSize:16,fontWeight:600,color:T.label,margin:'0 0 6px' }}>No results</p>
+              <p style={{ fontSize:14,color:T.label3 }}>Try a different search or category.</p>
             </div>
-          ))}
-        </Card>
+          )}
+        </>
       )}
 
       {editing !== null && (
@@ -688,6 +788,7 @@ function ProductsPanel() {
     </div>
   );
 }
+
 
 /* ─── ORDERS PANEL ──────────────────────────────────────────── */
 const S_LIST = ['pending','confirmed','shipped','delivered','cancelled'];
@@ -1158,143 +1259,11 @@ function FeedbackPanel() {
   );
 }
 
-
-/* ─── REVIEWS PANEL ─────────────────────────────────────────── */
-function ReviewsPanel() {
-  const [items,    setItems]   = useState([]);
-  const [loading,  setLoading] = useState(true);
-  const [sel,      setSel]     = useState(null);
-  const [approving,setApp]     = useState(false);
-  const [toast,    setToast]   = useState(null);
-
-  const load = async () => {
-    setLoading(true);
-    const { data } = await sb.from('product_reviews')
-      .select('id,product_id,reviewer_name,rating,body,approved,created_at,products(name)')
-      .order('created_at', { ascending:false });
-    setItems(data||[]);
-    setLoading(false);
-  };
-  useEffect(()=>{ load(); },[]);
-
-  const approve = async (id) => {
-    setApp(true);
-    await sb.from('product_reviews').update({ approved:true }).eq('id', id);
-    setItems(is=>is.map(i=>i.id===id?{...i,approved:true}:i));
-    if (sel?.id===id) setSel(s=>({...s,approved:true}));
-    setToast({ msg:'Review approved' });
-    setApp(false);
-  };
-
-  const remove = async (id) => {
-    await sb.from('product_reviews').delete().eq('id', id);
-    setItems(is=>is.filter(i=>i.id!==id));
-    setSel(null);
-    setToast({ msg:'Review deleted' });
-  };
-
-  const pending  = items.filter(i=>!i.approved);
-  const approved = items.filter(i=>i.approved);
-  const fmtDate  = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-  const starsEl  = n => <div style={{ display:'flex',gap:2 }}>{Array.from({length:5},(_,i)=><Ic key={i} n="review" size={12} color={i<n?'#f59a0e':'#D1D1D6'} w={i<n?0:1.5}/>)}</div>;
-
-  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
-
-  return (
-    <div style={{ animation:'fadeUp .28s ease' }}>
-      {toast && <Toast msg={toast.msg} type={toast.type||'success'} onDone={()=>setToast(null)}/>}
-
-      {pending.length > 0 && (
-        <Card title={`${pending.length} pending approval`} style={{ marginBottom:20 }}>
-          {pending.map((r,i) => (
-            <div key={r.id}>
-              <div style={{ padding:'13px 16px', background:T.white, display:'flex', alignItems:'flex-start', gap:12 }}>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
-                    {starsEl(r.rating)}
-                    <span style={{ fontSize:13, fontWeight:600, color:T.label }}>{r.reviewer_name}</span>
-                  </div>
-                  <p style={{ fontSize:12, color:T.blue, margin:'0 0 2px', fontWeight:500 }}>{r.products?.name}</p>
-                  <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.body}</p>
-                </div>
-                <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                  <button onClick={()=>approve(r.id)} disabled={approving} className="tap" style={{ padding:'6px 12px', borderRadius:99, background:`${T.green}14`, color:T.green, border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>
-                    Approve
-                  </button>
-                  <button onClick={()=>remove(r.id)} className="tap" style={{ width:30,height:30,borderRadius:15,background:`${T.red}14`,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                    <Ic n="trash" size={13} color={T.red} w={2}/>
-                  </button>
-                </div>
-              </div>
-              {i<pending.length-1&&<Sep/>}
-            </div>
-          ))}
-        </Card>
-      )}
-
-      {approved.length === 0 && pending.length === 0 && (
-        <div style={{ textAlign:'center', paddingTop:72 }}>
-          <div style={{ width:72,height:72,borderRadius:20,background:T.fill,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px' }}>
-            <Ic n="review" size={32} color={T.label3}/>
-          </div>
-          <p style={{ fontSize:20,fontWeight:700,color:T.label,margin:'0 0 8px' }}>No reviews yet</p>
-          <p style={{ fontSize:15,color:T.label3,lineHeight:1.5 }}>Customer reviews will appear here once submitted.</p>
-        </div>
-      )}
-
-      {approved.length > 0 && (
-        <Card title={`${approved.length} published`}>
-          {approved.map((r,i) => (
-            <div key={r.id}>
-              <button onClick={()=>setSel(r)} className="rowbtn" style={{ width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:T.white,border:'none',cursor:'pointer',textAlign:'left' }}>
-                <div style={{ flex:1,minWidth:0 }}>
-                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:2 }}>
-                    {starsEl(r.rating)}
-                    <span style={{ fontSize:13,fontWeight:600,color:T.label,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.reviewer_name}</span>
-                  </div>
-                  <p style={{ fontSize:12,color:T.blue,margin:'0 0 1px',fontWeight:500 }}>{r.products?.name}</p>
-                  <p style={{ fontSize:13,color:T.label3,margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.body}</p>
-                </div>
-                <p style={{ fontSize:11,color:T.label4,margin:0,flexShrink:0 }}>{fmtDate(r.created_at)}</p>
-              </button>
-              {i<approved.length-1&&<Sep/>}
-            </div>
-          ))}
-        </Card>
-      )}
-
-      {sel && (
-        <Sheet title="Review" onClose={()=>setSel(null)}>
-          <Card title="Rating">
-            <div style={{ padding:'14px 16px' }}>
-              <div style={{ display:'flex',gap:3,marginBottom:6 }}>{Array.from({length:5},(_,i)=><Ic key={i} n="review" size={22} color={i<sel.rating?'#f59a0e':'#D1D1D6'} w={i<sel.rating?0:1.5}/>)}</div>
-              <p style={{ fontSize:13,color:T.label3,margin:0 }}>{sel.rating}/5 · {sel.reviewer_name}</p>
-            </div>
-          </Card>
-          <Card title="Review">
-            <div style={{ padding:'14px 16px' }}>
-              <p style={{ fontSize:12,color:T.blue,fontWeight:500,margin:'0 0 8px' }}>{sel.products?.name}</p>
-              <p style={{ fontSize:15,color:T.label,margin:0,lineHeight:1.6 }}>{sel.body}</p>
-            </div>
-          </Card>
-          <Card title="Info">
-            <Row label={sel.reviewer_name} sub={fmtDate(sel.created_at)} last/>
-          </Card>
-          <button onClick={()=>remove(sel.id)} style={{ width:'100%',padding:'14px',background:`${T.red}10`,color:T.red,border:`1px solid ${T.red}30`,borderRadius:14,fontSize:15,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
-            <Ic n="trash" size={16} color={T.red} w={2}/> Delete review
-          </button>
-        </Sheet>
-      )}
-    </div>
-  );
-}
-
 /* ─── ROOT DASHBOARD ────────────────────────────────────────── */
 const TABS = [
   { id:'overview', label:'Overview',  icon:'chart'  },
   { id:'products', label:'Products',  icon:'box'    },
   { id:'orders',   label:'Orders',    icon:'orders' },
-  { id:'reviews',  label:'Reviews',   icon:'review' },
   { id:'feedback', label:'Feedback',  icon:'msg'    },
   { id:'settings', label:'Settings',  icon:'gear'   },
 ];
@@ -1342,7 +1311,6 @@ export default function Dashboard() {
         {tab==='overview'  && <Overview/>}
         {tab==='products'  && <ProductsPanel/>}
         {tab==='orders'    && <OrdersPanel/>}
-        {tab==='reviews'   && <ReviewsPanel/>}
         {tab==='feedback'  && <FeedbackPanel/>}
         {tab==='settings'  && <SettingsPanel/>}
       </div>
