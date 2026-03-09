@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
+import { useState, useEffect, useRef, useMemo, memo, createContext, useContext } from "react";
 import { createClient } from '@supabase/supabase-js';
 import './layout.css';
 
@@ -52,7 +52,10 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
     @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
     @keyframes slideInR { from { transform:translateX(100%); } to { transform:translateX(0); } }
     @keyframes spin     { to { transform:rotate(360deg); } }
+    @keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
     .pressable:active { transform:scale(0.97); transition:transform .1s; }
+    .sk { background:linear-gradient(90deg,#eef8fa 25%,#dff0f3 50%,#eef8fa 75%); background-size:800px 100%; animation:shimmer 1.4s infinite linear; border-radius:10px; }
+    img { content-visibility:auto; }
   `;
   document.head.appendChild(el);
 }
@@ -360,6 +363,10 @@ function Icon({ name, size=20, color=T.black, strokeWidth=2 }) {
     grid:      <svg {...s} viewBox="0 0 24 24"><rect {...p} x="3" y="3" width="7" height="7"/><rect {...p} x="14" y="3" width="7" height="7"/><rect {...p} x="14" y="14" width="7" height="7"/><rect {...p} x="3" y="14" width="7" height="7"/></svg>,
     list:      <svg {...s} viewBox="0 0 24 24"><line {...p} x1="8" y1="6" x2="21" y2="6"/><line {...p} x1="8" y1="12" x2="21" y2="12"/><line {...p} x1="8" y1="18" x2="21" y2="18"/><line {...p} x1="3" y1="6" x2="3.01" y2="6"/><line {...p} x1="3" y1="12" x2="3.01" y2="12"/><line {...p} x1="3" y1="18" x2="3.01" y2="18"/></svg>,
     share:     <svg {...s} viewBox="0 0 24 24"><circle {...p} cx="18" cy="5" r="3"/><circle {...p} cx="6" cy="12" r="3"/><circle {...p} cx="18" cy="19" r="3"/><line {...p} x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line {...p} x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+    check:     <svg {...s} viewBox="0 0 24 24"><polyline {...p} points="20 6 9 17 4 12"/></svg>,
+    lock:      <svg {...s} viewBox="0 0 24 24"><rect {...p} x="3" y="11" width="18" height="11" rx="2"/><path {...p} d="M7 11V7a5 5 0 0110 0v4"/></svg>,
+    chat:      <svg {...s} viewBox="0 0 24 24"><path {...p} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+    info:      <svg {...s} viewBox="0 0 24 24"><circle {...p} cx="12" cy="12" r="10"/><line {...p} x1="12" y1="8" x2="12" y2="12"/><line {...p} x1="12" y1="16" x2="12.01" y2="16"/></svg>,
   };
   return icons[name] || <svg {...s} viewBox="0 0 24 24"/>;
 }
@@ -427,7 +434,9 @@ function HScroll({ children, gap=12, px=0 }) {
 function EmptyState({ icon, title, body, action }) {
   return (
     <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px",gap:16,textAlign:"center" }}>
-      <div style={{ fontSize:52,opacity:.3 }}>{icon}</div>
+      <div style={{ width:64,height:64,borderRadius:20,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",opacity:.55 }}>
+        <Icon name={icon||"bag"} size={30} color={T.gray4}/>
+      </div>
       <p style={{ fontSize:18,fontWeight:700,color:T.gray2,margin:0 }}>{title}</p>
       <p style={{ fontSize:14,color:T.gray5,margin:0,maxWidth:280,lineHeight:1.6 }}>{body}</p>
       {action}
@@ -435,34 +444,100 @@ function EmptyState({ icon, title, body, action }) {
   );
 }
 
-/* ─── CardImageSlider — auto-slides through multiple images ─── */
+/* ─── Skeleton loading screens ──────────────────────────────── */
+function Sk({ w="100%", h=16, r=10, style:st }) {
+  return <div className="sk" style={{ width:w, height:h, borderRadius:r, flexShrink:0, ...st }}/>;
+}
+
+function HomeSkeleton() {
+  return (
+    <div style={{ animation:"fadeIn .2s ease" }}>
+      {/* Hero */}
+      <Sk h={380} r={28} style={{ marginBottom:28 }}/>
+      {/* New In label */}
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16 }}>
+        <Sk w={120} h={22} r={8}/>
+        <Sk w={50} h={16} r={8}/>
+      </div>
+      {/* New In row */}
+      <div style={{ display:"flex",gap:12,overflowX:"hidden",marginBottom:32 }}>
+        {[1,2,3].map(i=>(
+          <div key={i} style={{ flexShrink:0,width:140 }}>
+            <Sk w={140} h={168} r={16} style={{ marginBottom:8 }}/>
+            <Sk w={100} h={14} r={6} style={{ marginBottom:6 }}/>
+            <Sk w={70} h={12} r={6}/>
+          </div>
+        ))}
+      </div>
+      {/* Sale banner */}
+      <Sk h={100} r={20} style={{ marginBottom:28 }}/>
+      {/* Trending grid */}
+      <Sk w={160} h={22} r={8} style={{ marginBottom:16 }}/>
+      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+        {[1,2,3,4].map(i=>(
+          <div key={i}>
+            <Sk h={220} r={20} style={{ marginBottom:8 }}/>
+            <Sk w="70%" h={14} r={6} style={{ marginBottom:5 }}/>
+            <Sk w="45%" h={12} r={6}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Lazy image with fade-in + native lazy loading ─────────── */
+function LazyImg({ src, alt="", style:st, ...rest }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div style={{ position:"relative", width:"100%", height:"100%", background:"#f2f2f7", ...st }}>
+      {!loaded && <div className="sk" style={{ position:"absolute",inset:0,borderRadius:"inherit" }}/>}
+      <img
+        src={src} alt={alt} loading="lazy" decoding="async"
+        onLoad={() => setLoaded(true)}
+        style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", opacity: loaded ? 1 : 0, transition:"opacity .25s", ...rest.imgStyle }}
+        {...rest}
+      />
+    </div>
+  );
+}
 function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, children }) {
-  const [idx, setIdx]   = useState(0);
-  const timerRef        = useRef(null);
-  const imgs            = images?.length ? images : [];
-  const multi           = imgs.length > 1;
+  const [idx, setIdx]     = useState(0);
+  const [visible, setVis] = useState(false);
+  const timerRef          = useRef(null);
+  const rootRef           = useRef(null);
+  const imgs              = images?.length ? images : [];
+  const multi             = imgs.length > 1;
 
   useEffect(() => {
-    if (!multi) return;
+    const el = rootRef.current;
+    if (!el || !multi) return;
+    const obs = new IntersectionObserver(([e]) => setVis(e.isIntersecting), { threshold:0.2 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [multi]);
+
+  useEffect(() => {
+    if (!multi || !visible) { clearInterval(timerRef.current); return; }
     timerRef.current = setInterval(() => setIdx(i => (i + 1) % imgs.length), 2800);
     return () => clearInterval(timerRef.current);
-  }, [multi, imgs.length]);
+  }, [multi, visible, imgs.length]);
 
   return (
-    <div style={{ aspectRatio, background:"#f2f2f7", borderRadius, overflow:"hidden", position:"relative", flexShrink:0 }}>
+    <div ref={rootRef} style={{ aspectRatio, background:"#f2f2f7", borderRadius, overflow:"hidden", position:"relative", flexShrink:0, contain:"layout style" }}>
       {imgs.length === 0 ? (
-        <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32 }}>👗</div>
+        <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}>
+          <Icon name="bag" size={28} color={T.gray6}/>
+        </div>
       ) : (
         <>
-          {/* Slide strip */}
           <div style={{ display:"flex", width:`${imgs.length * 100}%`, height:"100%", transition:"transform .55s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx * (100 / imgs.length)}%)` }}>
             {imgs.map((src, i) => (
               <div key={i} style={{ width:`${100 / imgs.length}%`, height:"100%", flexShrink:0 }}>
-                <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
               </div>
             ))}
           </div>
-          {/* Dot indicators — only shown when multiple images */}
           {multi && (
             <div style={{ position:"absolute", bottom:7, left:"50%", transform:"translateX(-50%)", display:"flex", gap:4, pointerEvents:"none" }}>
               {imgs.map((_,i) => (
@@ -479,7 +554,7 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, ch
 }
 
 /* ─── ProductCard ───────────────────────────────────────────── */
-function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user, onLoginPrompt }) {
+const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user, onLoginPrompt }) {
   const images = p.image_urls?.length ? p.image_urls : p.image_url ? [p.image_url] : [];
 
   if (compact) return (
@@ -520,7 +595,7 @@ function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user,
     </div>
   );
   return null;
-}
+});
 
 /* ─── Purchase Request Modal ───────────────────────────────── */
 function PurchaseModal({ product, onClose, sessionId }) {
@@ -628,7 +703,7 @@ function PurchaseModal({ product, onClose, sessionId }) {
 
           {sent ? (
             <div style={{ textAlign:"center",padding:"32px 0" }}>
-              <div style={{ fontSize:52,marginBottom:16 }}>✅</div>
+              <div style={{ width:72,height:72,borderRadius:36,background:"#e8faf0",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16 }}><Icon name="check" size={34} color={T.green}/></div>
               <p style={{ fontSize:20,fontWeight:700,color:T.black,marginBottom:8 }}>{t.requestSent}</p>
               <p style={{ fontSize:14,color:T.gray4,marginBottom:24,lineHeight:1.6 }}>We'll contact you at <strong>{form.email}</strong> to confirm.</p>
               <Btn onClick={onClose} variant="gray" size="sm">Close</Btn>
@@ -743,7 +818,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
         {/* ── SENT ── */}
         {step==="sent" && (
           <div style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"0 28px 48px",textAlign:"center",gap:14 }}>
-            <div style={{ fontSize:60 }}>✅</div>
+            <div style={{ width:72,height:72,borderRadius:36,background:"#e8faf0",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="check" size={34} color={T.green}/></div>
             <p style={{ fontSize:22,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>{t.cartSent}</p>
             <p style={{ fontSize:14,color:T.gray4,lineHeight:1.6,maxWidth:280,margin:0 }}>{t.cartSentBody}</p>
             <Btn onClick={onClose} variant="gray" style={{ marginTop:10,borderRadius:14,padding:"13px 32px" }}>{t.continueShopping}</Btn>
@@ -843,14 +918,14 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
             )}
             <div style={{ flex:1,overflowY:"auto",padding:"0 22px" }}>
               {cart.length===0
-                ? <EmptyState icon="🛍️" title={t.emptyBag} body={t.continueShopping}/>
+                ? <EmptyState icon="bag" title={t.emptyBag} body={t.continueShopping}/>
                 : cart.map((item,i)=>(
                   <div key={`${item.id}-${item.sz}`}>
                     <div style={{ padding:"16px 0",display:"flex",gap:14 }}>
                       <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
-                        {item.image_url
-                          ? <img src={item.image_url} alt={item.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
-                          : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28 }}>👗</div>}
+                        {(item.selectedImg || item.image_url)
+                          ? <img src={item.selectedImg || item.image_url} alt={item.name} style={{ width:"100%",height:"100%",objectFit:"cover" }} loading="lazy"/>
+                          : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#e8e8ed" }}><Icon name="bag" size={24} color={T.gray5}/></div>}
                       </div>
                       <div style={{ flex:1,minWidth:0 }}>
                         <p style={{ fontSize:15,fontWeight:600,marginBottom:2 }}>{item.name}</p>
@@ -962,7 +1037,9 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
       {/* ── Image Gallery ── */}
       <div style={{ position:"relative", marginBottom:20, borderRadius:24, overflow:"hidden" }}>
         {images.length === 0 ? (
-          <div style={{ aspectRatio:"4/5", background:"#f2f2f7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:64, color:T.gray6 }}>👗</div>
+          <div style={{ aspectRatio:"4/5", background:"#f2f2f7", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:24 }}>
+            <Icon name="bag" size={64} color={T.gray6}/>
+          </div>
         ) : (
           <>
             {/* Horizontal scroll strip */}
@@ -977,7 +1054,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
                   onClick={() => setLB(i)}
                   style={{ minWidth:"100%", width:"100%", aspectRatio:"4/5", flexShrink:0, scrollSnapAlign:"start", cursor:"zoom-in", position:"relative", overflow:"hidden", background:"#f2f2f7" }}
                 >
-                  <img src={src} alt={`${p.name} ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                  <img src={src} alt={`${p.name} ${i+1}`} loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
                 </div>
               ))}
             </div>
@@ -994,7 +1071,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
             {/* Zoom hint */}
             {images.length > 0 && (
               <div style={{ position:"absolute", bottom:14, right:14, background:"rgba(0,0,0,0.35)", borderRadius:99, padding:"4px 10px", backdropFilter:"blur(6px)" }}>
-                <p style={{ fontSize:11, color:"#fff", margin:0 }}>🔍 Tap to zoom</p>
+                <p style={{ fontSize:11, color:"#fff", margin:0 }}>Tap to zoom</p>
               </div>
             )}
 
@@ -1023,7 +1100,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
               onClick={() => scrollTo(i)}
               style={{ width:60, height:72, borderRadius:12, overflow:"hidden", flexShrink:0, cursor:"pointer", border:`2px solid ${i===imgIdx?T.black:"transparent"}`, transition:"border .18s" }}
             >
-              <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
             </div>
           ))}
         </div>
@@ -1097,7 +1174,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
           </div>
           {imgErr && (
             <div style={{ marginTop:10,background:"#fff0f0",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:8 }}>
-              <span style={{ fontSize:16 }}>👆</span>
+              <Icon name="chevronR" size={16} color={T.red}/>
               <p style={{ fontSize:13,color:T.red,margin:0,fontWeight:500 }}>{t.pickRequired}</p>
             </div>
           )}
@@ -1386,7 +1463,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user
   const saleP = products.filter(p=>p.badge==='Sale').slice(0,8);
   const trend = products.slice(0,6);
 
-  if (products.length===0) return <EmptyState icon="🛍️" title={t.shopOpeningSoon} body={t.curatingCollection}/>;
+  if (products.length===0) return <EmptyState icon="bag" title={t.shopOpeningSoon} body={t.curatingCollection}/>;
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
@@ -1441,7 +1518,7 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
     return p;
   }, [cat,sort,products]);
 
-  if (products.length===0) return <EmptyState icon="👗" title={t.shopEmpty} body={t.shopEmptyBody}/>;
+  if (products.length===0) return <EmptyState icon="bag" title={t.shopEmpty} body={t.shopEmptyBody}/>;
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
@@ -1461,13 +1538,13 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
           </button>
         </div>
       </div>
-      {filtered.length===0 ? <EmptyState icon="🔍" title={`No ${cat} ${t.items}`} body={t.tryCategory}/> : (
+      {filtered.length===0 ? <EmptyState icon="search" title={`No ${cat} ${t.items}`} body={t.tryCategory}/> : (
         <div style={{ display:"grid",gridTemplateColumns:grid?"1fr 1fr":"1fr",gap:grid?"16px 10px":"12px" }}>
           {filtered.map(p=>(
             grid ? <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/> : (
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex",gap:14,cursor:"pointer",background:T.fill4,borderRadius:18,padding:14 }}>
                 <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
-                  {p.image_url?<img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28 }}>👗</div>}
+                  {p.image_url?<img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}><Icon name="bag" size={22} color={T.gray6}/></div>}
                 </div>
                 <div style={{ flex:1,minWidth:0,paddingTop:2 }}>
                   <p style={{ fontSize:15,fontWeight:700,marginBottom:4 }}>{p.name}</p>
@@ -1497,13 +1574,13 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
         {q&&<button onClick={()=>setQ("")} style={{ position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer" }}><Icon name="close" size={16} color={T.gray4}/></button>}
       </div>
       {q.length<2 ? (
-        products.length===0 ? <EmptyState icon="🔍" title={t.search} body={t.noProducts}/> : (
+        products.length===0 ? <EmptyState icon="search" title={t.search} body={t.noProducts}/> : (
           <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>{t.trending}</p><HScroll gap={10}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll></>
         )
       ) : (
         <>
           <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} {res.length!==1?t.noResults:t.noResults} for "{q}"</p>
-          {res.length===0 ? <EmptyState icon="🔍" title={t.noResults} body={`${t.nothingMatched} "${q}".`}/> : (
+          {res.length===0 ? <EmptyState icon="search" title={t.noResults} body={`${t.nothingMatched} "${q}".`}/> : (
             <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
               {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
             </div>
@@ -1521,7 +1598,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLogi
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} {t.savedItems}</p>
-      {items.length===0 ? <EmptyState icon="❤️" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
+      {items.length===0 ? <EmptyState icon="heart" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
         <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
           {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true} user={user} onLoginPrompt={onLoginPrompt}/>)}
         </div>
@@ -1535,7 +1612,7 @@ function AuthGate({ user, onLogin, children, t }) {
   if (user) return children;
   return (
     <div style={{ animation:"fadeIn .25s ease", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 24px", gap:20, textAlign:"center" }}>
-      <div style={{ fontSize:56 }}>🔒</div>
+      <div style={{ width:64,height:64,borderRadius:20,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="lock" size={28} color={T.gray4}/></div>
       <p style={{ fontSize:22, fontWeight:700, margin:0, letterSpacing:"-0.5px" }}>{t.loginRequired}</p>
       <p style={{ fontSize:15, color:T.gray4, margin:0, maxWidth:280, lineHeight:1.6 }}>{t.loginRequiredBody}</p>
       <Btn onClick={onLogin} style={{ borderRadius:14, padding:"14px 32px", fontSize:16 }}>{t.signIn} / {t.createAccount}</Btn>
@@ -1695,7 +1772,7 @@ function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t }) {
 
       {/* Help us improve */}
       <button onClick={onFeedback} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,background:`linear-gradient(135deg,${T.blue},${T.brandLight||"#4EC8E8"})`,border:"none",borderRadius:20,padding:"18px 20px",cursor:"pointer",marginBottom:16,textAlign:"left" }}>
-        <span style={{ fontSize:28,flexShrink:0 }}>💬</span>
+        <div style={{ width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name="chat" size={20} color="#fff"/></div>
         <div style={{ flex:1 }}>
           <p style={{ fontSize:15,fontWeight:700,color:"#fff",margin:0 }}>{t.helpFeedback}</p>
           <p style={{ fontSize:12,color:"rgba(255,255,255,0.75)",margin:"2px 0 0" }}>{t.helpFeedbackSub}</p>
@@ -1739,7 +1816,7 @@ function EditProfileScreen({ user, onBack, t }) {
     <div style={{ animation:"fadeIn .25s ease" }}>
       {saved && (
         <div style={{ background:"#e8faf0",borderRadius:14,padding:"12px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:10 }}>
-          <span style={{ fontSize:18 }}>✅</span>
+          <Icon name="check" size={18} color={T.green}/>
           <p style={{ fontSize:14,fontWeight:600,color:T.green,margin:0 }}>Profile saved!</p>
         </div>
       )}
@@ -1782,7 +1859,7 @@ function AddressesScreen({ t }) {
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
       {addresses.length === 0 && !adding && (
-        <EmptyState icon="📍" title="No addresses saved" body="Add a delivery address to speed up checkout." action={<Btn onClick={()=>setAdding(true)} size="sm">{t.addAddress}</Btn>}/>
+        <EmptyState icon="location" title="No addresses saved" body="Add a delivery address to speed up checkout." action={<Btn onClick={()=>setAdding(true)} size="sm">{t.addAddress}</Btn>}/>
       )}
       {addresses.map((a,i) => (
         <div key={a.id} style={{ background:T.fill4,borderRadius:16,padding:"16px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
@@ -1898,7 +1975,7 @@ function SettingsScreen({ t, lang, setLang }) {
         </Row>
       </div>
 
-      <p style={{ textAlign:"center",fontSize:12,color:T.gray6,marginTop:8 }}>MSAMBWA · v1.0.0 · Built with ❤️</p>
+      <p style={{ textAlign:"center",fontSize:12,color:T.gray6,marginTop:8 }}>MSAMBWA · v1.0.0</p>
     </div>
   );
 }
@@ -1930,7 +2007,7 @@ function OurStoryScreen({ t }) {
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
       <div style={{ background:"linear-gradient(145deg,#1C1C1E,#3A3A3C)",borderRadius:24,padding:"36px 24px",marginBottom:28,textAlign:"center" }}>
-        <p style={{ fontSize:40,margin:"0 0 16px" }}>✨</p>
+        <div style={{ width:52,height:52,borderRadius:16,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 0 16px" }}><Icon name="share" size={24} color={T.gray3}/></div>
         <h2 style={{ fontSize:28,fontWeight:800,color:"#fff",letterSpacing:"-0.8px",margin:"0 0 10px" }}>{t.ourStoryTitle}</h2>
         <p style={{ fontSize:14,color:"rgba(255,255,255,0.5)",margin:0 }}>Since 2024</p>
       </div>
@@ -1960,7 +2037,7 @@ function ReturnsScreen({ t }) {
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
       <div style={{ background:"#e8f4fd",borderRadius:20,padding:"20px",marginBottom:24,display:"flex",gap:14,alignItems:"flex-start" }}>
-        <span style={{ fontSize:28,flexShrink:0 }}>ℹ️</span>
+        <div style={{ width:38,height:38,borderRadius:10,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name="info" size={18} color={T.gray4}/></div>
         <div>
           <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px",color:T.blue }}>30-Day Returns</p>
           <p style={{ fontSize:13,color:T.gray3,margin:0,lineHeight:1.6 }}>Items must be unworn, unwashed, and in original packaging with tags attached.</p>
@@ -1995,7 +2072,7 @@ function SustainabilityScreen({ t }) {
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
       <div style={{ background:"linear-gradient(145deg,#1a4a2e,#2d7a47)",borderRadius:24,padding:"32px 24px",marginBottom:28,textAlign:"center" }}>
-        <p style={{ fontSize:40,margin:"0 0 12px" }}>🌿</p>
+        <div style={{ width:52,height:52,borderRadius:16,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 0 12px" }}><Icon name="truck" size={24} color={T.gray3}/></div>
         <h2 style={{ fontSize:26,fontWeight:800,color:"#fff",letterSpacing:"-0.6px",margin:"0 0 8px" }}>{t.sustainabilityTitle}</h2>
         <p style={{ fontSize:14,color:"rgba(255,255,255,0.6)",margin:0 }}>Fashion that respects the planet</p>
       </div>
@@ -2032,7 +2109,7 @@ function LookbookScreen({ products, onSelect, t }) {
       <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:24 }}>
         {imgs.map((src,i) => (
           <div key={i} style={{ aspectRatio: i===0?"2/3":"3/4", borderRadius:18,overflow:"hidden",gridColumn:i===0?"1":"2",gridRow:i===0?"1/3":"auto" }}>
-            <img src={src} alt="" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+            <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
           </div>
         ))}
       </div>
@@ -2044,7 +2121,7 @@ function LookbookScreen({ products, onSelect, t }) {
             {featured.map(p=>(
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
                 <div style={{ aspectRatio:"3/4",background:"#f2f2f7",borderRadius:18,overflow:"hidden",marginBottom:8 }}>
-                  {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/> : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36 }}>👗</div>}
+                  {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/> : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}><Icon name="bag" size={30} color={T.gray6}/></div>}
                 </div>
                 <p style={{ fontSize:13,fontWeight:600,margin:"0 0 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
                 <PriceLine price={p.price} was={p.was}/>
@@ -2473,14 +2550,14 @@ function HelpFeedback({ onClose }) {
 
         {step === "sent" ? (
           <div style={{ textAlign:"center",paddingBottom:8 }}>
-            <div style={{ fontSize:52,marginBottom:12 }}>🙏</div>
+            <div style={{ width:64,height:64,borderRadius:20,background:"#e8faf0",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12 }}><Icon name="check" size={28} color={T.green}/></div>
             <p style={{ fontSize:20,fontWeight:700,margin:"0 0 8px",color:T.black }}>Thank you!</p>
             <p style={{ fontSize:14,color:T.gray4,lineHeight:1.6,marginBottom:24 }}>Your feedback helps us improve MSAMBWA for everyone.</p>
             <button onClick={onClose} style={{ padding:"13px 32px",background:T.blue,color:"#fff",border:"none",borderRadius:14,fontSize:15,fontWeight:600,cursor:"pointer" }}>Close</button>
           </div>
         ) : (
           <>
-            <p style={{ fontSize:20,fontWeight:700,margin:"0 0 4px",color:T.black }}>Help us improve 💬</p>
+            <p style={{ fontSize:20,fontWeight:700,margin:"0 0 4px",color:T.black }}>Help us improve</p>
             <p style={{ fontSize:14,color:T.gray4,marginBottom:20,lineHeight:1.5 }}>How's your experience with MSAMBWA? We read every message.</p>
 
             {/* Star rating */}
@@ -2662,7 +2739,9 @@ export default function Page() {
 
   /* ── Load products + handle deep-link hash ── */
   useEffect(() => {
-    sb.from('products').select('*').eq('is_active', true).order('created_at', { ascending:false })
+    sb.from('products')
+      .select('id,name,price,was,category,badge,image_url,image_urls,sizes,rating,reviews,description,is_active,created_at')
+      .eq('is_active', true).order('created_at', { ascending:false })
       .then(({ data }) => {
         const prods = data || [];
         setProducts(prods);
@@ -2738,12 +2817,20 @@ export default function Page() {
   /* ── Cart ── */
   const addToCart = item => {
     setCart(c => {
-      const ex = c.find(x=>x.id===item.id&&x.sz===item.sz);
-      return ex ? c.map(x=>x.id===item.id&&x.sz===item.sz?{...x,qty:x.qty+1}:x) : [...c,{...item,qty:1}];
+      const key = x => x.id + '|' + (x.sz||'') + '|' + (x.selectedImg||'');
+      const ex = c.find(x => key(x) === key(item));
+      return ex ? c.map(x => key(x)===key(item) ? {...x,qty:x.qty+1} : x) : [...c,{...item,qty:1}];
     });
   };
-  const removeFromCart = item => setCart(c=>c.filter(x=>!(x.id===item.id&&x.sz===item.sz)));
-  const updateQty = (item,qty) => qty<=0 ? removeFromCart(item) : setCart(c=>c.map(x=>x.id===item.id&&x.sz===item.sz?{...x,qty}:x));
+  const removeFromCart = item => {
+    const key = x => x.id + '|' + (x.sz||'') + '|' + (x.selectedImg||'');
+    setCart(c => c.filter(x => key(x) !== key(item)));
+  };
+  const updateQty = (item,qty) => {
+    const key = x => x.id + '|' + (x.sz||'') + '|' + (x.selectedImg||'');
+    if (qty <= 0) return removeFromCart(item);
+    setCart(c => c.map(x => key(x)===key(item) ? {...x,qty} : x));
+  };
 
   /* ── Wishlist (synced to Supabase) ── */
   const toggleWishlist = async id => {
@@ -2762,12 +2849,7 @@ export default function Page() {
   const screenProps = { products, onSelect: p=>navigate("product",{product:p}), onWishlist:toggleWishlist, wishlist, onNavigate:navigate, user, onLoginPrompt:()=>setShowAuth(true) };
 
   const renderScreen = () => {
-    if (loading) return (
-      <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"60vh",gap:16 }}>
-        <Spin size={36}/>
-        <p style={{ fontSize:14,color:T.gray5 }}>Loading products…</p>
-      </div>
-    );
+    if (loading) return <HomeSkeleton/>;
     switch (current.screen) {
       case "home":         return <HomeScreen {...screenProps}/>;
       case "shop":         return <ShopScreen {...screenProps}/>;
@@ -2807,7 +2889,9 @@ export default function Page() {
         {!showSale&&showCookies&&(
           <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(12,28,31,0.96)",backdropFilter:"blur(20px)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
             <div style={{ display:"flex",gap:14,alignItems:"flex-start" }}>
-              <span style={{ fontSize:26,flexShrink:0 }}>🍪</span>
+              <div style={{ width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                <Icon name="settings" size={18} color="rgba(255,255,255,0.7)"/>
+              </div>
               <div style={{ flex:1 }}>
                 <p style={{ fontSize:15,fontWeight:600,color:"#fff",marginBottom:5 }}>We use cookies</p>
                 <p style={{ fontSize:13,color:"rgba(255,255,255,0.55)",lineHeight:1.5,marginBottom:16 }}>We use cookies to personalise your experience.</p>
