@@ -1,12 +1,41 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, memo, createContext, useContext } from "react";
+import { useState, useEffect, useRef, useMemo, memo, createContext, useContext, Component } from "react";
 import { createClient } from '@supabase/supabase-js';
 import './layout.css';
+
+/* ─── Error Boundary ────────────────────────────────────────── */
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError:false, error:null }; }
+  static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
+  componentDidCatch(e, info) { console.error("MSAMBWA Error:", e, info); }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:32,textAlign:"center",background:"#fff" }}>
+        <div style={{ width:72,height:72,borderRadius:24,background:"#fff0f0",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20 }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E03A4E" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <p style={{ fontSize:20,fontWeight:700,marginBottom:8,color:"#0C1C1F" }}>Something went wrong</p>
+        <p style={{ fontSize:14,color:"#8AADB5",marginBottom:24,maxWidth:280,lineHeight:1.6 }}>We hit an unexpected error. Tap below to reload.</p>
+        <button onClick={()=>window.location.reload()} style={{ background:"#1C7A8C",color:"#fff",border:"none",borderRadius:14,padding:"14px 32px",fontSize:15,fontWeight:600,cursor:"pointer" }}>Reload Store</button>
+      </div>
+    );
+  }
+}
 
 /* ─── Supabase ──────────────────────────────────────────────── */
 const SUPABASE_URL  = 'https://crekrdcmagswrfrmkiuj.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyZWtyZGNtYWdzd3Jmcm1raXVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODEyNDYsImV4cCI6MjA4ODI1NzI0Nn0.qoUb9wOHW5DbiJtJcIGhCFtYu5Slx9_Fhb7lK_l11kM';
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+/* ⚠️  IMPORTANT — Enable Row Level Security in Supabase for:
+   - wishlists       → users can only read/write their own session_id rows
+   - purchase_requests → users can only read/write their own session_id rows
+   - user_addresses  → users can only read/write their own user_id rows
+   - user_notification_prefs → users can only read/write their own user_id rows
+   - product_reviews → anyone can insert, only approved=true visible on select
+   - site_feedback   → insert-only for anon users
+   Run the SQL in schema.sql to set up tables + RLS policies.
+*/
 
 /* ─── Persistent anonymous session ─────────────────────────────
    Strategy:
@@ -65,15 +94,15 @@ const TR = {
   en: {
     home:"Home", shop:"Shop", search:"Search", saved:"Saved", account:"Account",
     wishlist:"Wishlist", myBag:"My Bag", checkout:"Checkout →",
-    addToBag:"Add to Bag", addedToBag:"Added ✓",
+    addToBag:"Add to Bag", addedToBag:"Added",
     freeDelivery:"Free Delivery", freeReturns:"Free Returns",
-    newIn:"New In ✦", trendingNow:"Trending Now 🔥", onSale:"On Sale",
+    newIn:"New In", trendingNow:"Trending Now", onSale:"On Sale",
     viewAll:"View All", seeAll:"See All", browse:"Browse",
     priceOnRequest:"Members only", addToBagReveal:"Add to Bag", requestReveal:"Request to Buy",
     signInToContinue:"Sign in to continue",
     cartCheckoutTitle:"Send Order Request", cartCheckoutSub:"We'll reach out to confirm your order.",
     cartPhoneLabel:"Your Phone Number", cartNotePlaceholder:"Anything we should know about your order…",
-    cartSubmit:"Send Request", cartSent:"Order Request Sent! ✓", cartSentBody:"We'll contact you shortly to confirm.",
+    cartSubmit:"Send Request", cartSent:"Order Request Sent!", cartSentBody:"We'll contact you shortly to confirm.",
     limitedTime:"Limited Time", upTo40:"Up to 40% off", whileStocks:"Select styles. While stocks last.", shopSale:"Shop Sale →",
     shopOpeningSoon:"Shop opening soon", curatingCollection:"Our collection is being curated. Check back shortly for new arrivals.",
     shopEmpty:"Shop is empty", shopEmptyBody:"Products will appear here once added by the team.",
@@ -96,7 +125,7 @@ const TR = {
     requestToBuy:"Request to Buy", yourName:"Your Name",
     yourEmail:"Your Email", yourPhone:"Phone (optional)",
     deliveryAddress:"Delivery Address", noteToSeller:"Note (optional)",
-    submitRequest:"Submit Request", requestSent:"Request Sent! ✓",
+    submitRequest:"Submit Request", requestSent:"Request Sent!",
     size:"Size", colour:"Colour", description:"Description", reviewsLabel:"reviews",
     loading:"Loading…", language:"Language",
     noProducts:"No products yet",
@@ -127,8 +156,8 @@ const TR = {
     lookbookTitle:"Lookbook", lookbookSeason:"SS26 Collection",
     /* ── Hero slide copy ── */
     heroNewLabel:"SS26 Collection", heroNewTitle:"Refined pieces\nfor modern living.", heroNewSub:"New arrivals — just dropped", heroNewCta:"Explore New In →",
-    heroHotLabel:"Trending Now 🔥", heroHotTitle:"Everyone's\ntalking about it.", heroHotSub:"Most loved styles right now", heroHotCta:"Shop Trending →",
-    heroSaleLabel:"Limited Time Sale 🏷️", heroSaleTitle:"Up to 40% Off\nSelect Styles.", heroSaleSub:"Shop before it ends", heroSaleCta:"Shop Sale →",
+    heroHotLabel:"Trending Now", heroHotTitle:"Everyone's\ntalking about it.", heroHotSub:"Most loved styles right now", heroHotCta:"Shop Trending →",
+    heroSaleLabel:"Limited Time Sale", heroSaleTitle:"Up to 40% Off\nSelect Styles.", heroSaleSub:"Shop before it ends", heroSaleCta:"Shop Sale →",
     /* ── Add to bag image picker ── */
     pickExactImage:"Pick the exact item", pickExactImageSub:"Select which photo matches what you want to order",
     pickRequired:"Please select the exact item picture first.",
@@ -140,15 +169,15 @@ const TR = {
   sw: {
     home:"Nyumbani", shop:"Duka", search:"Tafuta", saved:"Zilizohifadhiwa", account:"Akaunti",
     wishlist:"Orodha ya Matakwa", myBag:"Mfuko Wangu", checkout:"Malipo →",
-    addToBag:"Ongeza Kwenye Mfuko", addedToBag:"Imeongezwa ✓",
+    addToBag:"Ongeza Kwenye Mfuko", addedToBag:"Imeongezwa",
     freeDelivery:"Usafirishaji Bure", freeReturns:"Kurudisha Bure",
-    newIn:"Mpya ✦", trendingNow:"Inayoongoza Sasa 🔥", onSale:"Punguzo",
+    newIn:"Mpya", trendingNow:"Inayoongoza Sasa", onSale:"Punguzo",
     viewAll:"Angalia Zote", seeAll:"Angalia Zote", browse:"Tazama",
     priceOnRequest:"Wanachama tu", addToBagReveal:"Ongeza Mfukoni", requestReveal:"Ombi la Kununua",
     signInToContinue:"Ingia kuendelea",
     cartCheckoutTitle:"Tuma Ombi la Agizo", cartCheckoutSub:"Tutawasiliana nawe kuthibitisha agizo lako.",
     cartPhoneLabel:"Nambari Yako ya Simu", cartNotePlaceholder:"Kuna kitu chochote tunachopaswa kujua kuhusu agizo lako…",
-    cartSubmit:"Tuma Ombi", cartSent:"Ombi la Agizo Limetumwa! ✓", cartSentBody:"Tutawasiliana nawe hivi karibuni kuthibitisha.",
+    cartSubmit:"Tuma Ombi", cartSent:"Ombi la Agizo Limetumwa!", cartSentBody:"Tutawasiliana nawe hivi karibuni kuthibitisha.",
     limitedTime:"Wakati Mdogo", upTo40:"Hadi 40% punguzo", whileStocks:"Mitindo iliyochaguliwa. Hadi stoki itakapokwisha.", shopSale:"Nunua Punguzo →",
     shopOpeningSoon:"Duka linafunguliwa hivi karibuni", curatingCollection:"Mkusanyiko wetu unatengenezwa. Rudi hivi karibuni.",
     shopEmpty:"Duka ni tupu", shopEmptyBody:"Bidhaa zitaonekana hapa zikishaongezwa.",
@@ -171,7 +200,7 @@ const TR = {
     requestToBuy:"Ombi la Kununua", yourName:"Jina Lako",
     yourEmail:"Barua Pepe Yako", yourPhone:"Simu (si lazima)",
     deliveryAddress:"Anwani ya Usafirishaji", noteToSeller:"Kumbuka (si lazima)",
-    submitRequest:"Wasilisha Ombi", requestSent:"Ombi Limetumwa! ✓",
+    submitRequest:"Wasilisha Ombi", requestSent:"Ombi Limetumwa!",
     size:"Ukubwa", colour:"Rangi", description:"Maelezo", reviewsLabel:"maoni",
     loading:"Inapakia…", language:"Lugha",
     noProducts:"Hakuna bidhaa bado",
@@ -202,8 +231,8 @@ const TR = {
     lookbookTitle:"Albamu", lookbookSeason:"Mkusanyiko wa SS26",
     /* ── Hero slide copy ── */
     heroNewLabel:"Mkusanyiko SS26", heroNewTitle:"Vipande bora\nkwa maisha ya kisasa.", heroNewSub:"Waliofika wapya — wamepatikana", heroNewCta:"Angalia Mpya →",
-    heroHotLabel:"Inayoongoza Sasa 🔥", heroHotTitle:"Kila mtu\nanapenda hivi.", heroHotSub:"Mitindo inayopendwa zaidi sasa hivi", heroHotCta:"Nunua Inayoongoza →",
-    heroSaleLabel:"Punguzo la Muda Mfupi 🏷️", heroSaleTitle:"Hadi 40% Punguzo\nMitindo Iliyochaguliwa.", heroSaleSub:"Nunua kabla haijamalizika", heroSaleCta:"Nunua Punguzo →",
+    heroHotLabel:"Inayoongoza Sasa", heroHotTitle:"Kila mtu\nanapenda hivi.", heroHotSub:"Mitindo inayopendwa zaidi sasa hivi", heroHotCta:"Nunua Inayoongoza →",
+    heroSaleLabel:"Punguzo la Muda Mfupi", heroSaleTitle:"Hadi 40% Punguzo\nMitindo Iliyochaguliwa.", heroSaleSub:"Nunua kabla haijamalizika", heroSaleCta:"Nunua Punguzo →",
     /* ── Add to bag image picker ── */
     pickExactImage:"Chagua kipande halisi", pickExactImageSub:"Chagua picha inayolingana na unachotaka kuagiza",
     pickRequired:"Tafadhali chagua picha halisi ya bidhaa kwanza.",
@@ -215,15 +244,15 @@ const TR = {
   fr: {
     home:"Accueil", shop:"Boutique", search:"Rechercher", saved:"Sauvegardés", account:"Compte",
     wishlist:"Liste de souhaits", myBag:"Mon sac", checkout:"Commander →",
-    addToBag:"Ajouter au sac", addedToBag:"Ajouté ✓",
+    addToBag:"Ajouter au sac", addedToBag:"Ajouté",
     freeDelivery:"Livraison gratuite", freeReturns:"Retours gratuits",
-    newIn:"Nouveautés ✦", trendingNow:"Tendances 🔥", onSale:"En solde",
+    newIn:"Nouveautés", trendingNow:"Tendances", onSale:"En solde",
     viewAll:"Voir tout", seeAll:"Voir tout", browse:"Parcourir",
     priceOnRequest:"Membres uniquement", addToBagReveal:"Ajouter au sac", requestReveal:"Demande d'achat",
     signInToContinue:"Connectez-vous pour continuer",
     cartCheckoutTitle:"Envoyer la demande", cartCheckoutSub:"Nous vous contacterons pour confirmer votre commande.",
     cartPhoneLabel:"Votre numéro de téléphone", cartNotePlaceholder:"Quelque chose que nous devrions savoir sur votre commande…",
-    cartSubmit:"Envoyer", cartSent:"Demande envoyée! ✓", cartSentBody:"Nous vous contacterons prochainement pour confirmer.",
+    cartSubmit:"Envoyer", cartSent:"Demande envoyée!", cartSentBody:"Nous vous contacterons prochainement pour confirmer.",
     limitedTime:"Durée limitée", upTo40:"Jusqu'à -40%", whileStocks:"Styles sélectionnés. Jusqu'à épuisement des stocks.", shopSale:"Voir les soldes →",
     shopOpeningSoon:"Ouverture prochaine", curatingCollection:"Notre collection est en cours de sélection. Revenez bientôt.",
     shopEmpty:"La boutique est vide", shopEmptyBody:"Les produits apparaîtront ici une fois ajoutés.",
@@ -246,7 +275,7 @@ const TR = {
     requestToBuy:"Demande d'achat", yourName:"Votre nom",
     yourEmail:"Votre e-mail", yourPhone:"Téléphone (optionnel)",
     deliveryAddress:"Adresse de livraison", noteToSeller:"Note (optionnel)",
-    submitRequest:"Soumettre", requestSent:"Demande envoyée! ✓",
+    submitRequest:"Soumettre", requestSent:"Demande envoyée!",
     size:"Taille", colour:"Couleur", description:"Description", reviewsLabel:"avis",
     loading:"Chargement…", language:"Langue",
     noProducts:"Pas encore de produits",
@@ -277,8 +306,8 @@ const TR = {
     lookbookTitle:"Lookbook", lookbookSeason:"Collection SS26",
     /* ── Hero slide copy ── */
     heroNewLabel:"Collection SS26", heroNewTitle:"Des pièces raffinées\npour la vie moderne.", heroNewSub:"Nouvelles arrivées — vient de tomber", heroNewCta:"Découvrir les nouveautés →",
-    heroHotLabel:"Tendances du moment 🔥", heroHotTitle:"Tout le monde\nen parle.", heroHotSub:"Les styles les plus aimés en ce moment", heroHotCta:"Voir les tendances →",
-    heroSaleLabel:"Offre limitée 🏷️", heroSaleTitle:"Jusqu'à -40%\nStyles sélectionnés.", heroSaleSub:"Profitez avant la fin", heroSaleCta:"Voir les soldes →",
+    heroHotLabel:"Tendances du moment", heroHotTitle:"Tout le monde\nen parle.", heroHotSub:"Les styles les plus aimés en ce moment", heroHotCta:"Voir les tendances →",
+    heroSaleLabel:"Offre limitée", heroSaleTitle:"Jusqu'à -40%\nStyles sélectionnés.", heroSaleSub:"Profitez avant la fin", heroSaleCta:"Voir les soldes →",
     /* ── Add to bag image picker ── */
     pickExactImage:"Choisissez l'article exact", pickExactImageSub:"Sélectionnez la photo correspondant à ce que vous souhaitez commander",
     pickRequired:"Veuillez d'abord sélectionner la photo exacte de l'article.",
@@ -290,9 +319,9 @@ const TR = {
 };
 
 const LANGS = [
-  { code:"en", label:"English",   flag:"🇬🇧" },
-  { code:"sw", label:"Kiswahili", flag:"🇰🇪" },
-  { code:"fr", label:"Français",  flag:"🇫🇷" },
+  { code:"en", label:"English" },
+  { code:"sw", label:"Kiswahili" },
+  { code:"fr", label:"Français" },
 ];
 
 const LangCtx = createContext({ lang:"en", setLang:()=>{}, t:TR.en });
@@ -548,6 +577,7 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, ch
         </>
       )}
       {badge && <span style={{ position:"absolute",top:8,left:8,background:badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:99 }}>{badge}</span>}
+      {p?.in_stock === false && <div style={{ position:"absolute",inset:0,background:"rgba(255,255,255,0.55)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"inherit" }}><span style={{ fontSize:11,fontWeight:700,color:"#fff",background:"rgba(0,0,0,0.6)",padding:"4px 10px",borderRadius:99 }}>SOLD OUT</span></div>}
       {children}
     </div>
   );
@@ -596,6 +626,147 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   );
   return null;
 });
+
+
+
+/* ─── Reviews Section ────────────────────────────────────────── */
+function ReviewsSection({ product, user, sessionId }) {
+  const [reviews,   setReviews]  = useState([]);
+  const [showForm,  setShowForm] = useState(false);
+  const [rating,    setRating]   = useState(5);
+  const [body,      setBody]     = useState("");
+  const [name,      setName]     = useState(user?.user_metadata?.full_name || "");
+  const [submitting,setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [hov,       setHov]      = useState(0);
+
+  useEffect(() => {
+    sb.from('product_reviews')
+      .select('id,rating,body,reviewer_name,created_at')
+      .eq('product_id', product.id)
+      .eq('approved', true)
+      .order('created_at', { ascending:false })
+      .limit(20)
+      .then(({ data }) => { if (data) setReviews(data); });
+  }, [product.id]);
+
+  const submit = async () => {
+    if (!body.trim() || !name.trim()) return;
+    setSubmitting(true);
+    const { error } = await sb.from('product_reviews').insert({
+      product_id: product.id,
+      session_id: sessionId || null,
+      user_id: user?.id || null,
+      rating, body: body.trim(),
+      reviewer_name: name.trim(),
+      approved: false, // pending admin approval
+    });
+    setSubmitting(false);
+    if (!error) { setSubmitted(true); setShowForm(false); }
+  };
+
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  const avgRating = reviews.length ? (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1) : null;
+
+  return (
+    <div style={{ marginTop:32, paddingTop:24, borderTop:`1px solid ${T.gray8}` }}>
+      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20 }}>
+        <div>
+          <p style={{ fontSize:18,fontWeight:700,letterSpacing:"-0.4px",margin:"0 0 2px" }}>Reviews</p>
+          {avgRating && <div style={{ display:"flex",alignItems:"center",gap:6 }}><RatingStars rating={Number(avgRating)}/><span style={{ fontSize:13,color:T.gray3 }}>{avgRating} ({reviews.length})</span></div>}
+        </div>
+        {!showForm && !submitted && (
+          <button onClick={()=>setShowForm(true)} style={{ fontSize:13,fontWeight:600,color:T.blue,background:"none",border:`1px solid ${T.blue}`,borderRadius:99,padding:"7px 16px",cursor:"pointer" }}>Write a review</button>
+        )}
+      </div>
+
+      {submitted && (
+        <div style={{ background:"#e8faf0",borderRadius:14,padding:"12px 16px",marginBottom:20,display:"flex",gap:10,alignItems:"center" }}>
+          <Icon name="check" size={16} color={T.green}/>
+          <p style={{ fontSize:14,color:T.green,fontWeight:600,margin:0 }}>Review submitted — pending approval. Thank you!</p>
+        </div>
+      )}
+
+      {showForm && (
+        <div style={{ background:T.fill4,borderRadius:18,padding:"18px",marginBottom:20 }}>
+          <p style={{ fontSize:15,fontWeight:700,margin:"0 0 14px" }}>Your Review</p>
+          <div style={{ display:"flex",gap:4,marginBottom:14 }}>
+            {[1,2,3,4,5].map(i=>(
+              <button key={i} onClick={()=>setRating(i)} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(0)}
+                style={{ background:"none",border:"none",cursor:"pointer",padding:"0 2px" }}>
+                <Icon name="star" size={28} color={i<=(hov||rating)?"#FF9500":T.gray7}/>
+              </button>
+            ))}
+          </div>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" maxLength={60}
+            style={{ width:"100%",padding:"11px 14px",fontSize:14,background:T.white,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",marginBottom:10,boxSizing:"border-box",fontFamily:"-apple-system,sans-serif" }}/>
+          <textarea value={body} onChange={e=>setBody(e.target.value)} placeholder="Share your thoughts about this product…" maxLength={600} rows={3}
+            style={{ width:"100%",padding:"11px 14px",fontSize:14,background:T.white,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",resize:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"-apple-system,sans-serif" }}/>
+          <div style={{ display:"flex",gap:10 }}>
+            <Btn full onClick={submit} disabled={submitting||!body.trim()||!name.trim()} style={{ borderRadius:12,padding:"12px" }}>{submitting?<Spin size={16}/>:"Submit"}</Btn>
+            <Btn full variant="gray" onClick={()=>setShowForm(false)} style={{ borderRadius:12,padding:"12px" }}>Cancel</Btn>
+          </div>
+        </div>
+      )}
+
+      {reviews.length === 0 && !showForm && !submitted && (
+        <p style={{ fontSize:14,color:T.gray4,textAlign:"center",padding:"20px 0" }}>No reviews yet. Be the first!</p>
+      )}
+
+      <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
+        {reviews.map(r => (
+          <div key={r.id} style={{ paddingBottom:16,borderBottom:`1px solid ${T.gray8}` }}>
+            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                <div style={{ width:30,height:30,borderRadius:15,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center" }}>
+                  <Icon name="person" size={14} color={T.gray4}/>
+                </div>
+                <p style={{ fontSize:14,fontWeight:600,margin:0 }}>{r.reviewer_name}</p>
+              </div>
+              <p style={{ fontSize:11,color:T.gray5,margin:0 }}>{fmtDate(r.created_at)}</p>
+            </div>
+            <RatingStars rating={r.rating} size={11}/>
+            <p style={{ fontSize:14,color:T.gray3,lineHeight:1.65,margin:"6px 0 0" }}>{r.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Related Products ───────────────────────────────────────── */
+function RelatedProducts({ currentProduct, products, onSelect, wishlist, onWishlist, user, onLoginPrompt }) {
+  const related = useMemo(() => {
+    return products
+      .filter(p => p.id !== currentProduct.id && (
+        p.category === currentProduct.category ||
+        p.badge === currentProduct.badge
+      ))
+      .slice(0, 6);
+  }, [currentProduct, products]);
+
+  if (related.length === 0) return null;
+
+  return (
+    <div style={{ marginTop:32 }}>
+      <p style={{ fontSize:18,fontWeight:700,letterSpacing:"-0.4px",marginBottom:16 }}>You may also like</p>
+      <div style={{ display:"flex",gap:12,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4,WebkitOverflowScrolling:"touch" }}>
+        {related.map(p => (
+          <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ flexShrink:0,width:148,cursor:"pointer" }}>
+            <div style={{ width:148,height:185,borderRadius:18,overflow:"hidden",background:"#f2f2f7",marginBottom:8,position:"relative" }}>
+              {p.image_url
+                ? <img src={p.image_url} alt={p.name} loading="lazy" decoding="async" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+                : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="bag" size={24} color={T.gray6}/></div>}
+              {p.badge && <span style={{ position:"absolute",top:8,left:8,background:p.badge==="Sale"?T.red:T.black,color:"#fff",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:99 }}>{p.badge}</span>}
+            </div>
+            <p style={{ fontSize:13,fontWeight:600,margin:"0 0 4px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
+            <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ─── Purchase Request Modal ───────────────────────────────── */
 function PurchaseModal({ product, onClose, sessionId }) {
@@ -691,7 +862,7 @@ function PurchaseModal({ product, onClose, sessionId }) {
                     <img src={src} alt={`Option ${i+1}`} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
                     {selectedImg===src && (
                       <div style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.18)",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                        <span style={{ fontSize:20 }}>✓</span>
+                        <Icon name="check" size={18} color="#fff"/>
                       </div>
                     )}
                   </button>
@@ -741,18 +912,11 @@ function PurchaseModal({ product, onClose, sessionId }) {
 }
 
 /* ─── Cart Drawer ────────────────────────────────────────────── */
-function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
+function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSettings }) {
   const { t } = useLang();
   const subtotal = cart.reduce((s,i) => s + Number(i.price) * Number(i.qty), 0);
 
-  // Delivery config loaded from store_settings — defaults while loading
-  const [deliveryCfg, setDeliveryCfg] = useState({ delivery_enabled:true, delivery_cost:30000, free_delivery_threshold:500000 });
-  useEffect(()=>{
-    sb.from('store_settings').select('delivery_enabled,delivery_cost,free_delivery_threshold').eq('id',1).maybeSingle()
-      .then(({ data })=>{ if(data) setDeliveryCfg({ delivery_enabled: data.delivery_enabled ?? true, delivery_cost: Number(data.delivery_cost ?? 30000), free_delivery_threshold: Number(data.free_delivery_threshold ?? 500000) }); });
-  },[]);
-
-  const { delivery_enabled, delivery_cost, free_delivery_threshold } = deliveryCfg;
+  const { delivery_enabled, delivery_cost, free_delivery_threshold } = storeSettings || { delivery_enabled:true, delivery_cost:30000, free_delivery_threshold:500000 };
   const freeByThreshold = subtotal >= free_delivery_threshold;
 
   const [step,       setStep]      = useState("bag");
@@ -780,13 +944,17 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
     if (!user && !finalName) { setErr("Please enter your name."); return; }
     setLoad(true); setErr("");
     try {
+      // Group items under a shared order reference
+      const orderRef = `ORD-${Date.now().toString(36).toUpperCase()}`;
       for (const item of cart) {
         const payload = {
           product_id: item.id, product_name: item.name, product_price: Number(item.price),
           selected_size: item.sz || null, quantity: Number(item.qty),
+          selected_image_url: item.selectedImg || item.image_url || null,
           buyer_name:  finalName  || "Guest",
           buyer_email: finalEmail || null,
           buyer_phone: phone.trim(), note: note.trim() || null, status: "pending",
+          order_ref: orderRef,
         };
         let { error } = await sb.from("purchase_requests").insert({ ...payload, session_id: sessionId || null });
         if (error?.code === "42703") ({ error } = await sb.from("purchase_requests").insert(payload));
@@ -810,7 +978,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
             ? <button onClick={()=>setStep("bag")} style={{ display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",color:T.blue,padding:0,fontSize:14,fontWeight:500 }}>
                 <Icon name="back" size={17} color={T.blue}/> {t.myBag}
               </button>
-            : <span style={{ fontSize:21,fontWeight:700,letterSpacing:"-0.5px" }}>{step==="sent" ? "✓" : t.myBag}</span>
+            : <span style={{ fontSize:21,fontWeight:700,letterSpacing:"-0.5px" }}>{t.myBag}</span>
           }
           <IconBtn icon="close" onClick={onClose} size={34}/>
         </div>
@@ -863,7 +1031,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
             {!user && (<>
               <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
                 <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>Your Name *</label>
-                <input type="text" value={guestName} onChange={e=>setGuestName(e.target.value)} placeholder="Full name"
+                <input type="text" value={guestName} onChange={e=>setGuestName(e.target.value.slice(0,80))} placeholder="Full name" maxLength={80}
                   style={{ padding:"13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${err&&!guestName.trim()?T.red:T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
               </div>
               <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
@@ -876,7 +1044,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
             {/* Phone */}
             <div style={{ display:"flex",flexDirection:"column",gap:6,marginBottom:14 }}>
               <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>{t.cartPhoneLabel}</label>
-              <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+255 700 000 000"
+              <input type="tel" value={phone} onChange={e=>setPhone(e.target.value.slice(0,20))} placeholder="+255 700 000 000" maxLength={20}
                 style={{ padding:"13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${err&&!phone.trim()?T.red:T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
             </div>
 
@@ -975,7 +1143,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user }) {
 }
 
 /* ─── Product Detail ────────────────────────────────────────── */
-function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt }) {
+function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt, products=[] }) {
   const { t } = useLang();
   const [sz, setSz]           = useState(null);
   const [done, setDone]       = useState(false);
@@ -1010,7 +1178,9 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
     setSelectedImg(images[i]);
   };
 
+  const inStock = p.in_stock !== false; // default true if field absent
   const add = () => {
+    if (!inStock) return;
     if (!sz && p.sizes?.length > 0) return;
     if (multiImg && !selectedImg) { setImgErr(true); return; }
     onAdd({ ...p, sz: sz || null, selectedImg: selectedImg || null });
@@ -1181,9 +1351,15 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
         </div>
       )}
 
+      {!inStock && (
+        <div style={{ background:"#fff0f0",borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:10 }}>
+          <Icon name="close" size={14} color={T.red}/>
+          <p style={{ fontSize:14,fontWeight:600,color:T.red,margin:0 }}>Sold Out — Join the waitlist below</p>
+        </div>
+      )}
       <div style={{ display:"flex",gap:12,marginBottom:24 }}>
-        <Btn full onClick={handleAddToBag} disabled={showPrice && p.sizes?.length>0&&!sz} style={{ borderRadius:16,padding:"17px",fontSize:16 }}>
-          {done ? t.addedToBag : t.addToBagReveal}
+        <Btn full onClick={inStock ? handleAddToBag : undefined} disabled={!inStock || (showPrice && p.sizes?.length>0&&!sz)} style={{ borderRadius:16,padding:"17px",fontSize:16,background:inStock?undefined:"#ccc" }}>
+          {!inStock ? "Sold Out" : done ? t.addedToBag : t.addToBagReveal}
         </Btn>
         <Btn variant="gray" onClick={handleRequest} style={{ borderRadius:16,padding:"17px",whiteSpace:"nowrap" }}>
           {t.requestReveal}
@@ -1191,6 +1367,10 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
       </div>
 
       {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>}
+
+      <ReviewsSection product={p} user={user} sessionId={sessionId}/>
+
+      <RelatedProducts currentProduct={p} products={products} onSelect={onBack} wishlist={[]} onWishlist={onWishlist} user={user} onLoginPrompt={onLoginPrompt}/>
 
       {/* ── Lightbox / Zoom ── */}
       {lightbox !== null && (
@@ -1432,6 +1612,9 @@ function HeroSlider({ onNavigate, products }) {
                 <>
                   <img
                     src={sl.heroImg} alt=""
+                    loading={slides.indexOf(sl) === 0 ? "eager" : "lazy"}
+                    decoding={slides.indexOf(sl) === 0 ? "sync" : "async"}
+                    fetchpriority={slides.indexOf(sl) === 0 ? "high" : "low"}
                     style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
                   />
                   {/* Multi-layer gradient for text legibility */}
@@ -1593,7 +1776,16 @@ function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPro
 function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
   const { t } = useLang();
   const [q, setQ] = useState("");
-  const res = useMemo(() => q.trim().length<2 ? [] : products.filter(p=>p.name?.toLowerCase().includes(q.toLowerCase())||p.category?.toLowerCase().includes(q.toLowerCase())), [q,products]);
+  const res = useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    if (ql.length < 2) return [];
+    return products.filter(p =>
+      p.name?.toLowerCase().includes(ql) ||
+      p.category?.toLowerCase().includes(ql) ||
+      p.description?.toLowerCase().includes(ql) ||
+      p.badge?.toLowerCase().includes(ql)
+    );
+  }, [q, products]);
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
       <div style={{ position:"relative",marginBottom:22 }}>
@@ -1866,22 +2058,42 @@ function EditProfileScreen({ user, onBack, t }) {
 }
 
 /* ─── Addresses Screen ──────────────────────────────────────── */
-function AddressesScreen({ t }) {
+function AddressesScreen({ t, user }) {
   const [addresses, setAddresses] = useState([]);
-  const [adding, setAdding]       = useState(false);
-  const [form, setForm]           = useState({ street:"", city:"", country:"", postcode:"" });
+  const [adding,    setAdding]    = useState(false);
+  const [saving,    setSaving]    = useState(false);
+  const [form, setForm]           = useState({ label:"Home", street:"", city:"", country:"Tanzania", postcode:"" });
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
-  const addAddress = () => {
+  // Load from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+    sb.from('user_addresses').select('*').eq('user_id', user.id).order('created_at')
+      .then(({ data }) => { if (data) setAddresses(data); });
+  }, [user?.id]);
+
+  const saveAddress = async () => {
     if (!form.street || !form.city) return;
-    setAddresses(a=>[...a, { ...form, id: Date.now() }]);
-    setForm({ street:"", city:"", country:"", postcode:"" });
+    setSaving(true);
+    const payload = { ...form, user_id: user.id };
+    const { data, error } = await sb.from('user_addresses').insert(payload).select().single();
+    if (!error && data) setAddresses(a => [...a, data]);
+    setForm({ label:"Home", street:"", city:"", country:"Tanzania", postcode:"" });
     setAdding(false);
+    setSaving(false);
   };
 
-  const inp = (label, key, placeholder) => (
-    <input value={form[key]} onChange={e=>set(key,e.target.value)} placeholder={`${label}…`}
-      style={{ width:"100%",padding:"12px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",boxSizing:"border-box",fontFamily:"-apple-system,sans-serif",marginBottom:10 }}/>
+  const deleteAddress = async (id) => {
+    await sb.from('user_addresses').delete().eq('id', id).eq('user_id', user.id);
+    setAddresses(a => a.filter(x => x.id !== id));
+  };
+
+  const inp = (label, key, placeholder, type="text") => (
+    <div style={{ marginBottom:10 }}>
+      <p style={{ fontSize:11,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",margin:"0 0 5px" }}>{label}</p>
+      <input value={form[key]} onChange={e=>set(key,e.target.value)} placeholder={placeholder}
+        style={{ width:"100%",padding:"12px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",boxSizing:"border-box",fontFamily:"-apple-system,sans-serif" }}/>
+    </div>
   );
 
   return (
@@ -1889,13 +2101,14 @@ function AddressesScreen({ t }) {
       {addresses.length === 0 && !adding && (
         <EmptyState icon="location" title="No addresses saved" body="Add a delivery address to speed up checkout." action={<Btn onClick={()=>setAdding(true)} size="sm">{t.addAddress}</Btn>}/>
       )}
-      {addresses.map((a,i) => (
+      {addresses.map((a) => (
         <div key={a.id} style={{ background:T.fill4,borderRadius:16,padding:"16px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
           <div>
+            <p style={{ fontSize:11,fontWeight:700,color:T.blue,textTransform:"uppercase",letterSpacing:"0.06em",margin:"0 0 3px" }}>{a.label}</p>
             <p style={{ fontSize:15,fontWeight:600,margin:"0 0 3px" }}>{a.street}</p>
             <p style={{ fontSize:13,color:T.gray4,margin:0 }}>{a.city}{a.postcode ? `, ${a.postcode}` : ""}{a.country ? ` · ${a.country}` : ""}</p>
           </div>
-          <button onClick={()=>setAddresses(arr=>arr.filter(x=>x.id!==a.id))} style={{ background:"none",border:"none",cursor:"pointer",padding:4 }}>
+          <button onClick={()=>deleteAddress(a.id)} style={{ background:"none",border:"none",cursor:"pointer",padding:4 }}>
             <Icon name="close" size={16} color={T.gray5}/>
           </button>
         </div>
@@ -1903,12 +2116,20 @@ function AddressesScreen({ t }) {
       {adding ? (
         <div style={{ background:T.white,borderRadius:20,padding:"18px",boxShadow:shadow.xs }}>
           <p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>{t.addAddress}</p>
-          {inp(t.street,   "street",   t.street)}
-          {inp(t.city,     "city",     t.city)}
-          {inp(t.postcode, "postcode", t.postcode)}
-          {inp(t.country,  "country",  t.country)}
+          <div style={{ marginBottom:10 }}>
+            <p style={{ fontSize:11,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",margin:"0 0 5px" }}>Label</p>
+            <div style={{ display:"flex",gap:8,marginBottom:2 }}>
+              {["Home","Work","Other"].map(l=>(
+                <button key={l} onClick={()=>set("label",l)} style={{ padding:"7px 14px",borderRadius:99,border:`1.5px solid ${form.label===l?T.black:T.gray8}`,background:form.label===l?T.black:T.white,color:form.label===l?T.white:T.black,fontSize:13,fontWeight:600,cursor:"pointer" }}>{l}</button>
+              ))}
+            </div>
+          </div>
+          {inp(t.street,   "street",   "123 Main St")}
+          {inp(t.city,     "city",     "Dar es Salaam")}
+          {inp(t.postcode, "postcode", "Optional")}
+          {inp(t.country,  "country",  "Tanzania")}
           <div style={{ display:"flex",gap:10,marginTop:4 }}>
-            <Btn full onClick={addAddress} style={{ borderRadius:12,padding:"13px" }}>Save</Btn>
+            <Btn full onClick={saveAddress} disabled={saving} style={{ borderRadius:12,padding:"13px" }}>{saving?<Spin size={16}/>:"Save"}</Btn>
             <Btn full variant="gray" onClick={()=>setAdding(false)} style={{ borderRadius:12,padding:"13px" }}>{t.cancel}</Btn>
           </div>
         </div>
@@ -1925,9 +2146,27 @@ function AddressesScreen({ t }) {
 }
 
 /* ─── Notifications Screen ──────────────────────────────────── */
-function NotificationsScreen({ t }) {
+function NotificationsScreen({ t, user }) {
   const [prefs, setPrefs] = useState({ push:true, email:true, orders:true, promos:false, newArrivals:true });
-  const toggle = k => setPrefs(p=>({...p,[k]:!p[k]}));
+  const [saving, setSaving] = useState(false);
+
+  // Load saved prefs
+  useEffect(() => {
+    if (!user?.id) return;
+    sb.from('user_notification_prefs').select('*').eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => { if (data) setPrefs({ push:data.push??true, email:data.email??true, orders:data.orders??true, promos:data.promos??false, newArrivals:data.new_arrivals??true }); });
+  }, [user?.id]);
+
+  const toggle = async k => {
+    const next = { ...prefs, [k]:!prefs[k] };
+    setPrefs(next);
+    if (!user?.id) return;
+    setSaving(true);
+    await sb.from('user_notification_prefs').upsert({
+      user_id:user.id, push:next.push, email:next.email, orders:next.orders, promos:next.promos, new_arrivals:next.newArrivals
+    }, { onConflict:'user_id' });
+    setSaving(false);
+  };
   const Toggle = ({ on, onChange }) => (
     <div onClick={onChange} style={{ width:48,height:28,borderRadius:14,background:on?"#34C759":"#E5E5EA",cursor:"pointer",position:"relative",transition:"background .18s",flexShrink:0 }}>
       <div style={{ position:"absolute",top:2,left:on?22:2,width:24,height:24,borderRadius:12,background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,.2)",transition:"left .18s" }}/>
@@ -1944,6 +2183,7 @@ function NotificationsScreen({ t }) {
   );
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
+      {saving && <p style={{ fontSize:12,color:T.gray4,textAlign:"right",marginBottom:8 }}>Saving…</p>}
       <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
         <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Channels</p>
         <Row label={t.pushNotifications}  k="push"/>
@@ -1977,7 +2217,7 @@ function SettingsScreen({ t, lang, setLang }) {
           <div style={{ display:"flex",gap:8 }}>
             {LANGS.map(l=>(
               <button key={l.code} onClick={()=>setLang(l.code)} style={{ padding:"7px 14px",borderRadius:99,border:`1.5px solid ${lang===l.code?T.black:T.gray8}`,background:lang===l.code?T.black:T.white,color:lang===l.code?T.white:T.black,fontSize:13,fontWeight:lang===l.code?700:400,cursor:"pointer",transition:"all .15s" }}>
-                {l.flag} {l.code.toUpperCase()}
+                {l.code.toUpperCase()}
               </button>
             ))}
           </div>
@@ -2043,10 +2283,10 @@ function OurStoryScreen({ t }) {
         <p key={i} style={{ fontSize:15,color:T.gray3,lineHeight:1.8,marginBottom:20 }}>{para}</p>
       ))}
       <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginTop:8,marginBottom:20 }}>
-        {[["🌍","Ethical\nSourcing"],["✂️","Expert\nCraft"],["💚","Sustainable\nFuture"]].map(([e,l])=>(
-          <div key={l} style={{ background:T.fill4,borderRadius:16,padding:"18px 12px",textAlign:"center" }}>
-            <p style={{ fontSize:28,margin:"0 0 8px" }}>{e}</p>
-            <p style={{ fontSize:12,fontWeight:600,color:T.gray3,margin:0,whiteSpace:"pre-line",lineHeight:1.4 }}>{l}</p>
+        {[["location","Ethical Sourcing"],["settings","Expert Craft"],["gift","Sustainable Future"]].map(([icon,label])=>(
+          <div key={label} style={{ background:T.fill4,borderRadius:16,padding:"18px 12px",textAlign:"center" }}>
+            <div style={{ width:40,height:40,borderRadius:12,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px" }}><Icon name={icon} size={20} color={T.blue}/></div>
+            <p style={{ fontSize:12,fontWeight:600,color:T.gray3,margin:0,lineHeight:1.4 }}>{label}</p>
           </div>
         ))}
       </div>
@@ -2057,10 +2297,10 @@ function OurStoryScreen({ t }) {
 /* ─── Returns Screen ────────────────────────────────────────── */
 function ReturnsScreen({ t }) {
   const steps = [
-    { icon:"✉️", title:"Contact Us",    body:"Email hello@msambwa.com with your order number and reason for return." },
-    { icon:"📦", title:"Pack It Up",    body:"Place items in original packaging, unworn and with tags attached." },
-    { icon:"🚚", title:"Ship It Back",  body:"We'll email you a prepaid return label within 24 hours." },
-    { icon:"💳", title:"Get Refunded",  body:"Refunds processed within 5–7 business days of receiving your return." },
+    { icon:"chat",     title:"Contact Us",    body:"Email hello@msambwa.com with your order number and reason for return." },
+    { icon:"box",      title:"Pack It Up",    body:"Place items in original packaging, unworn and with tags attached." },
+    { icon:"truck",    title:"Ship It Back",  body:"We'll email you a prepaid return label within 24 hours." },
+    { icon:"card",     title:"Get Refunded",  body:"Refunds processed within 5–7 business days of receiving your return." },
   ];
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
@@ -2074,7 +2314,7 @@ function ReturnsScreen({ t }) {
       <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>How it works</p>
       {steps.map((s,i) => (
         <div key={i} style={{ display:"flex",gap:16,marginBottom:20 }}>
-          <div style={{ width:44,height:44,borderRadius:22,background:T.fill4,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:22 }}>{s.icon}</div>
+          <div style={{ width:44,height:44,borderRadius:22,background:T.fill4,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name={s.icon} size={20} color={T.blue}/></div>
           <div style={{ flex:1 }}>
             <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px" }}>{s.title}</p>
             <p style={{ fontSize:14,color:T.gray4,margin:0,lineHeight:1.6 }}>{s.body}</p>
@@ -2092,10 +2332,10 @@ function ReturnsScreen({ t }) {
 /* ─── Sustainability Screen ─────────────────────────────────── */
 function SustainabilityScreen({ t }) {
   const pillars = [
-    { emoji:"♻️", title:"Recyclable Packaging",  body:"100% of our packaging is made from recycled or recyclable materials. We've eliminated single-use plastics entirely." },
-    { emoji:"🌱", title:"Carbon Offset",          body:"We offset 100% of our shipping emissions through verified reforestation projects in East Africa." },
-    { emoji:"🤝", title:"Ethical Manufacturing",  body:"All manufacturing partners are audited annually for fair wages, safe conditions, and environmental compliance." },
-    { emoji:"👗", title:"Designed to Last",        body:"We design pieces with longevity in mind — the most sustainable garment is one you wear for years, not seasons." },
+    { icon:"gift",     title:"Recyclable Packaging",  body:"100% of our packaging is made from recycled or recyclable materials. We've eliminated single-use plastics entirely." },
+    { icon:"truck",    title:"Carbon Offset",          body:"We offset 100% of our shipping emissions through verified reforestation projects in East Africa." },
+    { icon:"person",   title:"Ethical Manufacturing",  body:"All manufacturing partners are audited annually for fair wages, safe conditions, and environmental compliance." },
+    { icon:"bag",      title:"Designed to Last",        body:"We design pieces with longevity in mind — the most sustainable garment is one you wear for years, not seasons." },
   ];
   return (
     <div style={{ animation:"fadeIn .25s ease" }}>
@@ -2106,7 +2346,7 @@ function SustainabilityScreen({ t }) {
       </div>
       {pillars.map((p,i) => (
         <div key={i} style={{ background:T.fill4,borderRadius:18,padding:"18px",marginBottom:12,display:"flex",gap:14 }}>
-          <div style={{ width:48,height:48,borderRadius:14,background:"rgba(52,199,89,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:24 }}>{p.emoji}</div>
+          <div style={{ width:48,height:48,borderRadius:14,background:"rgba(52,199,89,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name={p.icon} size={22} color="#34C759"/></div>
           <div style={{ flex:1 }}>
             <p style={{ fontSize:15,fontWeight:700,margin:"0 0 5px" }}>{p.title}</p>
             <p style={{ fontSize:13,color:T.gray3,margin:0,lineHeight:1.65 }}>{p.body}</p>
@@ -2166,11 +2406,11 @@ function LookbookScreen({ products, onSelect, t }) {
 
 /* ─── My Orders Screen ──────────────────────────────────────── */
 const ORDER_STATUS = {
-  pending:   { color:"#FF9500", label:"Pending",   icon:"⏳", canCancel:true  },
-  confirmed: { color:"#007AFF", label:"Confirmed", icon:"✅", canCancel:true  },
-  shipped:   { color:"#30B0C7", label:"Shipped",   icon:"🚚", canCancel:false },
-  delivered: { color:"#34C759", label:"Delivered", icon:"📦", canCancel:false },
-  cancelled: { color:"#FF3B30", label:"Cancelled", icon:"❌", canCancel:false },
+  pending:   { color:"#FF9500", label:"Pending",   icon:"bell",     canCancel:true  },
+  confirmed: { color:"#007AFF", label:"Confirmed", icon:"check",    canCancel:true  },
+  shipped:   { color:"#30B0C7", label:"Shipped",   icon:"truck",    canCancel:false },
+  delivered: { color:"#34C759", label:"Delivered", icon:"box",      canCancel:false },
+  cancelled: { color:"#FF3B30", label:"Cancelled", icon:"close",    canCancel:false },
 };
 
 function MyOrdersScreen({ sessionId }) {
@@ -2244,7 +2484,7 @@ function MyOrdersScreen({ sessionId }) {
 
   if (orders.length === 0) return (
     <EmptyState
-      icon="📋"
+      icon="box"
       title="No orders yet"
       body="Your purchase requests will appear here after you submit them."
     />
@@ -2255,7 +2495,7 @@ function MyOrdersScreen({ sessionId }) {
       {/* Toast */}
       {toast && (
         <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:toast.type==="error"?"#FF3B30":"rgba(28,28,30,0.92)",color:"#fff",padding:"12px 20px",borderRadius:99,fontSize:14,fontWeight:500,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.2)",animation:"slideUp .2s ease" }}>
-          {toast.type==="error" ? "⚠️  " : "✓  "}{toast.msg}
+          {toast.msg}
         </div>
       )}
 
@@ -2274,11 +2514,12 @@ function MyOrdersScreen({ sessionId }) {
               <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10 }}>
                 <div style={{ flex:1,minWidth:0 }}>
                   <p style={{ fontSize:15,fontWeight:700,margin:"0 0 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{order.product_name}</p>
-                  <p style={{ fontSize:12,color:T.gray4,margin:0 }}>{fmtDate(order.created_at)}</p>
+                  <p style={{ fontSize:12,color:T.gray4,margin:0 }}>{fmtDate(order.created_at)}{order.order_ref ? <span style={{ marginLeft:8,background:T.fill3,borderRadius:6,padding:"1px 7px",fontSize:11,color:T.gray4 }}>{order.order_ref}</span> : null}</p>
                 </div>
-                <span style={{ fontSize:12,fontWeight:600,padding:"4px 10px",borderRadius:99,background:`${st.color}18`,color:st.color,marginLeft:10,flexShrink:0 }}>
-                  {st.icon} {st.label}
-                </span>
+                <div style={{ display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:99,background:`${st.color}18`,marginLeft:10,flexShrink:0 }}>
+                  <Icon name={st.icon} size={12} color={st.color}/>
+                  <span style={{ fontSize:12,fontWeight:600,color:st.color }}>{st.label}</span>
+                </div>
               </div>
 
               <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
@@ -2329,7 +2570,7 @@ function MyOrdersScreen({ sessionId }) {
               {/* Status banner */}
               {(() => { const st = ORDER_STATUS[sel.status] || ORDER_STATUS.pending; return (
                 <div style={{ background:`${st.color}12`,borderRadius:14,padding:"14px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:12 }}>
-                  <span style={{ fontSize:28 }}>{st.icon}</span>
+                  <div style={{ width:40,height:40,borderRadius:12,background:`${st.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}><Icon name={st.icon} size={20} color={st.color}/></div>
                   <div>
                     <p style={{ fontSize:16,fontWeight:700,color:st.color,margin:"0 0 2px" }}>{st.label}</p>
                     <p style={{ fontSize:13,color:T.gray4,margin:0 }}>
@@ -2499,7 +2740,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
                   {LANGS.map(l=>(
                     <button key={l.code} onClick={()=>{ setLang(l.code); setShowLang(false); }}
                       style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 16px",background:lang===l.code?T.fill3:T.white,border:"none",cursor:"pointer",fontSize:14,fontWeight:lang===l.code?700:400,color:T.black,textAlign:"left" }}>
-                      <span style={{ fontSize:18 }}>{l.flag}</span>
+                      
                       <span>{l.label}</span>
                       {lang===l.code&&<span style={{ marginLeft:"auto",fontSize:12,color:T.blue }}>✓</span>}
                     </button>
@@ -2592,12 +2833,12 @@ function HelpFeedback({ onClose }) {
             <div style={{ display:"flex",gap:6,marginBottom:20 }}>
               {[1,2,3,4,5].map(i => (
                 <button key={i} onClick={()=>setRating(i)} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(0)}
-                  style={{ background:"none",border:"none",cursor:"pointer",padding:0,fontSize:32,lineHeight:1,transition:"transform .12s",transform:i<=(hovered||rating)?"scale(1.15)":"scale(1)" }}>
-                  {i <= (hovered||rating) ? "⭐" : "☆"}
+                  style={{ background:"none",border:"none",cursor:"pointer",padding:0,transition:"transform .12s",transform:i<=(hovered||rating)?"scale(1.15)":"scale(1)" }}>
+                  <Icon name="star" size={32} color={i<=(hovered||rating)?"#FF9500":T.gray7}/>
                 </button>
               ))}
               {rating > 0 && <span style={{ fontSize:13,color:T.gray4,marginLeft:6,alignSelf:"center" }}>
-                {["","😞 Poor","😐 Fair","🙂 Good","😊 Great","🤩 Excellent"][rating]}
+                {["","Poor","Fair","Good","Great","Excellent"][rating]}
               </span>}
             </div>
 
@@ -2658,7 +2899,7 @@ function SaleModal({ onClose, onShop }) {
 }
 
 /* ─── Root App ──────────────────────────────────────────────── */
-export default function Page() {
+function PageInner() {
   const [lang, setLang]         = useState(() => typeof localStorage !== "undefined" ? localStorage.getItem("msambwa_lang")||"en" : "en");
   const t                        = TR[lang] || TR.en;
 
@@ -2731,10 +2972,16 @@ export default function Page() {
         }
       } catch(_) { /* ignore */ }
 
-      // Fallback: restore cart from localStorage
+      // Fallback: restore cart from localStorage (skip if older than 30 days)
       try {
         const saved = localStorage.getItem(`cart_${sid}`);
-        if (saved) setCart(JSON.parse(saved));
+        const ts    = localStorage.getItem(`cart_${sid}_ts`);
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        if (saved && ts && Date.now() - Number(ts) < THIRTY_DAYS) setCart(JSON.parse(saved));
+        else if (ts && Date.now() - Number(ts) >= THIRTY_DAYS) {
+          localStorage.removeItem(`cart_${sid}`);
+          localStorage.removeItem(`cart_${sid}_ts`);
+        }
       } catch(_) {}
     }).catch(() => {
       // Even session creation failed — generate a temporary id so the app works
@@ -2746,7 +2993,10 @@ export default function Page() {
   /* ── Persist cart to localStorage + Supabase whenever it changes ── */
   useEffect(() => {
     if (!sessionId) return;
-    try { localStorage.setItem(`cart_${sessionId}`, JSON.stringify(cart)); } catch(_) {}
+    try {
+      localStorage.setItem(`cart_${sessionId}`, JSON.stringify(cart));
+      localStorage.setItem(`cart_${sessionId}_ts`, String(Date.now()));
+    } catch(_) {}
     // Best-effort sync to Supabase (only works if anonymous_sessions table exists)
     try {
       sb.from('anonymous_sessions')
@@ -2755,6 +3005,13 @@ export default function Page() {
         .then(() => {});
     } catch(_) {}
   }, [cart, sessionId]);
+
+  /* ── Store settings (fetched once, shared) ── */
+  const [storeSettings, setStoreSettings] = useState({ delivery_enabled:true, delivery_cost:30000, free_delivery_threshold:500000 });
+  useEffect(() => {
+    sb.from('store_settings').select('delivery_enabled,delivery_cost,free_delivery_threshold').eq('id',1).maybeSingle()
+      .then(({ data }) => { if(data) setStoreSettings({ delivery_enabled: data.delivery_enabled ?? true, delivery_cost: Number(data.delivery_cost ?? 30000), free_delivery_threshold: Number(data.free_delivery_threshold ?? 500000) }); });
+  }, []);
 
   /* ── Load wishlist from Supabase ── */
   useEffect(() => {
@@ -2766,15 +3023,18 @@ export default function Page() {
   }, [sessionId]);
 
   /* ── Load products + handle deep-link hash ── */
-  useEffect(() => {
+  const [loadError, setLoadError] = useState(false);
+  const loadProducts = () => {
+    setLoadError(false);
+    setLoading(true);
     sb.from('products')
-      .select('id,name,price,was,category,badge,image_url,image_urls,sizes,rating,reviews,description,is_active,created_at')
+      .select('id,name,price,was,category,badge,image_url,image_urls,sizes,rating,reviews,description,in_stock,is_active,created_at')
       .eq('is_active', true).order('created_at', { ascending:false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setLoadError(true); setLoading(false); return; }
         const prods = data || [];
         setProducts(prods);
         setLoading(false);
-        // Deep-link: URL ending in #product=<uuid> opens that product directly
         try {
           const m = window.location.hash.match(/^#product=([a-f0-9-]+)$/i);
           if (m) {
@@ -2786,7 +3046,8 @@ export default function Page() {
           }
         } catch(_) {}
       });
-  }, []);
+  };
+  useEffect(() => { loadProducts(); }, []);
 
   /* ── Show sale modal after 2s — max once per 2 days ── */
   useEffect(() => {
@@ -2861,9 +3122,14 @@ export default function Page() {
   };
 
   /* ── Wishlist (synced to Supabase) ── */
+  const [wishToast, setWishToast] = useState(null);
   const toggleWishlist = async id => {
     const has = wishlist.includes(id);
     setWishlist(w => has ? w.filter(x=>x!==id) : [...w,id]);
+    // Show brief toast
+    setWishToast(has ? "Removed from saved" : "Saved to wishlist");
+    clearTimeout(window.__wishToastTimer);
+    window.__wishToastTimer = setTimeout(() => setWishToast(null), 2000);
     if (!sessionId) return;
     if (has) {
       await sb.from('wishlists').delete().eq('session_id', sessionId).eq('product_id', id);
@@ -2878,6 +3144,16 @@ export default function Page() {
 
   const renderScreen = () => {
     if (loading) return <HomeSkeleton/>;
+    if (loadError) return (
+      <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"60vh",gap:16,padding:24,textAlign:"center" }}>
+        <div style={{ width:64,height:64,borderRadius:20,background:"#fff0f0",display:"flex",alignItems:"center",justifyContent:"center" }}>
+          <Icon name="info" size={28} color={T.red}/>
+        </div>
+        <p style={{ fontSize:18,fontWeight:700,margin:0 }}>Connection problem</p>
+        <p style={{ fontSize:14,color:T.gray4,margin:0,maxWidth:280,lineHeight:1.6 }}>We couldn't load the store. Please check your internet connection.</p>
+        <button onClick={loadProducts} style={{ background:T.blue,color:"#fff",border:"none",borderRadius:14,padding:"13px 28px",fontSize:15,fontWeight:600,cursor:"pointer" }}>Try Again</button>
+      </div>
+    );
     switch (current.screen) {
       case "home":         return <HomeScreen {...screenProps}/>;
       case "shop":         return <ShopScreen {...screenProps}/>;
@@ -2886,15 +3162,15 @@ export default function Page() {
       case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} onFeedback={()=>setShowFeedback(true)} t={t}/>;
       case "orders":       return <MyOrdersScreen sessionId={sessionId}/>;
       case "edit-profile": return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><EditProfileScreen user={user} onBack={goBack} t={t}/></AuthGate>;
-      case "addresses":    return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><AddressesScreen t={t}/></AuthGate>;
-      case "notifications":return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><NotificationsScreen t={t}/></AuthGate>;
+      case "addresses":    return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><AddressesScreen t={t} user={user}/></AuthGate>;
+      case "notifications":return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><NotificationsScreen t={t} user={user}/></AuthGate>;
       case "settings":     return <SettingsScreen t={t} lang={lang} setLang={setLang}/>;
       case "privacy":      return <PrivacyScreen t={t}/>;
       case "our-story":    return <OurStoryScreen t={t}/>;
       case "returns":      return <ReturnsScreen t={t}/>;
       case "sustainability":return <SustainabilityScreen t={t}/>;
       case "lookbook":     return <LookbookScreen products={products} onSelect={p=>navigate("product",{product:p})} t={t}/>;
-      case "product":      return <ProductDetail p={current.product} onBack={goBack} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId} user={user} onLoginPrompt={()=>setShowAuth(true)}/>;
+      case "product":      return <ProductDetail p={current.product} onBack={p=>navigate("product",{product:p})} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId} user={user} onLoginPrompt={()=>setShowAuth(true)} products={products}/>;
       default:             return <HomeScreen {...screenProps}/>;
     }
   };
@@ -2906,13 +3182,19 @@ export default function Page() {
         <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
-        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty} sessionId={sessionId} user={user}/>}
+        {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty} sessionId={sessionId} user={user} storeSettings={storeSettings}/>}
 
         {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={u=>{ if(u&&!u.is_anonymous) setUser(u); setShowAuth(false); }} t={t}/>}
 
         {showFeedback&&<HelpFeedback onClose={()=>setShowFeedback(false)}/>}
 
         {showSale&&!cartOpen&&<SaleModal onClose={()=>setShowSale(false)} onShop={()=>{setShowSale(false);navigate("shop");}}/>}
+
+        {wishToast && (
+          <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"rgba(28,28,30,0.92)",color:"#fff",padding:"10px 20px",borderRadius:99,fontSize:14,fontWeight:500,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.2)",animation:"slideUp .2s ease",display:"flex",alignItems:"center",gap:8 }}>
+            <Icon name="heart-fill" size={14} color={T.red}/>{wishToast}
+          </div>
+        )}
 
         {!showSale&&showCookies&&(
           <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(12,28,31,0.96)",backdropFilter:"blur(20px)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
@@ -2934,4 +3216,8 @@ export default function Page() {
       </div>
     </LangCtx.Provider>
   );
+}
+
+export default function Page() {
+  return <ErrorBoundary><PageInner/></ErrorBoundary>;
 }
