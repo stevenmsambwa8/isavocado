@@ -629,111 +629,6 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
 
 
 
-/* ─── Reviews Section ────────────────────────────────────────── */
-function ReviewsSection({ product, user, sessionId }) {
-  const [reviews,   setReviews]  = useState([]);
-  const [showForm,  setShowForm] = useState(false);
-  const [rating,    setRating]   = useState(5);
-  const [body,      setBody]     = useState("");
-  const [name,      setName]     = useState(user?.user_metadata?.full_name || "");
-  const [submitting,setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [hov,       setHov]      = useState(0);
-
-  useEffect(() => {
-    sb.from('product_reviews')
-      .select('id,rating,body,reviewer_name,created_at')
-      .eq('product_id', product.id)
-      .eq('approved', true)
-      .order('created_at', { ascending:false })
-      .limit(20)
-      .then(({ data }) => { if (data) setReviews(data); });
-  }, [product.id]);
-
-  const submit = async () => {
-    if (!body.trim() || !name.trim()) return;
-    setSubmitting(true);
-    const { error } = await sb.from('product_reviews').insert({
-      product_id: product.id,
-      session_id: sessionId || null,
-      user_id: user?.id || null,
-      rating, body: body.trim(),
-      reviewer_name: name.trim(),
-      approved: false, // pending admin approval
-    });
-    setSubmitting(false);
-    if (!error) { setSubmitted(true); setShowForm(false); }
-  };
-
-  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-  const avgRating = reviews.length ? (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1) : null;
-
-  return (
-    <div style={{ marginTop:32, paddingTop:24, borderTop:`1px solid ${T.gray8}` }}>
-      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20 }}>
-        <div>
-          <p style={{ fontSize:18,fontWeight:700,letterSpacing:"-0.4px",margin:"0 0 2px" }}>Reviews</p>
-          {avgRating && <div style={{ display:"flex",alignItems:"center",gap:6 }}><RatingStars rating={Number(avgRating)}/><span style={{ fontSize:13,color:T.gray3 }}>{avgRating} ({reviews.length})</span></div>}
-        </div>
-        {!showForm && !submitted && (
-          <button onClick={()=>setShowForm(true)} style={{ fontSize:13,fontWeight:600,color:T.blue,background:"none",border:`1px solid ${T.blue}`,borderRadius:99,padding:"7px 16px",cursor:"pointer" }}>Write a review</button>
-        )}
-      </div>
-
-      {submitted && (
-        <div style={{ background:"#e8faf0",borderRadius:14,padding:"12px 16px",marginBottom:20,display:"flex",gap:10,alignItems:"center" }}>
-          <Icon name="check" size={16} color={T.green}/>
-          <p style={{ fontSize:14,color:T.green,fontWeight:600,margin:0 }}>Review submitted — pending approval. Thank you!</p>
-        </div>
-      )}
-
-      {showForm && (
-        <div style={{ background:T.fill4,borderRadius:18,padding:"18px",marginBottom:20 }}>
-          <p style={{ fontSize:15,fontWeight:700,margin:"0 0 14px" }}>Your Review</p>
-          <div style={{ display:"flex",gap:4,marginBottom:14 }}>
-            {[1,2,3,4,5].map(i=>(
-              <button key={i} onClick={()=>setRating(i)} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(0)}
-                style={{ background:"none",border:"none",cursor:"pointer",padding:"0 2px" }}>
-                <Icon name="star" size={28} color={i<=(hov||rating)?"#FF9500":T.gray7}/>
-              </button>
-            ))}
-          </div>
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" maxLength={60}
-            style={{ width:"100%",padding:"11px 14px",fontSize:14,background:T.white,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",marginBottom:10,boxSizing:"border-box",fontFamily:"-apple-system,sans-serif" }}/>
-          <textarea value={body} onChange={e=>setBody(e.target.value)} placeholder="Share your thoughts about this product…" maxLength={600} rows={3}
-            style={{ width:"100%",padding:"11px 14px",fontSize:14,background:T.white,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",resize:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"-apple-system,sans-serif" }}/>
-          <div style={{ display:"flex",gap:10 }}>
-            <Btn full onClick={submit} disabled={submitting||!body.trim()||!name.trim()} style={{ borderRadius:12,padding:"12px" }}>{submitting?<Spin size={16}/>:"Submit"}</Btn>
-            <Btn full variant="gray" onClick={()=>setShowForm(false)} style={{ borderRadius:12,padding:"12px" }}>Cancel</Btn>
-          </div>
-        </div>
-      )}
-
-      {reviews.length === 0 && !showForm && !submitted && (
-        <p style={{ fontSize:14,color:T.gray4,textAlign:"center",padding:"20px 0" }}>No reviews yet. Be the first!</p>
-      )}
-
-      <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
-        {reviews.map(r => (
-          <div key={r.id} style={{ paddingBottom:16,borderBottom:`1px solid ${T.gray8}` }}>
-            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6 }}>
-              <div style={{ display:"flex",alignItems:"center",gap:8 }}>
-                <div style={{ width:30,height:30,borderRadius:15,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center" }}>
-                  <Icon name="person" size={14} color={T.gray4}/>
-                </div>
-                <p style={{ fontSize:14,fontWeight:600,margin:0 }}>{r.reviewer_name}</p>
-              </div>
-              <p style={{ fontSize:11,color:T.gray5,margin:0 }}>{fmtDate(r.created_at)}</p>
-            </div>
-            <RatingStars rating={r.rating} size={11}/>
-            <p style={{ fontSize:14,color:T.gray3,lineHeight:1.65,margin:"6px 0 0" }}>{r.body}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ─── Related Products ───────────────────────────────────────── */
 function RelatedProducts({ currentProduct, products, onSelect, wishlist, onWishlist, user, onLoginPrompt }) {
   const related = useMemo(() => {
@@ -1145,7 +1040,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
 /* ─── Product Detail ────────────────────────────────────────── */
 function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt, products=[] }) {
   const { t } = useLang();
-  const [sz, setSz]           = useState(null);
+  const [szs, setSzs]         = useState([]);
   const [done, setDone]       = useState(false);
   const [showReq, setReq]     = useState(false);
   const [imgIdx, setImgIdx]   = useState(0);
@@ -1178,12 +1073,14 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
     setSelectedImg(images[i]);
   };
 
-  const inStock = p.in_stock !== false; // default true if field absent
+  const inStock = p.in_stock !== false;
   const add = () => {
     if (!inStock) return;
-    if (!sz && p.sizes?.length > 0) return;
+    if (p.sizes?.length > 0 && szs.length === 0) return;
     if (multiImg && !selectedImg) { setImgErr(true); return; }
-    onAdd({ ...p, sz: sz || null, selectedImg: selectedImg || null });
+    // Add one cart entry per selected size
+    const toAdd = szs.length > 0 ? szs : [null];
+    toAdd.forEach(sz => onAdd({ ...p, sz, selectedImg: selectedImg || null }));
     setDone(true); setTimeout(() => setDone(false), 2200);
   };
 
@@ -1301,12 +1198,40 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
 
       {p.sizes?.length>0&&(
         <div style={{ marginBottom:24 }}>
-          <p style={{ fontSize:13,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:12,color:T.gray2 }}>{t.size}</p>
-          <div style={{ display:"flex",flexWrap:"wrap",gap:10 }}>
-            {p.sizes.map(s=>(
-              <button key={s} onClick={()=>setSz(s)} style={{ minWidth:52,padding:"10px 14px",borderRadius:12,border:`1.5px solid ${sz===s?T.black:T.gray7}`,background:sz===s?T.black:T.fill3,color:sz===s?T.white:T.black,fontSize:14,fontWeight:600,cursor:"pointer" }}>{s}</button>
-            ))}
+          <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12 }}>
+            <p style={{ fontSize:13,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",margin:0,color:T.gray2 }}>{t.size}</p>
+            {szs.length>0&&(
+              <button onClick={()=>setSzs([])} style={{ fontSize:11,color:T.gray4,background:"none",border:"none",cursor:"pointer",padding:0,fontWeight:500 }}>
+                Clear
+              </button>
+            )}
           </div>
+          <div style={{ display:"flex",flexWrap:"wrap",gap:10 }}>
+            {p.sizes.map(s=>{
+              const on=szs.includes(s);
+              return (
+                <button key={s}
+                  onClick={()=>setSzs(prev=>on?prev.filter(x=>x!==s):[...prev,s])}
+                  style={{ minWidth:52,padding:"10px 14px",borderRadius:12,position:"relative",
+                    border:`1.5px solid ${on?T.black:T.gray7}`,
+                    background:on?T.black:T.fill3,
+                    color:on?T.white:T.black,
+                    fontSize:14,fontWeight:600,cursor:"pointer",
+                    transition:"all .12s"
+                  }}>
+                  {s}
+                  {on&&<span style={{ position:"absolute",top:-5,right:-5,width:16,height:16,borderRadius:8,background:"#1C7A8C",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                    <Icon name="check" size={8} color="#fff"/>
+                  </span>}
+                </button>
+              );
+            })}
+          </div>
+          {szs.length>1&&(
+            <p style={{ fontSize:12,color:T.gray3,marginTop:10,marginBottom:0,fontWeight:500 }}>
+              {szs.length} sizes selected — each added to bag separately
+            </p>
+          )}
         </div>
       )}
 
@@ -1361,7 +1286,7 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
         <Btn
           full
           onClick={handleAddToBag}
-          disabled={!inStock || (showPrice && p.sizes?.length > 0 && !sz)}
+          disabled={!inStock || (showPrice && p.sizes?.length > 0 && szs.length === 0)}
           style={{ borderRadius:16, padding:"17px", fontSize:16, ...(inStock ? {} : { background:"#C7C7CC", cursor:"not-allowed" }) }}
         >
           {!inStock ? "Sold Out" : done ? t.addedToBag : t.addToBagReveal}
@@ -1373,7 +1298,6 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
 
       {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>}
 
-      <ReviewsSection product={p} user={user} sessionId={sessionId}/>
 
       <RelatedProducts currentProduct={p} products={products} onSelect={onNavigateProduct} wishlist={[]} onWishlist={onWishlist} user={user} onLoginPrompt={onLoginPrompt}/>
 
