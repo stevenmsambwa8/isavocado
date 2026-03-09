@@ -467,7 +467,7 @@ function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user,
 
   if (grid) return (
     <div style={{ cursor:"pointer" }}>
-      <div style={{ marginBottom:10 }}>
+      <div style={{ marginBottom:10 }} onClick={()=>onSelect(p)} className="pressable">
         <CardImageSlider images={images} aspectRatio="3/4" borderRadius={20} badge={p.badge}>
           {/* Share — BEFORE heart */}
           <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:10,right:50,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
@@ -492,7 +492,9 @@ function ProductCard({ p, grid, compact, onSelect, onWishlist, wishlisted, user,
 /* ─── Purchase Request Modal ───────────────────────────────── */
 function PurchaseModal({ product, onClose, sessionId }) {
   const { t } = useLang();
+  const images = product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : [];
   const [form, setForm] = useState({ name:"", email:"", phone:"", address:"", note:"", size:product.sizes?.[0]||"", qty:1 });
+  const [selectedImg, setSelectedImg] = useState(images[0] || null);
   const [loading, setL] = useState(false);
   const [sent, setSent] = useState(false);
   const [err, setErr]   = useState("");
@@ -500,35 +502,30 @@ function PurchaseModal({ product, onClose, sessionId }) {
 
   const submit = async () => {
     if (!form.name.trim()||!form.email.trim()) { setErr("Name and email are required."); return; }
+    if (images.length > 1 && !selectedImg) { setErr("Please select which item picture you want to order."); return; }
     setL(true); setErr("");
 
     const payload = {
-      product_id:    product.id,
-      product_name:  product.name,
-      product_price: product.price,
-      selected_size: form.size || null,
-      quantity:      form.qty,
-      buyer_name:    form.name.trim(),
-      buyer_email:   form.email.trim(),
-      buyer_phone:   form.phone.trim() || null,
-      buyer_address: form.address.trim() || null,
-      note:          form.note.trim() || null,
-      status:        'pending',
+      product_id:         product.id,
+      product_name:       product.name,
+      product_price:      product.price,
+      selected_size:      form.size || null,
+      quantity:           form.qty,
+      buyer_name:         form.name.trim(),
+      buyer_email:        form.email.trim(),
+      buyer_phone:        form.phone.trim() || null,
+      buyer_address:      form.address.trim() || null,
+      note:               form.note.trim() || null,
+      selected_image_url: selectedImg || null,
+      status:             'pending',
     };
 
     try {
-      // Try insert with session_id first
-      let { error } = await sb.from('purchase_requests').insert({
-        ...payload,
-        session_id: sessionId || null,
-      });
-
-      // If session_id column doesn't exist yet, retry without it
+      let { error } = await sb.from('purchase_requests').insert({ ...payload, session_id: sessionId || null });
       if (error && (error.message?.includes('session_id') || error.code === '42703')) {
         const res = await sb.from('purchase_requests').insert(payload);
         error = res.error;
       }
-
       if (error) throw error;
       setSent(true);
     } catch(e) {
@@ -557,12 +554,43 @@ function PurchaseModal({ product, onClose, sessionId }) {
           </div>
           {/* Product summary */}
           <div style={{ display:"flex",gap:12,background:T.fill4,borderRadius:14,padding:14,marginBottom:22 }}>
-            {product.image_url&&<div style={{ width:60,height:72,borderRadius:10,overflow:"hidden",flexShrink:0 }}><img src={product.image_url} alt={product.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/></div>}
+            {(selectedImg||product.image_url)&&<div style={{ width:60,height:72,borderRadius:10,overflow:"hidden",flexShrink:0 }}><img src={selectedImg||product.image_url} alt={product.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/></div>}
             <div style={{ flex:1 }}>
               <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px" }}>{product.name}</p>
               <p style={{ fontSize:16,fontWeight:700,color:T.black,margin:0 }}>{$p(product.price)}</p>
             </div>
           </div>
+
+          {/* ── Image picker (only when >1 image) ── */}
+          {images.length > 1 && (
+            <div style={{ marginBottom:18 }}>
+              <p style={{ fontSize:12,fontWeight:700,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:10 }}>
+                Select the exact item you want to order
+              </p>
+              <div style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
+                {images.map((src, i) => (
+                  <button
+                    key={i}
+                    onClick={()=>setSelectedImg(src)}
+                    style={{
+                      width:80, height:96, borderRadius:12, overflow:"hidden", padding:0, border:`2.5px solid ${selectedImg===src ? T.black : T.gray8}`,
+                      cursor:"pointer", position:"relative", background:"#f2f2f7", flexShrink:0,
+                      boxShadow: selectedImg===src ? `0 0 0 2px ${T.black}` : "none",
+                      transition:"border .18s, box-shadow .18s",
+                    }}
+                  >
+                    <img src={src} alt={`Option ${i+1}`} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
+                    {selectedImg===src && (
+                      <div style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.18)",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                        <span style={{ fontSize:20 }}>✓</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {!selectedImg && <p style={{ fontSize:12,color:T.red,marginTop:8 }}>Please pick the exact cloth picture you want.</p>}
+            </div>
+          )}
 
           {sent ? (
             <div style={{ textAlign:"center",padding:"32px 0" }}>
@@ -1136,51 +1164,72 @@ function ImageLightbox({ images, startIndex, onClose }) {
 }
 
 /* ─── Hero Slider ───────────────────────────────────────────── */
-const SLIDES = [
-  {
-    id: 1,
-    label:    "SS26 Collection",
-    title:    "Refined pieces\nfor modern living.",
-    sub:      "New arrivals — just dropped",
-    cta:      "Explore →",
-    bg:       "linear-gradient(145deg,#1C1C1E,#3A3A3C)",
-    textColor:"#fff",
-  },
-  {
-    id: 2,
-    label:    "Limited Time",
-    title:    "Up to 40% Off\nSelect Styles.",
-    sub:      "Shop the sale before it ends",
-    cta:      "Shop Sale →",
-    bg:       "linear-gradient(145deg,#FF3B30,#C0392B)",
-    textColor:"#fff",
-  },
-  {
-    id: 3,
-    label:    "Knitwear Edit",
-    title:    "Luxuriously soft\ncashmere pieces.",
-    sub:      "Crafted for the season",
-    cta:      "Discover →",
-    bg:       "linear-gradient(145deg,#2C2C2E,#5B4A3A)",
-    textColor:"#fff",
-  },
-];
-
-function HeroSlider({ onNavigate }) {
+function HeroSlider({ onNavigate, products }) {
   const [idx, setIdx]     = useState(0);
-  const [drag, setDrag]   = useState(null); // { startX, startIdx }
+  const [drag, setDrag]   = useState(null);
   const timerRef          = useRef(null);
 
-  const go = (i) => setIdx((i + SLIDES.length) % SLIDES.length);
+  // Build slides dynamically from products
+  const slides = useMemo(() => {
+    const newP  = products.filter(p=>p.badge==="New");
+    const hotP  = products.filter(p=>p.badge==="Hot"||p.badge==="hot"||p.badge==="Trending"||p.badge==="trending");
+    const saleP = products.filter(p=>p.badge==="Sale");
 
-  // Auto-advance every 4 s
+    // Pick first available image for each category
+    const imgOf = (list) => {
+      for (const p of list) {
+        const src = p.image_urls?.[0] || p.image_url;
+        if (src) return src;
+      }
+      return null;
+    };
+
+    return [
+      {
+        id: 1,
+        label:    "SS26 Collection",
+        title:    "Refined pieces\nfor modern living.",
+        sub:      "New arrivals — just dropped",
+        cta:      "Explore →",
+        bg:       "linear-gradient(145deg,#1C1C1E,#3A3A3C)",
+        textColor:"#fff",
+        heroImg:  imgOf(newP),
+        filter:   "new",
+      },
+      {
+        id: 2,
+        label:    "Trending Now 🔥",
+        title:    "Everyone's\ntalking about it.",
+        sub:      "Most loved styles right now",
+        cta:      "Shop Trending →",
+        bg:       "linear-gradient(145deg,#0A2342,#1565C0)",
+        textColor:"#fff",
+        heroImg:  imgOf(hotP.length ? hotP : products),
+        filter:   "trending",
+      },
+      {
+        id: 3,
+        label:    "Limited Time Sale",
+        title:    "Up to 40% Off\nSelect Styles.",
+        sub:      "Shop the sale before it ends",
+        cta:      "Shop Sale →",
+        bg:       "linear-gradient(145deg,#FF3B30,#C0392B)",
+        textColor:"#fff",
+        heroImg:  imgOf(saleP),
+        filter:   "sale",
+      },
+    ];
+  }, [products]);
+
+  const SLIDE_COUNT = slides.length;
+  const go = (i) => setIdx((i + SLIDE_COUNT) % SLIDE_COUNT);
+
   const resetTimer = () => {
     clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setIdx(i => (i + 1) % SLIDES.length), 4000);
+    timerRef.current = setInterval(() => setIdx(i => (i + 1) % SLIDE_COUNT), 4000);
   };
-  useEffect(() => { resetTimer(); return () => clearInterval(timerRef.current); }, []);
+  useEffect(() => { resetTimer(); return () => clearInterval(timerRef.current); }, [SLIDE_COUNT]);
 
-  // Touch / mouse swipe
   const onDragStart = (clientX) => setDrag({ startX: clientX, startIdx: idx });
   const onDragEnd   = (clientX) => {
     if (!drag) return;
@@ -1188,8 +1237,6 @@ function HeroSlider({ onNavigate }) {
     if (Math.abs(dx) > 40) { go(idx + (dx > 0 ? 1 : -1)); resetTimer(); }
     setDrag(null);
   };
-
-  const slide = SLIDES[idx];
 
   return (
     <div
@@ -1199,24 +1246,39 @@ function HeroSlider({ onNavigate }) {
       onTouchStart={e=>onDragStart(e.touches[0].clientX)}
       onTouchEnd={e=>onDragEnd(e.changedTouches[0].clientX)}
     >
-      {/* Slide panels (CSS translate trick — instant no-flash) */}
+      {/* Slide panels */}
       <div style={{ display:"flex", transition:"transform .38s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*100}%)`, willChange:"transform" }}>
-        {SLIDES.map((s, i) => (
-          <div key={s.id} style={{ minWidth:"100%", background:s.bg, padding:"38px 26px 32px", boxSizing:"border-box" }}>
-            <p style={{ fontSize:11,fontWeight:700,letterSpacing:"0.16em",textTransform:"uppercase",color:"rgba(255,255,255,0.45)",marginBottom:10 }}>{s.label}</p>
-            <h2 style={{ fontSize:30,fontWeight:800,color:s.textColor,letterSpacing:"-0.8px",lineHeight:1.15,marginBottom:10,whiteSpace:"pre-line" }}>{s.title}</h2>
-            <p style={{ fontSize:14,color:"rgba(255,255,255,0.55)",marginBottom:26,lineHeight:1.5 }}>{s.sub}</p>
-            <button
-              onClick={() => onNavigate("shop")}
-              style={{ background:"rgba(255,255,255,0.18)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",padding:"11px 22px",borderRadius:99,fontSize:14,fontWeight:600,cursor:"pointer",letterSpacing:"-0.1px" }}
-            >{s.cta}</button>
+        {slides.map((s) => (
+          <div key={s.id} style={{ minWidth:"100%", background:s.bg, boxSizing:"border-box", position:"relative", overflow:"hidden" }}>
+            {/* Product image on the right side */}
+            {s.heroImg && (
+              <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"55%", overflow:"hidden" }}>
+                <img
+                  src={s.heroImg}
+                  alt=""
+                  style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block", opacity:0.85 }}
+                />
+                {/* Gradient overlay so text is always readable */}
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)" }}/>
+              </div>
+            )}
+            {/* Text content */}
+            <div style={{ position:"relative", zIndex:2, padding:"38px 26px 32px", maxWidth: s.heroImg ? "60%" : "100%" }}>
+              <p style={{ fontSize:11,fontWeight:700,letterSpacing:"0.16em",textTransform:"uppercase",color:"rgba(255,255,255,0.45)",marginBottom:10 }}>{s.label}</p>
+              <h2 style={{ fontSize:28,fontWeight:800,color:s.textColor,letterSpacing:"-0.8px",lineHeight:1.15,marginBottom:10,whiteSpace:"pre-line" }}>{s.title}</h2>
+              <p style={{ fontSize:13,color:"rgba(255,255,255,0.55)",marginBottom:26,lineHeight:1.5 }}>{s.sub}</p>
+              <button
+                onClick={() => onNavigate("shop")}
+                style={{ background:"rgba(255,255,255,0.18)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",padding:"11px 22px",borderRadius:99,fontSize:14,fontWeight:600,cursor:"pointer",letterSpacing:"-0.1px" }}
+              >{s.cta}</button>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Dot indicators */}
       <div style={{ position:"absolute",bottom:14,left:"50%",transform:"translateX(-50%)",display:"flex",gap:6 }}>
-        {SLIDES.map((_,i) => (
+        {slides.map((_,i) => (
           <button
             key={i}
             onClick={()=>{ go(i); resetTimer(); }}
@@ -1241,7 +1303,7 @@ function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user
 
   return (
     <div style={{ animation:"fadeIn 0.25s ease" }}>
-      <HeroSlider onNavigate={onNavigate}/>
+      <HeroSlider onNavigate={onNavigate} products={products}/>
 
       {newP.length>0&&(
         <div style={{ marginBottom:32 }}>
