@@ -1202,84 +1202,115 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
 
 /* ─── Image Lightbox with pinch-to-zoom ─────────────────────── */
 function ImageLightbox({ images, startIndex, onClose }) {
-  const [idx, setIdx]     = useState(startIndex);
+  const { t }             = useLang();
+  const [idx, setIdx]     = useState(startIndex ?? 0);
   const [scale, setScale] = useState(1);
   const [offset, setOffs] = useState({ x:0, y:0 });
+  const containerRef      = useRef(null);
   const lastTouch         = useRef(null);
   const lastDist          = useRef(null);
   const dragStart         = useRef(null);
 
   const reset = () => { setScale(1); setOffs({ x:0, y:0 }); };
+  const goTo  = (i) => { reset(); setIdx((i + images.length) % images.length); };
 
-  const goTo = (i) => { reset(); setIdx((i + images.length) % images.length); };
+  // Attach touch handlers with { passive:false } so preventDefault works
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-  // Pinch zoom
-  const onTouchStart = e => {
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lastDist.current = Math.hypot(dx, dy);
-    } else if (e.touches.length === 1) {
-      dragStart.current = { x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y };
-    }
-  };
-
-  const onTouchMove = e => {
-    e.preventDefault();
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.hypot(dx, dy);
-      if (lastDist.current) {
-        const delta = dist / lastDist.current;
-        setScale(s => Math.min(Math.max(s * delta, 1), 5));
+    const onStart = (e) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastDist.current = Math.hypot(dx, dy);
+        lastTouch.current = null;
+      } else if (e.touches.length === 1) {
+        lastTouch.current = e.touches[0].clientX;
+        dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
-      lastDist.current = dist;
-    } else if (e.touches.length === 1 && scale > 1 && dragStart.current) {
-      setOffs({
-        x: e.touches[0].clientX - dragStart.current.x,
-        y: e.touches[0].clientY - dragStart.current.y,
+    };
+
+    const onMove = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        if (lastDist.current) {
+          const delta = dist / lastDist.current;
+          setScale(s => Math.min(Math.max(s * delta, 1), 5));
+        }
+        lastDist.current = dist;
+      } else if (e.touches.length === 1) {
+        setScale(s => {
+          if (s > 1 && dragStart.current) {
+            e.preventDefault();
+            const dx = e.touches[0].clientX - dragStart.current.x;
+            const dy = e.touches[0].clientY - dragStart.current.y;
+            setOffs(o => ({ x: o.x + dx, y: o.y + dy }));
+            dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          }
+          return s;
+        });
+      }
+    };
+
+    const onEnd = (e) => {
+      lastDist.current = null;
+      dragStart.current = null;
+      // swipe to next/prev only when not zoomed
+      setScale(s => {
+        if (s <= 1 && e.changedTouches.length === 1 && lastTouch.current !== null) {
+          const dx = lastTouch.current - e.changedTouches[0].clientX;
+          if (Math.abs(dx) > 50) {
+            setIdx(i => (i + (dx > 0 ? 1 : -1) + images.length) % images.length);
+            setOffs({ x:0, y:0 });
+          }
+        }
+        return s;
       });
-    }
-  };
+      lastTouch.current = null;
+    };
 
-  const onTouchEnd = e => {
-    lastDist.current = null;
-    if (scale <= 1 && e.changedTouches.length === 1) {
-      // swipe to next/prev
-      const endX = e.changedTouches[0].clientX;
-      if (lastTouch.current) {
-        const dx = lastTouch.current - endX;
-        if (Math.abs(dx) > 50) goTo(idx + (dx > 0 ? 1 : -1));
-      }
-    }
-    lastTouch.current = null;
-    dragStart.current = null;
-  };
+    el.addEventListener('touchstart', onStart, { passive:true });
+    el.addEventListener('touchmove',  onMove,  { passive:false });
+    el.addEventListener('touchend',   onEnd,   { passive:true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove',  onMove);
+      el.removeEventListener('touchend',   onEnd);
+    };
+  }, [images.length]);
 
-  const onTouchStartSwipe = e => {
-    if (e.touches.length === 1) lastTouch.current = e.touches[0].clientX;
-    onTouchStart(e);
-  };
+  // Close on Escape key
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
     <div
-      style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.96)", display:"flex", alignItems:"center", justifyContent:"center" }}
-      onTouchStart={onTouchStartSwipe}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
+      ref={containerRef}
+      style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.96)", display:"flex", alignItems:"center", justifyContent:"center", touchAction:"none" }}
     >
       {/* Close */}
-      <button onClick={onClose} style={{ position:"absolute", top:20, right:20, zIndex:10, width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <button
+        onClick={onClose}
+        style={{ position:"absolute", top:20, right:20, zIndex:10, width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+      >
         <Icon name="close" size={20} color="#fff"/>
       </button>
 
       {/* Counter */}
-      <p style={{ position:"absolute", top:24, left:"50%", transform:"translateX(-50%)", color:"rgba(255,255,255,0.6)", fontSize:13, fontWeight:600 }}>
-        {idx + 1} / {images.length}
-      </p>
+      {images.length > 1 && (
+        <p style={{ position:"absolute", top:24, left:"50%", transform:"translateX(-50%)", color:"rgba(255,255,255,0.6)", fontSize:13, fontWeight:600, margin:0, pointerEvents:"none" }}>
+          {idx + 1} / {images.length}
+        </p>
+      )}
 
-      {/* Double-tap to reset zoom */}
+      {/* Image */}
       <div
         onDoubleClick={() => scale > 1 ? reset() : setScale(2.5)}
         style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}
@@ -1291,33 +1322,30 @@ function ImageLightbox({ images, startIndex, onClose }) {
             maxWidth:"100%", maxHeight:"100%", objectFit:"contain",
             transform:`scale(${scale}) translate(${offset.x/scale}px, ${offset.y/scale}px)`,
             transition: scale === 1 ? "transform .25s" : "none",
-            userSelect:"none", pointerEvents:"none",
+            userSelect:"none", pointerEvents:"none", display:"block",
           }}
         />
       </div>
 
-      {/* Zoom hint */}
+      {/* Hint */}
       {scale === 1 && (
-        <p style={{ position:"absolute", bottom:80, left:"50%", transform:"translateX(-50%)", color:"rgba(255,255,255,0.35)", fontSize:12, whiteSpace:"nowrap" }}>
+        <p style={{ position:"absolute", bottom:images.length>1?80:32, left:"50%", transform:"translateX(-50%)", color:"rgba(255,255,255,0.3)", fontSize:12, whiteSpace:"nowrap", margin:0, pointerEvents:"none" }}>
           {t.pinchZoom}
         </p>
       )}
 
-      {/* Prev / Next arrows */}
+      {/* Prev / Next */}
       {images.length > 1 && (
         <>
-          <button onClick={()=>goTo(idx-1)} style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)", width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", color:"#fff", fontSize:22, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
-          <button onClick={()=>goTo(idx+1)} style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", color:"#fff", fontSize:22, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
+          <button onClick={()=>goTo(idx-1)} style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", color:"#fff", fontSize:22, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
+          <button onClick={()=>goTo(idx+1)} style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)", width:40, height:40, borderRadius:20, background:"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", color:"#fff", fontSize:22, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
+          {/* Dot strip */}
+          <div style={{ position:"absolute", bottom:32, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6, pointerEvents:"none" }}>
+            {images.map((_, i) => (
+              <div key={i} style={{ width: i===idx?18:6, height:6, borderRadius:3, background: i===idx?"#fff":"rgba(255,255,255,0.3)", transition:"width .2s" }}/>
+            ))}
+          </div>
         </>
-      )}
-
-      {/* Dot strip */}
-      {images.length > 1 && (
-        <div style={{ position:"absolute", bottom:32, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
-          {images.map((_, i) => (
-            <div key={i} onClick={()=>goTo(i)} style={{ width: i===idx?18:6, height:6, borderRadius:3, background: i===idx?"#fff":"rgba(255,255,255,0.3)", cursor:"pointer", transition:"width .2s" }}/>
-          ))}
-        </div>
       )}
     </div>
   );
