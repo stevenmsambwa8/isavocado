@@ -1153,7 +1153,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
 }
 
 /* ─── Product Detail ────────────────────────────────────────── */
-function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt, products=[] }) {
+function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWishlist, sessionId, user, onLoginPrompt, products=[] }) {
   const { t } = useLang();
   const [sz, setSz]           = useState(null);
   const [done, setDone]       = useState(false);
@@ -1380,7 +1380,7 @@ function ProductDetail({ p, onBack, onAdd, wishlisted, onWishlist, sessionId, us
 
       <ReviewsSection product={p} user={user} sessionId={sessionId}/>
 
-      <RelatedProducts currentProduct={p} products={products} onSelect={onBack} wishlist={[]} onWishlist={onWishlist} user={user} onLoginPrompt={onLoginPrompt}/>
+      <RelatedProducts currentProduct={p} products={products} onSelect={onNavigateProduct} wishlist={[]} onWishlist={onWishlist} user={user} onLoginPrompt={onLoginPrompt}/>
 
       {/* ── Lightbox / Zoom ── */}
       {lightbox !== null && (
@@ -3180,7 +3180,7 @@ function PageInner() {
       case "returns":      return <ReturnsScreen t={t}/>;
       case "sustainability":return <SustainabilityScreen t={t}/>;
       case "lookbook":     return <LookbookScreen products={products} onSelect={p=>navigate("product",{product:p})} t={t}/>;
-      case "product":      return <ProductDetail p={current.product} onBack={p=>navigate("product",{product:p})} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId} user={user} onLoginPrompt={()=>setShowAuth(true)} products={products}/>;
+      case "product":      return <ProductDetail p={current.product} onBack={goBack} onNavigateProduct={prod=>navigate("product",{product:prod})} onAdd={addToCart} wishlisted={wishlist.includes(current.product?.id)} onWishlist={toggleWishlist} sessionId={sessionId} user={user} onLoginPrompt={()=>setShowAuth(true)} products={products}/>;
       default:             return <HomeScreen {...screenProps}/>;
     }
   };
