@@ -1358,7 +1358,12 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
         </div>
       )}
       <div style={{ display:"flex",gap:12,marginBottom:24 }}>
-        <Btn full onClick={inStock ? handleAddToBag : undefined} disabled={!inStock || (showPrice && p.sizes?.length>0&&!sz)} style={{ borderRadius:16,padding:"17px",fontSize:16,background:inStock?undefined:"#ccc" }}>
+        <Btn
+          full
+          onClick={handleAddToBag}
+          disabled={!inStock || (showPrice && p.sizes?.length > 0 && !sz)}
+          style={{ borderRadius:16, padding:"17px", fontSize:16, ...(inStock ? {} : { background:"#C7C7CC", cursor:"not-allowed" }) }}
+        >
           {!inStock ? "Sold Out" : done ? t.addedToBag : t.addToBagReveal}
         </Btn>
         <Btn variant="gray" onClick={handleRequest} style={{ borderRadius:16,padding:"17px",whiteSpace:"nowrap" }}>
@@ -3191,8 +3196,8 @@ function PageInner() {
         {showSale&&!cartOpen&&<SaleModal onClose={()=>setShowSale(false)} onShop={()=>{setShowSale(false);navigate("shop");}}/>}
 
         {wishToast && (
-          <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"rgba(28,28,30,0.92)",color:"#fff",padding:"10px 20px",borderRadius:99,fontSize:14,fontWeight:500,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.2)",animation:"slideUp .2s ease",display:"flex",alignItems:"center",gap:8 }}>
-            <Icon name="heart-fill" size={14} color={T.red}/>{wishToast}
+          <div key={wishToast} style={{ position:"fixed",bottom:84,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"rgba(28,28,30,0.93)",color:"#fff",padding:"11px 18px",borderRadius:99,fontSize:13,fontWeight:600,whiteSpace:"nowrap",boxShadow:"0 4px 24px rgba(0,0,0,0.25)",animation:"fadeIn .18s ease",pointerEvents:"none",display:"flex",alignItems:"center",gap:7,backdropFilter:"blur(12px)" }}>
+            <Icon name="heart-fill" size={13} color={T.red}/>{wishToast}
           </div>
         )}
 
