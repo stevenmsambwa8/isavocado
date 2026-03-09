@@ -722,7 +722,7 @@ function PurchaseModal({ product, onClose, sessionId, user }) {
       )}
     </>
   );
-});
+}
 
 /* ─── Cart Drawer ────────────────────────────────────────────── */
 function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSettings }) {
