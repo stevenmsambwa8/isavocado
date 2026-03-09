@@ -165,6 +165,19 @@ const TR = {
     pinchZoom:"Pinch or double-tap to zoom",
     helpFeedback:"Help us improve", helpFeedbackSub:"Share feedback — we read every message",
     version:"v1.0.0",
+    /* ── Post-purchase account nudge ── */
+    createAccountNudgeTitle:"Save your details for next time",
+    createAccountNudgeBody:"Your request was sent. Add a password to turn your email into a full account — track orders, save addresses and more.",
+    createAccountNudgePasswordLabel:"Choose a password",
+    createAccountNudgePasswordPlaceholder:"At least 8 characters",
+    createAccountNudgeCreate:"Create Account",
+    createAccountNudgeSkip:"No thanks",
+    createAccountNudgeDontShow:"Don't show again",
+    createAccountNudgeSuccess:"Account created! Welcome.",
+    createAccountNudgeError:"Couldn't create account. Try again.",
+    /* ── Purchase modal pre-fill ── */
+    requestFormPrefilled:"Your details have been pre-filled from your account.",
+    requestFormGuestNote:"Tip: create an account to save your details for faster checkout.",
   },
   sw: {
     home:"Nyumbani", shop:"Duka", search:"Tafuta", saved:"Zilizohifadhiwa", account:"Akaunti",
@@ -240,6 +253,19 @@ const TR = {
     pinchZoom:"Pinch au gonga mara mbili kuzoom",
     helpFeedback:"Tusaidie kuboresha", helpFeedbackSub:"Shiriki maoni — tunasoma kila ujumbe",
     version:"v1.0.0",
+    /* ── Post-purchase account nudge ── */
+    createAccountNudgeTitle:"Hifadhi maelezo yako kwa wakati ujao",
+    createAccountNudgeBody:"Ombi lako limetumwa. Ongeza nenosiri ili kubadilisha barua pepe yako kuwa akaunti kamili — fuatilia maagizo, hifadhi anwani na zaidi.",
+    createAccountNudgePasswordLabel:"Chagua nenosiri",
+    createAccountNudgePasswordPlaceholder:"Angalau herufi 8",
+    createAccountNudgeCreate:"Fungua Akaunti",
+    createAccountNudgeSkip:"Hapana asante",
+    createAccountNudgeDontShow:"Usionyeshe tena",
+    createAccountNudgeSuccess:"Akaunti imeundwa! Karibu.",
+    createAccountNudgeError:"Haikuweza kuunda akaunti. Jaribu tena.",
+    /* ── Purchase modal pre-fill ── */
+    requestFormPrefilled:"Maelezo yako yamejazwa mapema kutoka kwa akaunti yako.",
+    requestFormGuestNote:"Kidokezo: fungua akaunti kuhifadhi maelezo yako kwa malipo ya haraka.",
   },
   fr: {
     home:"Accueil", shop:"Boutique", search:"Rechercher", saved:"Sauvegardés", account:"Compte",
@@ -315,6 +341,19 @@ const TR = {
     pinchZoom:"Pincez ou double-tapez pour zoomer",
     helpFeedback:"Aidez-nous à nous améliorer", helpFeedbackSub:"Partagez vos commentaires — nous lisons chaque message",
     version:"v1.0.0",
+    /* ── Post-purchase account nudge ── */
+    createAccountNudgeTitle:"Enregistrez vos coordonnées pour la prochaine fois",
+    createAccountNudgeBody:"Votre demande a été envoyée. Ajoutez un mot de passe pour transformer votre e-mail en compte complet — suivez vos commandes, enregistrez vos adresses et plus encore.",
+    createAccountNudgePasswordLabel:"Choisissez un mot de passe",
+    createAccountNudgePasswordPlaceholder:"Au moins 8 caractères",
+    createAccountNudgeCreate:"Créer un compte",
+    createAccountNudgeSkip:"Non merci",
+    createAccountNudgeDontShow:"Ne plus afficher",
+    createAccountNudgeSuccess:"Compte créé ! Bienvenue.",
+    createAccountNudgeError:"Impossible de créer le compte. Réessayez.",
+    /* ── Purchase modal pre-fill ── */
+    requestFormPrefilled:"Vos coordonnées ont été pré-remplies depuis votre compte.",
+    requestFormGuestNote:"Astuce : créez un compte pour enregistrer vos coordonnées et accélérer vos prochaines commandes.",
   },
 };
 
@@ -396,6 +435,8 @@ function Icon({ name, size=20, color=T.black, strokeWidth=2 }) {
     lock:      <svg {...s} viewBox="0 0 24 24"><rect {...p} x="3" y="11" width="18" height="11" rx="2"/><path {...p} d="M7 11V7a5 5 0 0110 0v4"/></svg>,
     chat:      <svg {...s} viewBox="0 0 24 24"><path {...p} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
     info:      <svg {...s} viewBox="0 0 24 24"><circle {...p} cx="12" cy="12" r="10"/><line {...p} x1="12" y1="8" x2="12" y2="12"/><line {...p} x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+    eye:       <svg {...s} viewBox="0 0 24 24"><path {...p} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle {...p} cx="12" cy="12" r="3"/></svg>,
+    "eye-off": <svg {...s} viewBox="0 0 24 24"><path {...p} d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path {...p} d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line {...p} x1="1" y1="1" x2="23" y2="23"/></svg>,
   };
   return icons[name] || <svg {...s} viewBox="0 0 24 24"/>;
 }
@@ -664,20 +705,139 @@ function RelatedProducts({ currentProduct, products, onSelect, wishlist, onWishl
 }
 
 /* ─── Purchase Request Modal ───────────────────────────────── */
-function PurchaseModal({ product, onClose, sessionId }) {
+/* ─── Post-purchase "finish your account" nudge ──────────────── */
+const NUDGE_SKIP_KEY = 'msambwa_skip_nudge';
+
+function AccountNudge({ email, onDone }) {
+  const { t } = useLang();
+  const [pass,    setPass]    = useState('');
+  const [show,    setShow]    = useState(false);
+  const [busy,    setBusy]    = useState(false);
+  const [err,     setErr]     = useState('');
+  const [created, setCreated] = useState(false);
+
+  const skip = (permanently) => {
+    if (permanently) {
+      try { localStorage.setItem(NUDGE_SKIP_KEY, '1'); } catch(_) {}
+    }
+    onDone();
+  };
+
+  const create = async () => {
+    if (pass.length < 8) { setErr(t.createAccountNudgePasswordPlaceholder); return; }
+    setBusy(true); setErr('');
+    try {
+      const { error } = await sb.auth.signUp({ email, password: pass });
+      if (error) throw error;
+      setCreated(true);
+      setTimeout(onDone, 2000);
+    } catch(e) {
+      setErr(e.message || t.createAccountNudgeError);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"flex-end",justifyContent:"center" }}>
+      <div onClick={()=>skip(false)} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(6px)",animation:"fadeIn .2s ease" }}/>
+      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:540,background:T.white,borderRadius:"24px 24px 0 0",padding:"0 0 env(safe-area-inset-bottom,24px)",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)" }}>
+        <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"14px auto 0" }}/>
+        <div style={{ padding:"22px 24px 32px" }}>
+          {created ? (
+            <div style={{ textAlign:"center",padding:"24px 0 12px" }}>
+              <div style={{ width:64,height:64,borderRadius:32,background:"#e8faf0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px" }}>
+                <Icon name="check" size={30} color={T.green}/>
+              </div>
+              <p style={{ fontSize:18,fontWeight:700,color:T.black,margin:"0 0 6px" }}>{t.createAccountNudgeSuccess}</p>
+              <p style={{ fontSize:13,color:T.gray4,margin:0 }}>{email}</p>
+            </div>
+          ) : (
+            <>
+              <div style={{ display:"flex",alignItems:"flex-start",gap:14,marginBottom:20 }}>
+                <div style={{ width:46,height:46,borderRadius:14,background:`${T.blue}14`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2 }}>
+                  <Icon name="person" size={22} color={T.blue}/>
+                </div>
+                <div>
+                  <p style={{ fontSize:17,fontWeight:700,margin:"0 0 6px",letterSpacing:"-0.3px" }}>{t.createAccountNudgeTitle}</p>
+                  <p style={{ fontSize:13,color:T.gray4,margin:0,lineHeight:1.6 }}>{t.createAccountNudgeBody}</p>
+                </div>
+              </div>
+
+              <div style={{ marginBottom:14 }}>
+                <label style={{ fontSize:11,fontWeight:700,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",display:"block",marginBottom:7 }}>
+                  {t.createAccountNudgePasswordLabel}
+                </label>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={show?"text":"password"}
+                    value={pass}
+                    onChange={e=>{ setPass(e.target.value); setErr(''); }}
+                    placeholder={t.createAccountNudgePasswordPlaceholder}
+                    style={{ width:"100%",padding:"13px 44px 13px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${err?T.red:T.gray8}`,borderRadius:13,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif",boxSizing:"border-box" }}
+                  />
+                  <button onClick={()=>setShow(s=>!s)} style={{ position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",padding:4 }}>
+                    <Icon name={show?"eye-off":"eye"} size={17} color={T.gray5}/>
+                  </button>
+                </div>
+                {err&&<p style={{ fontSize:12,color:T.red,margin:"6px 0 0" }}>{err}</p>}
+              </div>
+
+              <Btn full onClick={create} disabled={busy||pass.length<2} style={{ borderRadius:13,padding:"15px",fontSize:15,marginBottom:10 }}>
+                {busy ? <Spin size={17}/> : t.createAccountNudgeCreate}
+              </Btn>
+
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+                <button onClick={()=>skip(false)} style={{ background:"none",border:"none",fontSize:13,color:T.gray4,cursor:"pointer",padding:"8px 0",fontWeight:500 }}>
+                  {t.createAccountNudgeSkip}
+                </button>
+                <button onClick={()=>skip(true)} style={{ background:"none",border:"none",fontSize:12,color:T.gray5,cursor:"pointer",padding:"8px 0" }}>
+                  {t.createAccountNudgeDontShow}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PurchaseModal({ product, onClose, sessionId, user }) {
   const { t } = useLang();
   const images = product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : [];
-  const [form, setForm] = useState({ name:"", email:"", phone:"", address:"", note:"", size:product.sizes?.[0]||"", qty:1 });
+
+  // Pre-fill from logged-in user's metadata
+  const meta = user?.user_metadata || {};
+  const isRealUser = user && !user.is_anonymous;
+  const prefillName  = isRealUser ? (meta.full_name || [meta.first_name, meta.last_name].filter(Boolean).join(' ') || '') : '';
+  const prefillEmail = isRealUser ? (user.email || '') : '';
+  const prefillPhone = isRealUser ? (meta.phone || '') : '';
+  const prefillAddr  = isRealUser ? (meta.address || '') : '';
+
+  const [form, setForm] = useState({
+    name:    prefillName,
+    email:   prefillEmail,
+    phone:   prefillPhone,
+    address: prefillAddr,
+    note:    '',
+    size:    product.sizes?.[0]||'',
+    qty:     1,
+  });
   const [selectedImg, setSelectedImg] = useState(images[0] || null);
-  const [loading, setL] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [err, setErr]   = useState("");
+  const [loading, setL]     = useState(false);
+  const [sent, setSent]     = useState(false);
+  const [err, setErr]       = useState('');
+  const [showNudge, setNudge] = useState(false);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
+  // Check if "don't show again" was set
+  const nudgeSkipped = () => { try { return localStorage.getItem(NUDGE_SKIP_KEY)==='1'; } catch(_){ return false; } };
+
   const submit = async () => {
-    if (!form.name.trim()||!form.email.trim()) { setErr("Name and email are required."); return; }
-    if (images.length > 1 && !selectedImg) { setErr("Please select which item picture you want to order."); return; }
-    setL(true); setErr("");
+    if (!form.name.trim()||!form.email.trim()) { setErr(t.yourName + ' & ' + t.yourEmail + ' are required.'); return; }
+    if (images.length > 1 && !selectedImg) { setErr(t.pickRequired); return; }
+    setL(true); setErr('');
 
     const payload = {
       product_id:         product.id,
@@ -702,107 +862,133 @@ function PurchaseModal({ product, onClose, sessionId }) {
       }
       if (error) throw error;
       setSent(true);
+      // Show account nudge only to non-registered users who provided an email and haven't dismissed it
+      if (!isRealUser && form.email.trim() && !nudgeSkipped()) {
+        setTimeout(() => setNudge(true), 900);
+      }
     } catch(e) {
-      setErr(e?.message || e?.error_description || "Something went wrong. Please try again.");
+      setErr(e?.message || e?.error_description || 'Something went wrong. Please try again.');
     } finally {
       setL(false);
     }
   };
 
-  const inp = (label, key, type="text", placeholder="") => (
-    <div style={{ display:"flex",flexDirection:"column",gap:5 }}>
-      <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>{label}</label>
-      <input type={type} value={form[key]} onChange={e=>set(key,e.target.value)} placeholder={placeholder} style={{ padding:"12px 14px",fontSize:15,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif" }}/>
+  const inp = (label, key, type='text', placeholder='', readOnly=false) => (
+    <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+      <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:'0.05em',textTransform:'uppercase' }}>{label}</label>
+      <input
+        type={type} value={form[key]}
+        onChange={e=>{ if(!readOnly) set(key,e.target.value); }}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        style={{ padding:'12px 14px',fontSize:15,background:readOnly?T.fill4:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:'none',fontFamily:'-apple-system,sans-serif',opacity:readOnly?0.8:1 }}
+      />
     </div>
   );
 
   return (
-    <div style={{ position:"fixed",inset:0,zIndex:700,display:"flex",alignItems:"flex-end",justifyContent:"center" }}>
-      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(6px)" }}/>
-      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:540,background:T.white,borderRadius:"24px 24px 0 0",maxHeight:"92vh",overflowY:"auto",animation:"slideUp .3s cubic-bezier(.32,0,.28,1)" }}>
-        <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:"14px auto 0" }}/>
-        <div style={{ padding:"20px 24px 40px" }}>
-          <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20 }}>
-            <h3 style={{ fontSize:20,fontWeight:700,margin:0,letterSpacing:"-0.4px" }}>{t.requestToBuy}</h3>
-            <IconBtn icon="close" onClick={onClose} size={34} color={T.gray4}/>
-          </div>
-          {/* Product summary */}
-          <div style={{ display:"flex",gap:12,background:T.fill4,borderRadius:14,padding:14,marginBottom:22 }}>
-            {(selectedImg||product.image_url)&&<div style={{ width:60,height:72,borderRadius:10,overflow:"hidden",flexShrink:0 }}><img src={selectedImg||product.image_url} alt={product.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/></div>}
-            <div style={{ flex:1 }}>
-              <p style={{ fontSize:15,fontWeight:700,margin:"0 0 4px" }}>{product.name}</p>
-              <p style={{ fontSize:16,fontWeight:700,color:T.black,margin:0 }}>{$p(product.price)}</p>
+    <>
+      <div style={{ position:'fixed',inset:0,zIndex:700,display:'flex',alignItems:'flex-end',justifyContent:'center' }}>
+        <div onClick={onClose} style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',backdropFilter:'blur(6px)' }}/>
+        <div style={{ position:'relative',zIndex:1,width:'100%',maxWidth:540,background:T.white,borderRadius:'24px 24px 0 0',maxHeight:'92vh',overflowY:'auto',animation:'slideUp .3s cubic-bezier(.32,0,.28,1)' }}>
+          <div style={{ width:36,height:5,borderRadius:3,background:T.gray7,margin:'14px auto 0' }}/>
+          <div style={{ padding:'20px 24px 40px' }}>
+            <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20 }}>
+              <h3 style={{ fontSize:20,fontWeight:700,margin:0,letterSpacing:'-0.4px' }}>{t.requestToBuy}</h3>
+              <IconBtn icon="close" onClick={onClose} size={34} color={T.gray4}/>
             </div>
-          </div>
 
-          {/* ── Image picker (only when >1 image) ── */}
-          {images.length > 1 && (
-            <div style={{ marginBottom:18 }}>
-              <p style={{ fontSize:12,fontWeight:700,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:10 }}>
-                {t.pickExactImage}
-              </p>
-              <p style={{ fontSize:12,color:T.gray4,marginBottom:12 }}>{t.pickExactImageSub}</p>
-              <div style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
-                {images.map((src, i) => (
-                  <button
-                    key={i}
-                    onClick={()=>setSelectedImg(src)}
-                    style={{
-                      width:80, height:96, borderRadius:12, overflow:"hidden", padding:0, border:`2.5px solid ${selectedImg===src ? T.black : T.gray8}`,
-                      cursor:"pointer", position:"relative", background:"#f2f2f7", flexShrink:0,
-                      boxShadow: selectedImg===src ? `0 0 0 2px ${T.black}` : "none",
-                      transition:"border .18s, box-shadow .18s",
-                    }}
-                  >
-                    <img src={src} alt={`Option ${i+1}`} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
-                    {selectedImg===src && (
-                      <div style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.18)",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                        <Icon name="check" size={18} color="#fff"/>
-                      </div>
-                    )}
-                  </button>
-                ))}
+            {/* Product summary */}
+            <div style={{ display:'flex',gap:12,background:T.fill4,borderRadius:14,padding:14,marginBottom:22 }}>
+              {(selectedImg||product.image_url)&&<div style={{ width:60,height:72,borderRadius:10,overflow:'hidden',flexShrink:0 }}><img src={selectedImg||product.image_url} alt={product.name} style={{ width:'100%',height:'100%',objectFit:'cover' }}/></div>}
+              <div style={{ flex:1 }}>
+                <p style={{ fontSize:15,fontWeight:700,margin:'0 0 4px' }}>{product.name}</p>
+                <p style={{ fontSize:16,fontWeight:700,color:T.black,margin:0 }}>{$p(product.price)}</p>
               </div>
-              {!selectedImg && <p style={{ fontSize:12,color:T.red,marginTop:8 }}>{t.pickRequired}</p>}
             </div>
-          )}
 
-          {sent ? (
-            <div style={{ textAlign:"center",padding:"32px 0" }}>
-              <div style={{ width:72,height:72,borderRadius:36,background:"#e8faf0",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16 }}><Icon name="check" size={34} color={T.green}/></div>
-              <p style={{ fontSize:20,fontWeight:700,color:T.black,marginBottom:8 }}>{t.requestSent}</p>
-              <p style={{ fontSize:14,color:T.gray4,marginBottom:24,lineHeight:1.6 }}>We'll contact you at <strong>{form.email}</strong> to confirm.</p>
-              <Btn onClick={onClose} variant="gray" size="sm">Close</Btn>
-            </div>
-          ) : (
-            <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
-              {inp(t.yourName,"name","text","e.g. Jane Smith")}
-              {inp(t.yourEmail,"email","email","your@email.com")}
-              {inp(t.yourPhone,"phone","tel","+1 555 000 0000")}
-              {inp(t.deliveryAddress,"address","text","Street, City, Country")}
-              {product.sizes?.length>0&&(
-                <div style={{ display:"flex",flexDirection:"column",gap:5 }}>
-                  <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>{t.size}</label>
-                  <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
-                    {product.sizes.map(s=>(
-                      <button key={s} onClick={()=>set("size",s)} style={{ padding:"8px 16px",borderRadius:10,border:`1.5px solid ${form.size===s?T.black:T.gray8}`,background:form.size===s?T.black:T.fill3,color:form.size===s?T.white:T.black,fontSize:13,fontWeight:600,cursor:"pointer" }}>{s}</button>
-                    ))}
-                  </div>
+            {/* Image picker */}
+            {images.length > 1 && (
+              <div style={{ marginBottom:18 }}>
+                <p style={{ fontSize:12,fontWeight:700,color:T.gray4,letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:10 }}>{t.pickExactImage}</p>
+                <p style={{ fontSize:12,color:T.gray4,marginBottom:12 }}>{t.pickExactImageSub}</p>
+                <div style={{ display:'flex',gap:10,flexWrap:'wrap' }}>
+                  {images.map((src,i)=>(
+                    <button key={i} onClick={()=>setSelectedImg(src)}
+                      style={{ width:80,height:96,borderRadius:12,overflow:'hidden',padding:0,border:`2.5px solid ${selectedImg===src?T.black:T.gray8}`,cursor:'pointer',position:'relative',background:'#f2f2f7',flexShrink:0,boxShadow:selectedImg===src?`0 0 0 2px ${T.black}`:'none',transition:'border .18s, box-shadow .18s' }}>
+                      <img src={src} alt={`Option ${i+1}`} style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
+                      {selectedImg===src&&<div style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.18)',display:'flex',alignItems:'center',justifyContent:'center' }}><Icon name="check" size={18} color="#fff"/></div>}
+                    </button>
+                  ))}
                 </div>
-              )}
-              <div style={{ display:"flex",flexDirection:"column",gap:5 }}>
-                <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:"0.05em",textTransform:"uppercase" }}>{t.noteToSeller}</label>
-                <textarea value={form.note} onChange={e=>set("note",e.target.value)} placeholder="Anything we should know…" style={{ padding:"12px 14px",fontSize:14,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:"none",fontFamily:"-apple-system,sans-serif",resize:"vertical",minHeight:72 }}/>
+                {!selectedImg&&<p style={{ fontSize:12,color:T.red,marginTop:8 }}>{t.pickRequired}</p>}
               </div>
-              {err&&<p style={{ fontSize:13,color:T.red,background:"#fff0f0",padding:"10px 14px",borderRadius:10,margin:0 }}>{err}</p>}
-              <Btn full onClick={submit} disabled={loading} style={{ marginTop:4,padding:"16px",fontSize:16,borderRadius:16 }}>
-                {loading?<Spin size={18}/>:t.requestToBuy+" →"}
-              </Btn>
-            </div>
-          )}
+            )}
+
+            {/* Pre-fill notice */}
+            {isRealUser && prefillName && (
+              <div style={{ display:'flex',alignItems:'center',gap:8,background:`${T.green}10`,border:`1px solid ${T.green}30`,borderRadius:11,padding:'10px 13px',marginBottom:16 }}>
+                <Icon name="check" size={14} color={T.green}/>
+                <p style={{ fontSize:12,color:T.green,fontWeight:500,margin:0 }}>{t.requestFormPrefilled}</p>
+              </div>
+            )}
+
+            {sent ? (
+              <div style={{ textAlign:'center',padding:'32px 0' }}>
+                <div style={{ width:72,height:72,borderRadius:36,background:'#e8faf0',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16 }}>
+                  <Icon name="check" size={34} color={T.green}/>
+                </div>
+                <p style={{ fontSize:20,fontWeight:700,color:T.black,marginBottom:8 }}>{t.requestSent}</p>
+                <p style={{ fontSize:14,color:T.gray4,marginBottom:24,lineHeight:1.6 }}>
+                  We'll contact you at <strong>{form.email}</strong> to confirm.
+                </p>
+                <Btn onClick={onClose} variant="gray" size="sm">Close</Btn>
+              </div>
+            ) : (
+              <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
+                {inp(t.yourName,  'name',    'text',  'e.g. Jane Smith')}
+                {inp(t.yourEmail, 'email',   'email', 'your@email.com', isRealUser && !!prefillEmail)}
+                {inp(t.yourPhone, 'phone',   'tel',   '+255 700 000 000')}
+                {inp(t.deliveryAddress,'address','text','Street, City, Country')}
+
+                {product.sizes?.length>0&&(
+                  <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+                    <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:'0.05em',textTransform:'uppercase' }}>{t.size}</label>
+                    <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
+                      {product.sizes.map(s=>(
+                        <button key={s} onClick={()=>set('size',s)} style={{ padding:'8px 16px',borderRadius:10,border:`1.5px solid ${form.size===s?T.black:T.gray8}`,background:form.size===s?T.black:T.fill3,color:form.size===s?T.white:T.black,fontSize:13,fontWeight:600,cursor:'pointer' }}>{s}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+                  <label style={{ fontSize:12,fontWeight:600,color:T.gray4,letterSpacing:'0.05em',textTransform:'uppercase' }}>{t.noteToSeller}</label>
+                  <textarea value={form.note} onChange={e=>set('note',e.target.value)} placeholder="Anything we should know…" style={{ padding:'12px 14px',fontSize:14,background:T.fill3,border:`1.5px solid ${T.gray8}`,borderRadius:12,color:T.black,outline:'none',fontFamily:'-apple-system,sans-serif',resize:'vertical',minHeight:72 }}/>
+                </div>
+
+                {/* Guest tip */}
+                {!isRealUser && (
+                  <p style={{ fontSize:12,color:T.gray5,background:T.fill4,padding:'9px 13px',borderRadius:10,margin:0,lineHeight:1.5 }}>
+                    {t.requestFormGuestNote}
+                  </p>
+                )}
+
+                {err&&<p style={{ fontSize:13,color:T.red,background:'#fff0f0',padding:'10px 14px',borderRadius:10,margin:0 }}>{err}</p>}
+                <Btn full onClick={submit} disabled={loading} style={{ marginTop:4,padding:'16px',fontSize:16,borderRadius:16 }}>
+                  {loading?<Spin size={18}/>:t.requestToBuy+' →'}
+                </Btn>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Account creation nudge — shown after successful send for guests */}
+      {showNudge && (
+        <AccountNudge email={form.email} onDone={()=>{ setNudge(false); onClose(); }}/>
+      )}
+    </>
   );
 }
 
@@ -1296,7 +1482,7 @@ function ProductDetail({ p, onBack, onNavigateProduct, onAdd, wishlisted, onWish
         </Btn>
       </div>
 
-      {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId}/>}
+      {showReq&&<PurchaseModal product={p} onClose={()=>setReq(false)} sessionId={sessionId} user={user}/>}
 
 
       <RelatedProducts currentProduct={p} products={products} onSelect={onNavigateProduct} wishlist={[]} onWishlist={onWishlist} user={user} onLoginPrompt={onLoginPrompt}/>
