@@ -5,19 +5,29 @@ import './layout.css';
 
 /* ─── Error Boundary ────────────────────────────────────────── */
 class ErrorBoundary extends Component {
-  constructor(props) { super(props); this.state = { hasError:false, error:null }; }
+  constructor(props) { super(props); this.state = { hasError:false, error:null, info:null }; }
   static getDerivedStateFromError(e) { return { hasError:true, error:e }; }
-  componentDidCatch(e, info) { console.error("MSAMBWA Error:", e, info); }
+  componentDidCatch(e, info) { console.error("MSAMBWA Error:", e, info); this.setState({ info }); }
   render() {
     if (!this.state.hasError) return this.props.children;
+    const msg = this.state.error?.message || String(this.state.error);
+    const stack = this.state.error?.stack || "";
+    const component = this.state.info?.componentStack || "";
     return (
-      <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:32,textAlign:"center",background:"#fff" }}>
-        <div style={{ width:72,height:72,borderRadius:24,background:"#fff0f0",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20 }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E03A4E" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div style={{ padding:20,fontFamily:"monospace",background:"#fff",minHeight:"100vh" }}>
+        <div style={{ background:"#fff0f0",borderRadius:12,padding:16,marginBottom:16 }}>
+          <p style={{ fontSize:16,fontWeight:700,color:"#E03A4E",margin:"0 0 8px" }}>Runtime Error</p>
+          <p style={{ fontSize:13,color:"#333",margin:0,wordBreak:"break-all" }}>{msg}</p>
         </div>
-        <p style={{ fontSize:20,fontWeight:700,marginBottom:8,color:"#0C1C1F" }}>Something went wrong</p>
-        <p style={{ fontSize:14,color:"#8AADB5",marginBottom:24,maxWidth:280,lineHeight:1.6 }}>We hit an unexpected error. Tap below to reload.</p>
-        <button onClick={()=>window.location.reload()} style={{ background:"#1C7A8C",color:"#fff",border:"none",borderRadius:14,padding:"14px 32px",fontSize:15,fontWeight:600,cursor:"pointer" }}>Reload Store</button>
+        <details open style={{ marginBottom:12 }}>
+          <summary style={{ fontSize:12,color:"#666",cursor:"pointer",marginBottom:8 }}>Stack trace</summary>
+          <pre style={{ fontSize:10,color:"#555",overflowX:"auto",background:"#f5f5f5",padding:12,borderRadius:8,lineHeight:1.5 }}>{stack}</pre>
+        </details>
+        <details style={{ marginBottom:16 }}>
+          <summary style={{ fontSize:12,color:"#666",cursor:"pointer",marginBottom:8 }}>Component tree</summary>
+          <pre style={{ fontSize:10,color:"#555",overflowX:"auto",background:"#f5f5f5",padding:12,borderRadius:8,lineHeight:1.5 }}>{component}</pre>
+        </details>
+        <button onClick={()=>window.location.reload()} style={{ background:"#1C7A8C",color:"#fff",border:"none",borderRadius:10,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer" }}>Reload</button>
       </div>
     );
   }
