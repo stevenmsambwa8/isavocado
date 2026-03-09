@@ -137,6 +137,10 @@ function Ic({ n, size=20, color=T.label, w=1.8 }) {
     out:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline {...p} points="16 17 21 12 16 7"/><line {...p} x1="21" y1="12" x2="9" y2="12"/></svg>,
     gear:   <svg {...d} viewBox="0 0 24 24"><circle {...p} cx="12" cy="12" r="3"/><path {...p} d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
     msg:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+    clock:  <svg {...d} viewBox="0 0 24 24"><circle {...p} cx="12" cy="12" r="10"/><polyline {...p} points="12 6 12 12 16 14"/></svg>,
+    review: <svg {...d} viewBox="0 0 24 24"><polygon {...p} points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    tag:    <svg {...d} viewBox="0 0 24 24"><path {...p} d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line {...p} x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+    toggle: <svg {...d} viewBox="0 0 24 24"><rect {...p} x="1" y="5" width="22" height="14" rx="7"/><circle {...p} cx="16" cy="12" r="3" fill={color} stroke="none"/></svg>,
     star:   <svg {...d} viewBox="0 0 24 24"><polygon fill={color} stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     starE:  <svg {...d} viewBox="0 0 24 24"><polygon {...p} fill="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   };
@@ -172,7 +176,11 @@ function Toast({ msg, type, onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, []);
   return (
     <div style={{ position:'fixed', bottom:88, left:'50%', transform:'translateX(-50%)', zIndex:9999, animation:'fadeUp .2s ease', background:type==='error'?T.red:'rgba(30,30,30,0.9)', color:T.white, padding:'12px 20px', borderRadius:99, fontSize:14, fontWeight:500, backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', boxShadow:'0 4px 20px rgba(0,0,0,.2)', whiteSpace:'nowrap' }}>
-      {type==='error'?'⚠️  ':'✓  '}{msg}
+      <span style={{ marginRight:6, display:'inline-flex', alignItems:'center' }}>
+      {type==='error'
+        ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+    </span>{msg}
     </div>
   );
 }
@@ -356,7 +364,7 @@ function MultiImagePicker({ slots, onAdd, onRemove, onReorder, compressingIdx })
 }
 
 /* ─── PRODUCT FORM ──────────────────────────────────────────── */
-const BLANK = { name:'', description:'', price:'', was:'', category:'Knitwear', sizes:[], badge:'', stock:'', rating:'0', reviews:'0', is_active:true };
+const BLANK = { name:'', description:'', price:'', was:'', category:'Knitwear', sizes:[], badge:'', stock:'', rating:'0', reviews:'0', is_active:true, in_stock:true };
 const CATS  = ['Knitwear','Tailoring','Dresses','Trousers','Tops','Outerwear','Accessories','Footwear','Sale'];
 const SIZES_ALPHA   = ['XS','S','M','L','XL','XXL','3XL','4XL','5XL','6XL','7XL','8XL','9XL','10XL'];
 const SIZES_NUMERIC = Array.from({length:101}, (_,i) => String(i));
@@ -445,6 +453,14 @@ function ProductForm({ initial=BLANK, onSave, onCancel, saving }) {
         <Sep/>
         <FieldRow label="Stock" value={f.stock} onChange={v=>set('stock',v)} type="number" placeholder="0" error={err.stock}/>
         <Sep/>
+        <Sep/>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderBottom:`1px solid ${T.sep}` }}>
+          <div>
+            <p style={{ fontSize:15, color:T.label, margin:0 }}>In Stock</p>
+            <p style={{ fontSize:12, color:T.label3, margin:'2px 0 0' }}>Off = "Sold Out" shown on product</p>
+          </div>
+          <Toggle on={f.in_stock} onChange={v=>set('in_stock',v)}/>
+        </div>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px' }}>
           <p style={{ fontSize:15, color:T.label, margin:0 }}>Visible in store</p>
           <Toggle on={f.is_active} onChange={v=>set('is_active',v)}/>
@@ -551,6 +567,7 @@ function ProductsPanel() {
         rating:      parseFloat(form.rating) || 0,
         reviews:     parseInt(form.reviews)  || 0,
         is_active:   form.is_active,
+        in_stock:    form.in_stock,
       };
       let id = editing?.id;
       if (editing?.id) {
@@ -615,7 +632,7 @@ function ProductsPanel() {
                 <div style={{ width:52, height:60, borderRadius:10, background:T.fill, flexShrink:0, overflow:'hidden', position:'relative' }}>
                   {p.image_url
                     ? <img src={p.image_url} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                    : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>👗</div>
+                    : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="box" size={22} color={T.label3}/></div>
                   }
                   {p.image_urls?.length > 1 && (
                     <div style={{ position:'absolute', bottom:3, right:3, background:'rgba(0,0,0,.6)', borderRadius:5, padding:'1px 5px' }}>
@@ -637,11 +654,17 @@ function ProductsPanel() {
                         ★ {p.rating} ({p.reviews})
                       </span>
                     )}
-                    <span style={{ fontSize:12, color:p.stock>0?T.green:T.red }}>· {p.stock} left</span>
+                    <span style={{ fontSize:12, color:T.label3 }}>· {p.stock ?? 0} in stock</span>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 7px', borderRadius:99, background: p.in_stock!==false ? `${T.green}14` : `${T.red}14`, color: p.in_stock!==false ? T.green : T.red }}>
+                      {p.in_stock!==false ? 'Live' : 'Sold Out'}
+                    </span>
                   </div>
                 </div>
                 {/* Actions */}
                 <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                  <button onClick={async()=>{ await sb.from('products').update({in_stock:p.in_stock===false}).eq('id',p.id); load(); }} className="tap" style={{ fontSize:10, fontWeight:700, padding:'4px 9px', borderRadius:99, background:p.in_stock!==false?`${T.green}14`:`${T.red}14`, color:p.in_stock!==false?T.green:T.red, border:'none', cursor:'pointer' }}>
+                    {p.in_stock!==false?'IN STOCK':'SOLD OUT'}
+                  </button>
                   <Toggle on={p.is_active} onChange={async () => { await sb.from('products').update({is_active:!p.is_active}).eq('id',p.id); load(); }}/>
                   <button onClick={()=>setEditing(p)} className="tap" style={{ width:34,height:34,borderRadius:10,background:T.fill,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
                     <Ic n="edit" size={15} color={T.blue}/>
@@ -794,7 +817,10 @@ function OrdersPanel() {
                     <p style={{ fontSize:15, fontWeight:600, color:T.label, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{o.product_name}</p>
                     <Pill status={o.status}/>
                   </div>
-                  <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{o.buyer_name} · {o.buyer_phone||o.buyer_email}</p>
+                  <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {o.buyer_name} · {o.buyer_phone||o.buyer_email}
+                    {o.order_ref && <span style={{ marginLeft:6, fontSize:11, fontWeight:600, color:T.label4, background:T.fill, borderRadius:6, padding:'1px 6px' }}>{o.order_ref}</span>}
+                  </p>
                 </div>
                 <div style={{ textAlign:'right', flexShrink:0 }}>
                   <p style={{ fontSize:15, fontWeight:700, color:T.label, margin:'0 0 2px' }}>{money(o.product_price * (o.quantity||1))}</p>
@@ -810,9 +836,14 @@ function OrdersPanel() {
       {sel && (
         <Sheet title="Purchase Request" onClose={()=>setSel(null)}>
           <Card title="Product">
+            {sel.selected_image_url && (
+              <div style={{ padding:'12px 16px 0' }}>
+                <img src={sel.selected_image_url} alt="" style={{ width:80, height:100, objectFit:'cover', borderRadius:10 }}/>
+              </div>
+            )}
             <Row
               label={sel.product_name}
-              sub={[sel.selected_size && `Size ${sel.selected_size}`, `Qty ${sel.quantity||1}`, `${money(sel.product_price)} each`].filter(Boolean).join(' · ')}
+              sub={[sel.selected_size && `Size ${sel.selected_size}`, `Qty ${sel.quantity||1}`, `${money(sel.product_price)} each`, sel.order_ref].filter(Boolean).join(' · ')}
               right={<span style={{fontSize:15,fontWeight:700,color:T.label}}>{money(sel.product_price * (sel.quantity||1))}</span>}
               last/>
           </Card>
@@ -872,10 +903,10 @@ function Overview() {
   if (!stats) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
 
   const cards = [
-    { label:'Products', value:stats.products,                  emoji:'📦', color:T.blue   },
-    { label:'Orders',   value:stats.orders,                    emoji:'🧾', color:T.green  },
-    { label:'Pending',  value:stats.pending,                   emoji:'⏳', color:T.orange },
-    { label:'Revenue',  value:`TZS ${Number(stats.revenue||0).toLocaleString('en-US',{maximumFractionDigits:0})}`, emoji:'💰', color:T.purple },
+    { label:'Products', value:stats.products,                  icon:'box',    color:T.blue   },
+    { label:'Orders',   value:stats.orders,                    icon:'orders', color:T.green  },
+    { label:'Pending',  value:stats.pending,                   icon:'clock',  color:T.orange },
+    { label:'Revenue',  value:`TZS ${Number(stats.revenue||0).toLocaleString('en-US',{maximumFractionDigits:0})}`, icon:'chart', color:T.purple },
   ];
 
   return (
@@ -883,8 +914,10 @@ function Overview() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:26 }}>
         {cards.map((c, i) => (
           <div key={c.label} style={{ background:T.white, borderRadius:16, padding:'18px 16px', boxShadow:'0 1px 3px rgba(0,0,0,.05)', animation:`fadeUp .3s ease ${i*0.06}s both` }}>
-            <p style={{ fontSize:26, margin:'0 0 8px' }}>{c.emoji}</p>
-            <p style={{ fontSize:28, fontWeight:700, color:T.label, margin:'0 0 2px', letterSpacing:'-0.8px' }}>{c.value}</p>
+            <div style={{ width:38,height:38,borderRadius:10,background:`${c.color}14`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:10 }}>
+              <Ic n={c.icon} size={20} color={c.color} w={2}/>
+            </div>
+            <p style={{ fontSize:26, fontWeight:700, color:T.label, margin:'0 0 2px', letterSpacing:'-0.8px' }}>{c.value}</p>
             <p style={{ fontSize:13, color:T.label3, margin:0 }}>{c.label}</p>
           </div>
         ))}
@@ -925,7 +958,7 @@ function Auth({ onAuth }) {
       <div style={{ width:'100%', maxWidth:390, animation:'fadeUp .35s ease' }}>
         <div style={{ textAlign:'center', marginBottom:36 }}>
           <div style={{ width:84, height:84, borderRadius:22, background:T.label, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', boxShadow:'0 8px 28px rgba(0,0,0,.16)' }}>
-            <span style={{ fontSize:42 }}>🛍️</span>
+            <span style={{ fontSize:36, letterSpacing:'-1px', fontWeight:800, color:'#fff' }}>M</span>
           </div>
           <h1 style={{ fontSize:26, fontWeight:700, color:T.label, margin:'0 0 4px', letterSpacing:'-0.5px' }}>MSAMBWA</h1>
           <p style={{ fontSize:15, color:T.label3, margin:0 }}>Store Admin</p>
@@ -1043,7 +1076,9 @@ function FeedbackPanel() {
     setDel(false);
   };
 
-  const stars = n => '★'.repeat(n) + '☆'.repeat(5-n);
+  const stars = n => Array.from({length:5}, (_,i) => (
+    <Ic key={i} n={i<n?'review':'review'} size={14} color={i<n?'#f59a0e':'#D1D1D6'} w={i<n?0:1.8}/>
+  ));
   const avg = items.length ? (items.reduce((s,i)=>s+(i.rating||0),0)/items.length).toFixed(1) : '—';
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
@@ -1083,7 +1118,7 @@ function FeedbackPanel() {
               <button onClick={()=>setSel(item)} className="rowbtn" style={{ width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:T.white,border:'none',cursor:'pointer',textAlign:'left' }}>
                 <div style={{ flex:1,minWidth:0 }}>
                   <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:2 }}>
-                    <span style={{ fontSize:14,color:'#f59a0e',letterSpacing:1 }}>{stars(item.rating||0)}</span>
+                    <div style={{ display:'flex',gap:2 }}>{stars(item.rating||0)}</div>
                     {item.email&&<span style={{ fontSize:12,color:T.label3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.email}</span>}
                   </div>
                   {item.message&&<p style={{ fontSize:13,color:T.label3,margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.message}</p>}
@@ -1100,7 +1135,7 @@ function FeedbackPanel() {
         <Sheet title="Feedback" onClose={()=>setSel(null)}>
           <Card title="Rating">
             <div style={{ padding:'14px 16px' }}>
-              <p style={{ fontSize:28,color:'#f59a0e',margin:'0 0 4px',letterSpacing:2 }}>{stars(sel.rating||0)}</p>
+              <div style={{ display:'flex',gap:3,marginBottom:4 }}>{stars(sel.rating||0)}</div>
               <p style={{ fontSize:13,color:T.label3,margin:0 }}>{sel.rating}/5 stars</p>
             </div>
           </Card>
@@ -1123,11 +1158,143 @@ function FeedbackPanel() {
   );
 }
 
+
+/* ─── REVIEWS PANEL ─────────────────────────────────────────── */
+function ReviewsPanel() {
+  const [items,    setItems]   = useState([]);
+  const [loading,  setLoading] = useState(true);
+  const [sel,      setSel]     = useState(null);
+  const [approving,setApp]     = useState(false);
+  const [toast,    setToast]   = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await sb.from('product_reviews')
+      .select('id,product_id,reviewer_name,rating,body,approved,created_at,products(name)')
+      .order('created_at', { ascending:false });
+    setItems(data||[]);
+    setLoading(false);
+  };
+  useEffect(()=>{ load(); },[]);
+
+  const approve = async (id) => {
+    setApp(true);
+    await sb.from('product_reviews').update({ approved:true }).eq('id', id);
+    setItems(is=>is.map(i=>i.id===id?{...i,approved:true}:i));
+    if (sel?.id===id) setSel(s=>({...s,approved:true}));
+    setToast({ msg:'Review approved' });
+    setApp(false);
+  };
+
+  const remove = async (id) => {
+    await sb.from('product_reviews').delete().eq('id', id);
+    setItems(is=>is.filter(i=>i.id!==id));
+    setSel(null);
+    setToast({ msg:'Review deleted' });
+  };
+
+  const pending  = items.filter(i=>!i.approved);
+  const approved = items.filter(i=>i.approved);
+  const fmtDate  = d => new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  const starsEl  = n => <div style={{ display:'flex',gap:2 }}>{Array.from({length:5},(_,i)=><Ic key={i} n="review" size={12} color={i<n?'#f59a0e':'#D1D1D6'} w={i<n?0:1.5}/>)}</div>;
+
+  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
+
+  return (
+    <div style={{ animation:'fadeUp .28s ease' }}>
+      {toast && <Toast msg={toast.msg} type={toast.type||'success'} onDone={()=>setToast(null)}/>}
+
+      {pending.length > 0 && (
+        <Card title={`${pending.length} pending approval`} style={{ marginBottom:20 }}>
+          {pending.map((r,i) => (
+            <div key={r.id}>
+              <div style={{ padding:'13px 16px', background:T.white, display:'flex', alignItems:'flex-start', gap:12 }}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
+                    {starsEl(r.rating)}
+                    <span style={{ fontSize:13, fontWeight:600, color:T.label }}>{r.reviewer_name}</span>
+                  </div>
+                  <p style={{ fontSize:12, color:T.blue, margin:'0 0 2px', fontWeight:500 }}>{r.products?.name}</p>
+                  <p style={{ fontSize:13, color:T.label3, margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.body}</p>
+                </div>
+                <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                  <button onClick={()=>approve(r.id)} disabled={approving} className="tap" style={{ padding:'6px 12px', borderRadius:99, background:`${T.green}14`, color:T.green, border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>
+                    Approve
+                  </button>
+                  <button onClick={()=>remove(r.id)} className="tap" style={{ width:30,height:30,borderRadius:15,background:`${T.red}14`,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                    <Ic n="trash" size={13} color={T.red} w={2}/>
+                  </button>
+                </div>
+              </div>
+              {i<pending.length-1&&<Sep/>}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {approved.length === 0 && pending.length === 0 && (
+        <div style={{ textAlign:'center', paddingTop:72 }}>
+          <div style={{ width:72,height:72,borderRadius:20,background:T.fill,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px' }}>
+            <Ic n="review" size={32} color={T.label3}/>
+          </div>
+          <p style={{ fontSize:20,fontWeight:700,color:T.label,margin:'0 0 8px' }}>No reviews yet</p>
+          <p style={{ fontSize:15,color:T.label3,lineHeight:1.5 }}>Customer reviews will appear here once submitted.</p>
+        </div>
+      )}
+
+      {approved.length > 0 && (
+        <Card title={`${approved.length} published`}>
+          {approved.map((r,i) => (
+            <div key={r.id}>
+              <button onClick={()=>setSel(r)} className="rowbtn" style={{ width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:T.white,border:'none',cursor:'pointer',textAlign:'left' }}>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:2 }}>
+                    {starsEl(r.rating)}
+                    <span style={{ fontSize:13,fontWeight:600,color:T.label,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.reviewer_name}</span>
+                  </div>
+                  <p style={{ fontSize:12,color:T.blue,margin:'0 0 1px',fontWeight:500 }}>{r.products?.name}</p>
+                  <p style={{ fontSize:13,color:T.label3,margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.body}</p>
+                </div>
+                <p style={{ fontSize:11,color:T.label4,margin:0,flexShrink:0 }}>{fmtDate(r.created_at)}</p>
+              </button>
+              {i<approved.length-1&&<Sep/>}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {sel && (
+        <Sheet title="Review" onClose={()=>setSel(null)}>
+          <Card title="Rating">
+            <div style={{ padding:'14px 16px' }}>
+              <div style={{ display:'flex',gap:3,marginBottom:6 }}>{Array.from({length:5},(_,i)=><Ic key={i} n="review" size={22} color={i<sel.rating?'#f59a0e':'#D1D1D6'} w={i<sel.rating?0:1.5}/>)}</div>
+              <p style={{ fontSize:13,color:T.label3,margin:0 }}>{sel.rating}/5 · {sel.reviewer_name}</p>
+            </div>
+          </Card>
+          <Card title="Review">
+            <div style={{ padding:'14px 16px' }}>
+              <p style={{ fontSize:12,color:T.blue,fontWeight:500,margin:'0 0 8px' }}>{sel.products?.name}</p>
+              <p style={{ fontSize:15,color:T.label,margin:0,lineHeight:1.6 }}>{sel.body}</p>
+            </div>
+          </Card>
+          <Card title="Info">
+            <Row label={sel.reviewer_name} sub={fmtDate(sel.created_at)} last/>
+          </Card>
+          <button onClick={()=>remove(sel.id)} style={{ width:'100%',padding:'14px',background:`${T.red}10`,color:T.red,border:`1px solid ${T.red}30`,borderRadius:14,fontSize:15,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+            <Ic n="trash" size={16} color={T.red} w={2}/> Delete review
+          </button>
+        </Sheet>
+      )}
+    </div>
+  );
+}
+
 /* ─── ROOT DASHBOARD ────────────────────────────────────────── */
 const TABS = [
   { id:'overview', label:'Overview',  icon:'chart'  },
   { id:'products', label:'Products',  icon:'box'    },
   { id:'orders',   label:'Orders',    icon:'orders' },
+  { id:'reviews',  label:'Reviews',   icon:'review' },
   { id:'feedback', label:'Feedback',  icon:'msg'    },
   { id:'settings', label:'Settings',  icon:'gear'   },
 ];
@@ -1175,6 +1342,7 @@ export default function Dashboard() {
         {tab==='overview'  && <Overview/>}
         {tab==='products'  && <ProductsPanel/>}
         {tab==='orders'    && <OrdersPanel/>}
+        {tab==='reviews'   && <ReviewsPanel/>}
         {tab==='feedback'  && <FeedbackPanel/>}
         {tab==='settings'  && <SettingsPanel/>}
       </div>
@@ -1183,7 +1351,7 @@ export default function Dashboard() {
       <div style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:300, background:'rgba(242,242,247,0.92)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderTop:`1px solid ${T.sep}`, paddingBottom:'env(safe-area-inset-bottom,0px)' }}>
         <div style={{ display:'flex', justifyContent:'space-around', padding:'8px 0 2px', maxWidth:640, margin:'0 auto' }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={()=>setTab(t.id)} className="tap" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, background:'none', border:'none', cursor:'pointer', padding:'4px 24px' }}>
+            <button key={t.id} onClick={()=>setTab(t.id)} className="tap" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, background:'none', border:'none', cursor:'pointer', padding:'4px 16px', position:'relative' }}>
               <Ic n={t.icon} size={24} color={tab===t.id?T.blue:T.label3} w={tab===t.id?2.2:1.6}/>
               <span style={{ fontSize:10, fontWeight:tab===t.id?600:400, color:tab===t.id?T.blue:T.label3 }}>{t.label}</span>
             </button>
