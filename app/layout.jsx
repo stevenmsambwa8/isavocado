@@ -1,9 +1,5 @@
+import Script from 'next/script';
 import './layout.css';
-
-/* ─────────────────────────────────────────────────────────────
-   MSAMBWA — Root Layout
-   PWA meta tags for iOS Safari and Android Chrome.
-───────────────────────────────────────────────────────────── */
 
 export const metadata = {
   title:       'MSAMBWA Classic Wear',
@@ -13,10 +9,18 @@ export const metadata = {
     capable:        true,
     title:          'MSAMBWA',
     statusBarStyle: 'black-translucent',
+    startupImage: [
+      { url: '/splash/splash-1290x2796.png', media: 'screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
+      { url: '/splash/splash-1179x2556.png', media: 'screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
+      { url: '/splash/splash-1125x2436.png', media: 'screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
+      { url: '/splash/splash-828x1792.png',  media: 'screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)' },
+      { url: '/splash/splash-750x1334.png',  media: 'screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)' },
+      { url: '/splash/splash-2048x2732.png', media: 'screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)' },
+      { url: '/splash/splash-1640x2360.png', media: 'screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)' },
+    ],
   },
-  formatDetection: {
-    telephone: false,
-  },
+  formatDetection:  { telephone: false },
+  applicationName:  'MSAMBWA',
   openGraph: {
     title:       'MSAMBWA Classic Wear',
     description: 'Shop refined fashion from MSAMBWA.',
@@ -37,6 +41,12 @@ export const metadata = {
     ],
     shortcut: '/icons/icon-192x192.png',
   },
+  other: {
+    'mobile-web-app-capable':  'yes',
+    'msapplication-TileColor': '#1C7A8C',
+    'msapplication-TileImage': '/icons/icon-144x144.png',
+    'msapplication-config':    '/browserconfig.xml',
+  },
 };
 
 export const viewport = {
@@ -54,52 +64,20 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        {/* ── iOS Safari ── */}
-        <meta name="apple-mobile-web-app-capable"           content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style"  content="black-translucent" />
-        <meta name="apple-mobile-web-app-title"             content="MSAMBWA" />
-
-        {/* iOS splash screens */}
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"  href="/splash/splash-1290x2796.png"/>
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"  href="/splash/splash-1179x2556.png"/>
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"  href="/splash/splash-1125x2436.png"/>
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"  href="/splash/splash-828x1792.png"/>
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"  href="/splash/splash-750x1334.png"/>
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-2048x2732.png"/>
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"  href="/splash/splash-1640x2360.png"/>
-
-        {/* ── Android / general ── */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="application-name"       content="MSAMBWA" />
-
-        {/* Microsoft Edge tiles */}
-        <meta name="msapplication-TileColor" content="#1C7A8C" />
-        <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
-        <meta name="msapplication-config"    content="/browserconfig.xml" />
-
-        {/* Service Worker registration */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                    .then(function(reg) {
-                      console.log('[MSAMBWA SW] registered:', reg.scope);
-                      setInterval(function() { reg.update(); }, 60 * 60 * 1000);
-                    })
-                    .catch(function(err) {
-                      console.warn('[MSAMBWA SW] failed:', err);
-                    });
-                });
-              }
-            `,
-          }}
-        />
-      </head>
       <body style={{ margin: 0, padding: 0, overscrollBehavior: 'none' }}>
         {children}
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(function(reg) {
+                  console.log('[SW] registered:', reg.scope);
+                  setInterval(function() { reg.update(); }, 3600000);
+                })
+                .catch(function(err) { console.warn('[SW] failed:', err); });
+            });
+          }`}
+        </Script>
       </body>
     </html>
   );
