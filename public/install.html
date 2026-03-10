@@ -3,225 +3,262 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Install MSAMBWA App</title>
+  <title>Install MSAMBWA</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(160deg, #0f3d47 0%, #1C7A8C 50%, #4EC8E8 100%);
+      background: #0f3d47;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
     }
+
     .card {
       background: #fff;
-      border-radius: 28px;
-      padding: 40px 32px;
-      max-width: 420px;
+      border-radius: 24px;
+      padding: 32px 28px;
       width: 100%;
+      max-width: 380px;
       text-align: center;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
     }
-    .logo-ring {
-      width: 88px; height: 88px; border-radius: 22px;
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .icon {
+      width: 60px; height: 60px; border-radius: 15px;
       background: linear-gradient(145deg, #1C7A8C, #0f5f6e);
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px;
-      box-shadow: 0 8px 28px rgba(28,122,140,0.45);
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(28,122,140,0.4);
     }
-    .logo-ring span {
-      font-size: 42px; font-weight: 900; color: #fff;
-      letter-spacing: -2px;
+    .icon span {
+      font-size: 28px; font-weight: 900; color: #fff;
+      font-family: -apple-system, sans-serif; letter-spacing: -1px;
     }
-    h1 { font-size: 26px; font-weight: 800; color: #0C1C1F; letter-spacing: -0.6px; margin-bottom: 6px; }
-    .sub { font-size: 15px; color: #5B7C84; margin-bottom: 32px; line-height: 1.5; }
+    .app-name { font-size: 20px; font-weight: 800; color: #0C1C1F; letter-spacing: -0.5px; }
+    .app-sub  { font-size: 13px; color: #5B7C84; margin-top: 2px; }
 
-    /* QR box */
-    .qr-wrap {
-      background: #F2FAFC;
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 28px;
-      border: 2px solid #DFF0F3;
-    }
-    .qr-wrap p { font-size: 13px; font-weight: 600; color: #5B7C84; margin-top: 14px; letter-spacing: 0.03em; }
-    #qr-canvas { display: block; margin: 0 auto; border-radius: 12px; }
-
-    /* URL pill */
-    .url-pill {
+    /* QR section */
+    .qr-box {
       background: #F2FAFC;
       border: 1.5px solid #DFF0F3;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 14px;
-      font-weight: 600;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto 14px;
+      border-radius: 8px;
+    }
+    .qr-hint {
+      font-size: 12px;
+      font-weight: 500;
+      color: #8AADB5;
+      margin-bottom: 12px;
+    }
+    .download-btn {
+      display: block; width: 100%;
+      padding: 11px;
+      background: #fff;
+      border: 1.5px solid #DFF0F3;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 600;
       color: #1C7A8C;
-      word-break: break-all;
-      margin-bottom: 24px;
       cursor: pointer;
       transition: background .15s;
     }
-    .url-pill:hover { background: #DFF0F3; }
-    .copied { color: #1D9B6A !important; }
+    .download-btn:hover { background: #DFF0F3; }
 
-    /* Install button */
-    .install-btn {
-      display: block; width: 100%;
-      padding: 16px;
-      background: #1C7A8C; color: #fff;
-      border: none; border-radius: 14px;
-      font-size: 16px; font-weight: 700;
-      cursor: pointer; text-decoration: none;
-      margin-bottom: 10px;
+    /* URL row */
+    .url-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .url-text {
+      flex: 1;
+      padding: 11px 14px;
+      background: #F2FAFC;
+      border: 1.5px solid #DFF0F3;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #1C7A8C;
+      font-weight: 600;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .copy-btn {
+      padding: 11px 16px;
+      background: #1C7A8C;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
       transition: opacity .15s;
     }
-    .install-btn:hover { opacity: 0.88; }
+    .copy-btn:hover { opacity: 0.85; }
+    .copy-btn.done { background: #1D9B6A; }
 
-    /* Features */
-    .features {
-      display: flex; gap: 8px; flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 28px;
+    /* Open button */
+    .open-btn {
+      display: block; width: 100%;
+      padding: 14px;
+      background: #1C7A8C; color: #fff;
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      margin-bottom: 20px;
+      transition: opacity .15s;
     }
-    .feat {
-      font-size: 12px; font-weight: 600;
-      background: #F2FAFC; color: #5B7C84;
-      padding: 6px 12px; border-radius: 99px;
-    }
+    .open-btn:hover { opacity: 0.88; }
 
-    /* Platform tabs */
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 6px;
+      margin-bottom: 16px;
+    }
     .tab {
-      flex: 1; padding: 10px;
-      border-radius: 10px; border: 1.5px solid #DFF0F3;
+      flex: 1; padding: 9px;
+      border-radius: 9px;
+      border: 1.5px solid #DFF0F3;
       background: #fff; color: #5B7C84;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: all .15s;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .15s;
     }
     .tab.active { background: #1C7A8C; color: #fff; border-color: #1C7A8C; }
 
+    /* Steps */
     .steps { text-align: left; }
     .step {
-      display: flex; gap: 14px; align-items: flex-start;
-      padding: 10px 0;
+      display: flex; gap: 12px;
+      align-items: center;
+      padding: 9px 0;
       border-bottom: 1px solid #F2FAFC;
     }
     .step:last-child { border-bottom: none; }
-    .step-icon {
-      width: 36px; height: 36px; border-radius: 10px;
+    .step-num {
+      width: 26px; height: 26px; border-radius: 8px;
       background: #F2FAFC;
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px; flex-shrink: 0;
+      font-size: 12px; font-weight: 700; color: #1C7A8C;
+      flex-shrink: 0;
     }
-    .step-title { font-size: 14px; font-weight: 600; color: #0C1C1F; margin-bottom: 2px; }
-    .step-sub { font-size: 12px; color: #5B7C84; line-height: 1.4; }
-
-    .footer { font-size: 12px; color: #8AADB5; margin-top: 24px; }
+    .step-text { font-size: 13px; color: #0C1C1F; font-weight: 500; line-height: 1.4; }
   </style>
 </head>
 <body>
 <div class="card">
-  <div class="logo-ring"><span>M</span></div>
-  <h1>MSAMBWA</h1>
-  <p class="sub">Classic Wear · Scan to install the free app<br>on any phone — no App Store needed</p>
 
-  <div class="features">
-    <span class="feat">⚡ Instant loading</span>
-    <span class="feat">📦 Order tracking</span>
-    <span class="feat">📶 Works offline</span>
-    <span class="feat">🔔 Notifications</span>
+  <!-- Header -->
+  <div class="header">
+    <div class="icon"><span>M</span></div>
+    <div>
+      <div class="app-name">MSAMBWA</div>
+      <div class="app-sub">Classic Wear · Free App</div>
+    </div>
   </div>
 
   <!-- QR Code -->
-  <div class="qr-wrap">
-    <canvas id="qr-canvas" width="200" height="200"></canvas>
-    <p>Scan with your phone camera</p>
+  <div class="qr-box">
+    <canvas id="qr" width="180" height="180"></canvas>
+    <p class="qr-hint">Scan with your phone camera to open</p>
+    <button class="download-btn" onclick="downloadQR()">Download QR Code</button>
   </div>
 
-  <!-- URL copy pill -->
-  <div class="url-pill" id="url-pill" onclick="copyUrl()">
-    🔗 <span id="url-text">msambwa.vercel.app</span>
+  <!-- URL row -->
+  <div class="url-row">
+    <div class="url-text" id="url-display">msambwa.vercel.app</div>
+    <button class="copy-btn" id="copy-btn" onclick="copyUrl()">Copy</button>
   </div>
 
-  <!-- Direct open button (for mobile visitors) -->
-  <a class="install-btn" id="open-btn" href="https://msambwa.vercel.app">
-    📲 Open &amp; Install App
-  </a>
+  <!-- Open button (for mobile) -->
+  <a class="open-btn" id="open-btn" href="https://msambwa.vercel.app">Open App</a>
 
-  <!-- Platform steps -->
+  <!-- Platform tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="showTab('android', this)">🤖 Android</button>
-    <button class="tab" onclick="showTab('ios', this)">🍎 iOS</button>
+    <button class="tab active" onclick="showTab('android', this)">Android</button>
+    <button class="tab" onclick="showTab('ios', this)">iPhone</button>
   </div>
 
+  <!-- Android steps -->
   <div class="steps" id="steps-android">
-    <div class="step"><div class="step-icon">🌐</div><div><div class="step-title">Open in Chrome</div><div class="step-sub">Scan the QR code or tap the link above</div></div></div>
-    <div class="step"><div class="step-icon">⋮</div><div><div class="step-title">Tap the menu (⋮)</div><div class="step-sub">Top right corner of Chrome</div></div></div>
-    <div class="step"><div class="step-icon">➕</div><div><div class="step-title">Add to Home screen</div><div class="step-sub">Or tap "Install app" if prompted automatically</div></div></div>
-    <div class="step"><div class="step-icon">✅</div><div><div class="step-title">Tap Install</div><div class="step-sub">MSAMBWA appears on your home screen instantly</div></div></div>
+    <div class="step"><div class="step-num">1</div><div class="step-text">Open the link in Chrome</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text">Tap the menu in the top right corner</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">Tap "Add to Home screen" or "Install app"</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text">Tap Install — done</div></div>
   </div>
 
+  <!-- iOS steps -->
   <div class="steps" id="steps-ios" style="display:none">
-    <div class="step"><div class="step-icon">🌐</div><div><div class="step-title">Open in Safari</div><div class="step-sub">Must be Safari — Chrome on iOS won't work</div></div></div>
-    <div class="step"><div class="step-icon">⬆️</div><div><div class="step-title">Tap the Share button</div><div class="step-sub">Bottom centre of Safari</div></div></div>
-    <div class="step"><div class="step-icon">➕</div><div><div class="step-title">Add to Home Screen</div><div class="step-sub">Scroll down in the share sheet</div></div></div>
-    <div class="step"><div class="step-icon">✅</div><div><div class="step-title">Tap Add</div><div class="step-sub">Top right — done, it's on your home screen!</div></div></div>
+    <div class="step"><div class="step-num">1</div><div class="step-text">Open the link in Safari (not Chrome)</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text">Tap the Share button at the bottom</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">Scroll down and tap "Add to Home Screen"</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text">Tap Add in the top right — done</div></div>
   </div>
 
-  <p class="footer">Free · No App Store · Works on all phones</p>
 </div>
 
-<!-- QR code generator (pure JS, no CDN needed) -->
 <script>
-// ── Tiny QR code generator (pure JS) ──────────────────────────
-// Based on qrcodejs, simplified for modern browsers
-(function(){
-  // The actual URL to encode — update this to your real domain
-  const URL = 'https://msambwa.vercel.app';
+  const APP_URL = 'https://msambwa.vercel.app';
+  const QR_SIZE = 180;
 
-  // Update the URL pill and open button
-  document.getElementById('url-text').textContent = URL.replace('https://','');
-  document.getElementById('open-btn').href = URL;
+  // Set URL
+  document.getElementById('url-display').textContent = APP_URL.replace('https://','');
+  document.getElementById('open-btn').href = APP_URL;
 
-  // Draw QR using Google Charts API (simple, reliable, no JS lib needed)
-  const canvas = document.getElementById('qr-canvas');
-  const size = 200;
-  const img = new Image();
+  // Load QR from API into canvas (so we can download it)
+  const canvas = document.getElementById('qr');
+  const ctx    = canvas.getContext('2d');
+  const img    = new Image();
   img.crossOrigin = 'anonymous';
-  // Use QR Server API — free, no key needed
-  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(URL)}&bgcolor=F2FAFC&color=0C1C1F&qzone=1&format=png`;
-  img.onload = function() {
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, size, size);
-  };
-  img.onerror = function() {
-    // Fallback: show URL text if QR fails
-    canvas.style.display = 'none';
-  };
-})();
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${QR_SIZE}x${QR_SIZE}&data=${encodeURIComponent(APP_URL)}&color=0C1C1F&bgcolor=F2FAFC&qzone=1&format=png`;
+  img.onload  = () => ctx.drawImage(img, 0, 0, QR_SIZE, QR_SIZE);
+  img.onerror = () => { canvas.style.display = 'none'; };
 
-function copyUrl() {
-  const url = document.getElementById('open-btn').href;
-  const pill = document.getElementById('url-pill');
-  const txt  = document.getElementById('url-text');
-  navigator.clipboard?.writeText(url).then(() => {
-    txt.textContent = '✓ Copied!';
-    pill.classList.add('copied');
-    setTimeout(() => {
-      txt.textContent = url.replace('https://','');
-      pill.classList.remove('copied');
-    }, 2000);
-  });
-}
+  function downloadQR() {
+    try {
+      const a = document.createElement('a');
+      a.download = 'msambwa-qr.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    } catch(e) {
+      // CORS fallback — open image directly
+      window.open(img.src, '_blank');
+    }
+  }
 
-function showTab(platform, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('steps-android').style.display = platform === 'android' ? 'block' : 'none';
-  document.getElementById('steps-ios').style.display     = platform === 'ios'     ? 'block' : 'none';
-}
+  function copyUrl() {
+    const btn = document.getElementById('copy-btn');
+    navigator.clipboard?.writeText(APP_URL).then(() => {
+      btn.textContent = 'Copied';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 2000);
+    });
+  }
+
+  function showTab(platform, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('steps-android').style.display = platform === 'android' ? 'block' : 'none';
+    document.getElementById('steps-ios').style.display     = platform === 'ios'     ? 'block' : 'none';
+  }
 </script>
 </body>
 </html>
