@@ -155,6 +155,67 @@ async function requestNotifPermission() {
 // Keys for localStorage
 const NOTIF_WELCOME_KEY  = 'msambwa_notif_welcomed';
 const NOTIF_ARRIVAL_KEY  = 'msambwa_notif_arrivals_started';
+const NOTIF_INBOX_KEY    = 'msambwa_notif_inbox';
+
+// ── Inbox helpers ─────────────────────────────────────────────
+function inboxGet() {
+  try { return JSON.parse(localStorage.getItem(NOTIF_INBOX_KEY) || '[]'); }
+  catch(_) { return []; }
+}
+
+function inboxAdd(entry) {
+  try {
+    const list = inboxGet();
+    // Keep max 30, newest first, no dupes by tag
+    const filtered = list.filter(n => n.tag !== entry.tag);
+    const next = [entry, ...filtered].slice(0, 30);
+    localStorage.setItem(NOTIF_INBOX_KEY, JSON.stringify(next));
+    return next;
+  } catch(_) { return []; }
+}
+
+function inboxMarkRead(id) {
+  try {
+    const next = inboxGet().map(n => n.id === id ? { ...n, read: true } : n);
+    localStorage.setItem(NOTIF_INBOX_KEY, JSON.stringify(next));
+    return next;
+  } catch(_) { return []; }
+}
+
+function inboxMarkAllRead() {
+  try {
+    const next = inboxGet().map(n => ({ ...n, read: true }));
+    localStorage.setItem(NOTIF_INBOX_KEY, JSON.stringify(next));
+    return next;
+  } catch(_) { return []; }
+}
+
+function inboxDelete(id) {
+  try {
+    const next = inboxGet().filter(n => n.id !== id);
+    localStorage.setItem(NOTIF_INBOX_KEY, JSON.stringify(next));
+    return next;
+  } catch(_) { return []; }
+}
+
+function inboxClear() {
+  try { localStorage.removeItem(NOTIF_INBOX_KEY); } catch(_) {}
+  return [];
+}
+
+function inboxUnreadCount(list) {
+  return list.filter(n => !n.read).length;
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
 
 const productUrl = (id) => {
   if (typeof window === "undefined") return "";
@@ -1810,7 +1871,7 @@ function AuthModal({ onClose, onAuth, t }) {
 }
 
 /* ─── Account Screen ────────────────────────────────────────── */
-function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t }) {
+function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t, inbox = [] }) {
   const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || t.guestUser;
 
   const publicRows = [
@@ -1830,15 +1891,23 @@ function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t }) {
     { icon:"card",     label:t.privacy,       sub:"Privacy & Terms",           go:"privacy",       auth:false },
   ];
 
+  const unread = inboxUnreadCount(inbox);
+
   const Row = ({ icon, label, sub, go, auth }) => {
     const locked = auth && !user;
+    const isBell = go === 'notifications';
     return (
       <button
         onClick={()=> locked ? onLogin() : onNavigate(go)}
         style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"15px 18px",background:"none",border:"none",cursor:"pointer",textAlign:"left" }}
       >
-        <div style={{ width:38,height:38,borderRadius:10,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+        <div style={{ width:38,height:38,borderRadius:10,background:T.fill3,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0, position:"relative" }}>
           <Icon name={icon} size={18} color={T.black}/>
+          {isBell && unread > 0 && (
+            <div style={{ position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:8,background:"#FF3B30",display:"flex",alignItems:"center",justifyContent:"center" }}>
+              <span style={{ fontSize:9,fontWeight:700,color:"#fff" }}>{unread > 9 ? "9+" : unread}</span>
+            </div>
+          )}
         </div>
         <div style={{ flex:1 }}>
           <p style={{ fontSize:15,fontWeight:600,margin:0,letterSpacing:"-0.2px" }}>{label}</p>
@@ -2052,9 +2121,19 @@ function AddressesScreen({ t, user }) {
 }
 
 /* ─── Notifications Screen ──────────────────────────────────── */
-function NotificationsScreen({ t, user }) {
-  const [prefs, setPrefs] = useState({ push:true, email:true, orders:true, promos:false, newArrivals:true });
+function NotificationsScreen({ t, user, inbox = [], setInbox }) {
+  const [prefs,  setPrefs]  = useState({ push:true, email:true, orders:true, promos:false, newArrivals:true });
   const [saving, setSaving] = useState(false);
+  const [tab,    setTab]    = useState('inbox'); // 'inbox' | 'settings'
+
+  const unread = inboxUnreadCount(inbox);
+
+  // Mark all read when inbox tab opens
+  useEffect(() => {
+    if (tab === 'inbox' && unread > 0) {
+      setInbox(inboxMarkAllRead());
+    }
+  }, [tab]);
 
   // Load saved prefs
   useEffect(() => {
@@ -2073,7 +2152,8 @@ function NotificationsScreen({ t, user }) {
     }, { onConflict:'user_id' });
     setSaving(false);
   };
-  const Toggle = ({ on, onChange }) => (
+
+  const NToggle = ({ on, onChange }) => (
     <div onClick={onChange} style={{ width:48,height:28,borderRadius:14,background:on?"#34C759":"#E5E5EA",cursor:"pointer",position:"relative",transition:"background .18s",flexShrink:0 }}>
       <div style={{ position:"absolute",top:2,left:on?22:2,width:24,height:24,borderRadius:12,background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,.2)",transition:"left .18s" }}/>
     </div>
@@ -2084,26 +2164,94 @@ function NotificationsScreen({ t, user }) {
         <p style={{ fontSize:15,fontWeight:500,margin:0 }}>{label}</p>
         {sub && <p style={{ fontSize:12,color:T.gray4,margin:"2px 0 0" }}>{sub}</p>}
       </div>
-      <Toggle on={prefs[k]} onChange={()=>toggle(k)}/>
+      <NToggle on={prefs[k]} onChange={()=>toggle(k)}/>
     </div>
   );
+
+  // Tag → icon emoji
+  const tagIcon = tag => {
+    if (!tag) return '🔔';
+    if (tag.includes('welcome'))  return '👋';
+    if (tag.includes('cart'))     return '🛍️';
+    if (tag.includes('arrival'))  return '✨';
+    if (tag.includes('sale'))     return '🏷️';
+    return '🔔';
+  };
+
   return (
     <div style={{ animation:"fadeIn .18s ease" }}>
-      {saving && <p style={{ fontSize:12,color:T.gray4,textAlign:"right",marginBottom:8 }}>Saving…</p>}
-      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
-        <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Channels</p>
-        <Row label={t.pushNotifications}  k="push"/>
-        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
-        <Row label={t.emailNotifications} k="email"/>
+      {/* Tab switcher */}
+      <div style={{ display:"flex", background:T.fill4, borderRadius:14, padding:3, marginBottom:20, gap:2 }}>
+        {[{id:'inbox',label:'Inbox'},{id:'settings',label:'Settings'}].map(tb => (
+          <button key={tb.id} onClick={()=>setTab(tb.id)} style={{ flex:1, padding:"9px 0", borderRadius:11, border:"none", background:tab===tb.id?"#fff":"transparent", fontWeight:tab===tb.id?600:400, fontSize:14, color:tab===tb.id?T.black:T.gray4, cursor:"pointer", boxShadow:tab===tb.id?"0 1px 4px rgba(0,0,0,.1)":"none", transition:"all .15s", position:"relative" }}>
+            {tb.label}
+            {tb.id==='inbox' && unread > 0 && (
+              <span style={{ position:"absolute", top:6, right:"calc(50% - 22px)", width:16, height:16, borderRadius:8, background:"#FF3B30", color:"#fff", fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
-      <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden" }}>
-        <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Topics</p>
-        <Row label={t.orderUpdates}    sub="Status changes for your orders" k="orders"/>
-        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
-        <Row label={t.promotions}      sub="Sales and special offers"       k="promos"/>
-        <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
-        <Row label={t.newArrivalsAlert} sub="New collection drops"           k="newArrivals"/>
-      </div>
+
+      {/* ── INBOX TAB ── */}
+      {tab === 'inbox' && (
+        <div>
+          {inbox.length === 0 ? (
+            <div style={{ textAlign:"center", padding:"48px 24px", color:T.gray4 }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>🔔</div>
+              <p style={{ fontSize:15, fontWeight:600, color:T.black, margin:"0 0 6px" }}>No notifications yet</p>
+              <p style={{ fontSize:13, margin:0 }}>Alerts from the store will appear here, even if you missed the popup.</p>
+            </div>
+          ) : (
+            <>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <p style={{ fontSize:13, color:T.gray4, margin:0 }}>{inbox.length} notification{inbox.length!==1?"s":""}</p>
+                <button onClick={()=>setInbox(inboxClear())} style={{ fontSize:12, color:"#FF3B30", background:"none", border:"none", cursor:"pointer", fontWeight:500, padding:"4px 8px" }}>Clear all</button>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {inbox.map(n => (
+                  <div key={n.id} style={{ background: n.read ? T.fill4 : "#fff", borderRadius:16, padding:"14px 16px", boxShadow: n.read ? "none" : "0 2px 12px rgba(0,0,0,.08)", border:`1.5px solid ${n.read ? T.gray8 : T.gray8}`, position:"relative", display:"flex", gap:14, alignItems:"flex-start" }}>
+                    {/* Unread dot */}
+                    {!n.read && <div style={{ position:"absolute", top:14, right:14, width:8, height:8, borderRadius:4, background:"#007AFF" }}/>}
+                    {/* Icon */}
+                    <div style={{ fontSize:26, flexShrink:0, marginTop:2 }}>{tagIcon(n.tag)}</div>
+                    {/* Content */}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontSize:14, fontWeight:600, margin:"0 0 3px", color:T.black, paddingRight:16 }}>{n.title}</p>
+                      <p style={{ fontSize:13, color:T.gray4, margin:"0 0 6px", lineHeight:1.4 }}>{n.body}</p>
+                      <p style={{ fontSize:11, color:T.gray5, margin:0 }}>{timeAgo(n.ts)}</p>
+                    </div>
+                    {/* Delete */}
+                    <button onClick={()=>setInbox(inboxDelete(n.id))} style={{ position:"absolute", bottom:10, right:12, fontSize:11, color:T.gray5, background:"none", border:"none", cursor:"pointer", padding:"2px 6px" }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── SETTINGS TAB ── */}
+      {tab === 'settings' && (
+        <div>
+          {saving && <p style={{ fontSize:12,color:T.gray4,textAlign:"right",marginBottom:8 }}>Saving…</p>}
+          <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden",marginBottom:16 }}>
+            <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Channels</p>
+            <Row label={t.pushNotifications}  k="push"/>
+            <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+            <Row label={t.emailNotifications} k="email"/>
+          </div>
+          <div style={{ background:T.fill4,borderRadius:20,overflow:"hidden" }}>
+            <p style={{ fontSize:13,color:T.gray4,padding:"14px 18px 6px",textTransform:"uppercase",letterSpacing:"0.05em",fontWeight:600 }}>Topics</p>
+            <Row label={t.orderUpdates}    sub="Status changes for your orders" k="orders"/>
+            <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+            <Row label={t.promotions}      sub="Sales and special offers"       k="promos"/>
+            <div style={{ height:1,background:T.gray8,margin:"0 18px" }}/>
+            <Row label={t.newArrivalsAlert} sub="New collection drops"           k="newArrivals"/>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2979,6 +3127,7 @@ function PageInner() {
 
   /* Cart — stored in localStorage keyed by sessionId */
   const [cart,     setCart]     = useState([]);
+  const [inbox,    setInbox]    = useState(() => inboxGet());
 
   /* Wishlist — stored in Supabase wishlists table */
   const [wishlist, setWishlist] = useState([]);
@@ -3094,6 +3243,19 @@ function PageInner() {
     const handler = () => loadProducts();
     window.addEventListener('msambwa:reload', handler);
     return () => window.removeEventListener('msambwa:reload', handler);
+  }, []);
+
+  // ── SW → App message listener (inbox) ───────────────────────
+  useEffect(() => {
+    if (!navigator.serviceWorker) return;
+    const handler = event => {
+      if (event.data?.type === 'INBOX_ADD') {
+        const updated = inboxAdd(event.data.entry);
+        setInbox([...updated]);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handler);
+    return () => navigator.serviceWorker.removeEventListener('message', handler);
   }, []);
 
   // ── Notification setup on mount ───────────────────────────
@@ -3250,11 +3412,11 @@ function PageInner() {
       case "shop":         return <ShopScreen {...screenProps}/>;
       case "search":       return <SearchScreen {...screenProps}/>;
       case "wishlist":     return <WishlistScreen {...screenProps}/>;
-      case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} onFeedback={()=>setShowFeedback(true)} t={t}/>;
+      case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} onFeedback={()=>setShowFeedback(true)} t={t} inbox={inbox}/>;
       case "orders":       return <MyOrdersScreen sessionId={sessionId}/>;
       case "edit-profile": return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><EditProfileScreen user={user} onBack={goBack} t={t}/></AuthGate>;
       case "addresses":    return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><AddressesScreen t={t} user={user}/></AuthGate>;
-      case "notifications":return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><NotificationsScreen t={t} user={user}/></AuthGate>;
+      case "notifications":return <AuthGate user={user} onLogin={()=>setShowAuth(true)} t={t}><NotificationsScreen t={t} user={user} inbox={inbox} setInbox={setInbox}/></AuthGate>;
       case "settings":     return <SettingsScreen t={t} lang={lang} setLang={setLang}/>;
       case "privacy":      return <PrivacyScreen t={t}/>;
       case "our-story":    return <OurStoryScreen t={t}/>;
