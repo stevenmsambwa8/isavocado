@@ -143,6 +143,7 @@ function Ic({ n, size=20, color=T.label, w=1.8 }) {
     toggle: <svg {...d} viewBox="0 0 24 24"><rect {...p} x="1" y="5" width="22" height="14" rx="7"/><circle {...p} cx="16" cy="12" r="3" fill={color} stroke="none"/></svg>,
     star:   <svg {...d} viewBox="0 0 24 24"><polygon fill={color} stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     starE:  <svg {...d} viewBox="0 0 24 24"><polygon {...p} fill="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    bell:   <svg {...d} viewBox="0 0 24 24"><path {...p} d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path {...p} d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
   };
   return set[n] || <svg {...d} viewBox="0 0 24 24"/>;
 }
@@ -1264,9 +1265,137 @@ const TABS = [
   { id:'overview', label:'Overview',  icon:'chart'  },
   { id:'products', label:'Products',  icon:'box'    },
   { id:'orders',   label:'Orders',    icon:'orders' },
-  { id:'feedback', label:'Feedback',  icon:'msg'    },
+  { id:'notify',   label:'Notify',    icon:'bell'   },
   { id:'settings', label:'Settings',  icon:'gear'   },
 ];
+
+
+/* ─── Notify Panel ───────────────────────────────────────────── */
+function NotifyPanel() {
+  const [title,   setTitle]   = useState('');
+  const [message, setMessage] = useState('');
+  const [status,  setStatus]  = useState(null); // 'sent' | 'denied' | 'unsupported'
+  const [sending, setSending] = useState(false);
+
+  const presets = [
+    { label:'Flash Sale',    title:'Flash Sale — Up to 40% Off',  message:'Limited time offer at MSAMBWA. Shop now before stock runs out.' },
+    { label:'New Arrivals',  title:'New Arrivals Just Dropped',   message:'Fresh styles are in. Check out the latest collection at MSAMBWA.' },
+    { label:'Restock Alert', title:'Back in Stock',               message:'A favourite item has been restocked. Grab it before it sells out again.' },
+    { label:'Weekend Deal',  title:'Weekend Special at MSAMBWA',  message:'Exclusive weekend pricing — today and tomorrow only.' },
+  ];
+
+  const sendAlert = async () => {
+    if (!title.trim() || !message.trim()) return;
+    if (!('Notification' in window)) { setStatus('unsupported'); return; }
+    if (Notification.permission === 'denied') { setStatus('denied'); return; }
+
+    setSending(true);
+    try {
+      // Request permission if not yet granted
+      if (Notification.permission !== 'granted') {
+        const result = await Notification.requestPermission();
+        if (result !== 'granted') { setStatus('denied'); setSending(false); return; }
+      }
+
+      // Send via service worker
+      const sw = navigator.serviceWorker?.controller;
+      if (sw) {
+        sw.postMessage({ type: 'NOTIF_SALE', payload: { title: title.trim(), message: message.trim() } });
+        setStatus('sent');
+        setTimeout(() => setStatus(null), 4000);
+      } else {
+        // Fallback: direct Notification if SW not ready
+        new Notification(title.trim(), {
+          body: message.trim(),
+          icon: '/icons/icon-192x192.png',
+        });
+        setStatus('sent');
+        setTimeout(() => setStatus(null), 4000);
+      }
+    } catch(_) {}
+    setSending(false);
+  };
+
+  return (
+    <div>
+      <p style={{ fontSize:13, color:T.label3, marginBottom:20, lineHeight:1.5 }}>
+        Send a local alert directly to users who have the app installed and notifications enabled.
+        No backend needed — fires instantly on their device.
+      </p>
+
+      {/* Presets */}
+      <p style={{ fontSize:12, fontWeight:600, color:T.label3, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:10 }}>Quick Presets</p>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:20 }}>
+        {presets.map(p => (
+          <button key={p.label} onClick={() => { setTitle(p.title); setMessage(p.message); }}
+            style={{ padding:'7px 14px', borderRadius:99, background:T.fill, border:`1.5px solid ${T.sep}`, fontSize:13, fontWeight:500, color:T.label, cursor:'pointer' }}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Title */}
+      <p style={{ fontSize:12, fontWeight:600, color:T.label3, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Notification Title</p>
+      <input
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        placeholder="e.g. Flash Sale — 40% Off"
+        maxLength={60}
+        style={{ width:'100%', padding:'13px 16px', borderRadius:12, border:`1.5px solid ${T.sep}`, fontSize:15, color:T.label, background:T.white, outline:'none', boxSizing:'border-box', marginBottom:14 }}
+      />
+
+      {/* Message */}
+      <p style={{ fontSize:12, fontWeight:600, color:T.label3, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Message</p>
+      <textarea
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        placeholder="e.g. Limited time offer. Shop before it ends."
+        maxLength={120}
+        rows={3}
+        style={{ width:'100%', padding:'13px 16px', borderRadius:12, border:`1.5px solid ${T.sep}`, fontSize:15, color:T.label, background:T.white, outline:'none', boxSizing:'border-box', resize:'none', marginBottom:6, fontFamily:'inherit' }}
+      />
+      <p style={{ fontSize:12, color:T.label3, marginBottom:20, textAlign:'right' }}>{message.length}/120</p>
+
+      {/* Send button */}
+      <button
+        onClick={sendAlert}
+        disabled={sending || !title.trim() || !message.trim()}
+        style={{ width:'100%', padding:'15px', borderRadius:14, background:T.blue, color:T.white, border:'none', fontSize:16, fontWeight:700, cursor: sending || !title.trim() || !message.trim() ? 'not-allowed' : 'pointer', opacity: sending || !title.trim() || !message.trim() ? 0.55 : 1 }}>
+        {sending ? 'Sending...' : 'Send Notification'}
+      </button>
+
+      {/* Status feedback */}
+      {status === 'sent' && (
+        <div style={{ marginTop:14, padding:'13px 16px', borderRadius:12, background:'#e8faf0', border:'1.5px solid #b3e8cb' }}>
+          <p style={{ margin:0, fontSize:14, color:'#1a7a45', fontWeight:600 }}>Notification sent successfully</p>
+          <p style={{ margin:'3px 0 0', fontSize:13, color:'#2e9d5e' }}>Users with the app installed will see it now.</p>
+        </div>
+      )}
+      {status === 'denied' && (
+        <div style={{ marginTop:14, padding:'13px 16px', borderRadius:12, background:'#fff3f3', border:'1.5px solid #fcc' }}>
+          <p style={{ margin:0, fontSize:14, color:'#c0392b', fontWeight:600 }}>Notifications are blocked</p>
+          <p style={{ margin:'3px 0 0', fontSize:13, color:'#e74c3c' }}>Allow notifications in your browser settings and try again.</p>
+        </div>
+      )}
+      {status === 'unsupported' && (
+        <div style={{ marginTop:14, padding:'13px 16px', borderRadius:12, background:'#fffbe6', border:'1.5px solid #ffe066' }}>
+          <p style={{ margin:0, fontSize:14, color:'#7a6a00', fontWeight:600 }}>Not supported on this device</p>
+          <p style={{ margin:'3px 0 0', fontSize:13, color:'#a08800' }}>Open the dashboard on Android Chrome to send notifications.</p>
+        </div>
+      )}
+
+      {/* Info box */}
+      <div style={{ marginTop:20, padding:'14px 16px', borderRadius:12, background:T.fill, border:`1.5px solid ${T.sep}` }}>
+        <p style={{ margin:'0 0 6px', fontSize:13, fontWeight:600, color:T.label }}>How it works</p>
+        <p style={{ margin:0, fontSize:13, color:T.label3, lineHeight:1.6 }}>
+          This sends a local notification from your device to itself — useful for testing. 
+          To notify all customers at once you would need a push notification backend (OneSignal, Firebase etc). 
+          For now, share a sale link or post on social media for broad reach.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -1312,6 +1441,7 @@ export default function Dashboard() {
         {tab==='products'  && <ProductsPanel/>}
         {tab==='orders'    && <OrdersPanel/>}
         {tab==='feedback'  && <FeedbackPanel/>}
+        {tab==='notify'    && <NotifyPanel/>}
         {tab==='settings'  && <SettingsPanel/>}
       </div>
 
