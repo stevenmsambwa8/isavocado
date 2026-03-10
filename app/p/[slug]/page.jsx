@@ -2,11 +2,6 @@
  * MSAMBWA — Product Open Graph page
  * Route: /p/[slug]
  * Deploy to: app/p/[slug]/page.jsx
- *
- * Key fix: NO server-side redirect() — crawlers (WhatsApp, FB, Twitter)
- * follow redirects and read the destination page OG tags, not this page.
- * Instead we serve a real HTML page with correct OG meta, and use a
- * client-side <meta http-equiv="refresh"> + JS to redirect real users.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -36,24 +31,46 @@ async function getProduct(slug) {
   ) || null;
 }
 
-// generateMetadata — crawlers read this
+// ── Image URL helper ───────────────────────────────────────────
+// Facebook requires:
+//   - Minimum 200×200px, recommended 1200×630 (landscape)
+//   - Publicly accessible, no redirect chains
+//   - We use wsrv.nl to resize to 1200×630 and serve as JPEG
+//   - fb=1 param bypasses FB's sometimes-broken image fetcher
+function ogImageUrl(src) {
+  if (!src) return null;
+  // wsrv.nl: resize to 1200w, crop to 630h (landscape), output jpg
+  return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=1200&h=630&fit=cover&output=jpg&q=85`;
+}
+
+// generateMetadata — crawlers read this, not the page body
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const p = await getProduct(slug);
+
+  const fallbackImg = `${DOMAIN}/icons/icon-512x512.png`;
 
   if (!p) {
     return {
       title:       'MSAMBWA Classic Wear',
       description: 'Shop refined fashion from MSAMBWA Classic Wear.',
       openGraph: {
-        title:    'MSAMBWA Classic Wear',
-        siteName: 'MSAMBWA Classic Wear',
-        images:   [{ url: `${DOMAIN}/icons/icon-512x512.png`, width: 512, height: 512 }],
+        title:       'MSAMBWA Classic Wear',
+        description: 'Shop refined fashion from MSAMBWA Classic Wear.',
+        siteName:    'MSAMBWA Classic Wear',
+        url:          DOMAIN,
+        images:      [{ url: fallbackImg, width: 512, height: 512, alt: 'MSAMBWA' }],
+      },
+      twitter: {
+        card:   'summary_large_image',
+        title:  'MSAMBWA Classic Wear',
+        images: [fallbackImg],
       },
     };
   }
 
-  const image      = (p.image_urls?.[0] || p.image_url || '').trim();
+  const rawImage   = (p.image_urls?.[0] || p.image_url || '').trim();
+  const image      = ogImageUrl(rawImage);          // 1200×630 landscape for FB
   const inStock    = p.in_stock !== false;
   const stockLabel = inStock ? 'In Stock' : 'Out of Stock';
   const sizesLine  = Array.isArray(p.sizes) && p.sizes.length > 0
@@ -66,11 +83,13 @@ export async function generateMetadata({ params }) {
     'Order now on MSAMBWA Classic Wear.',
   ].filter(Boolean).join(' · ');
 
-  const ogTitle  = `${p.name} — MSAMBWA`;
-  const pageUrl  = `${DOMAIN}/p/${slug}`;
+  const ogTitle = `${p.name} — MSAMBWA`;
+  const pageUrl = `${DOMAIN}/p/${slug}`;
+
+  // Facebook needs width/height declared so it knows the image is large enough
   const ogImages = image
-    ? [{ url: image, width: 1200, height: 1200, alt: p.name }]
-    : [{ url: `${DOMAIN}/icons/icon-512x512.png`, width: 512, height: 512, alt: 'MSAMBWA' }];
+    ? [{ url: image, width: 1200, height: 630, alt: p.name, type: 'image/jpeg' }]
+    : [{ url: fallbackImg, width: 512, height: 512, alt: 'MSAMBWA' }];
 
   return {
     title:       ogTitle,
@@ -87,23 +106,28 @@ export async function generateMetadata({ params }) {
       card:        'summary_large_image',
       title:       ogTitle,
       description: ogDesc,
-      images:      image ? [image] : [`${DOMAIN}/icons/icon-512x512.png`],
+      images:      image ? [image] : [fallbackImg],
     },
     other: {
+      // Facebook product meta
       'og:type':                  'og:product',
       'product:availability':     inStock ? 'in stock' : 'out of stock',
       'product:condition':        'new',
       'product:retailer_item_id': p.id,
       ...(sizesLine ? { 'product:size': sizesLine } : {}),
+      // Explicit image dimensions — FB uses these to validate image size
       'og:image:width':  '1200',
-      'og:image:height': '1200',
+      'og:image:height': '630',
+      'og:image:type':   'image/jpeg',
+      // WhatsApp Status reads og:image:secure_url
+      'og:image:secure_url': image || fallbackImg,
     },
     alternates: { canonical: pageUrl },
   };
 }
 
-// Page component — serves real HTML so crawlers read OG tags above.
-// Real users are redirected client-side via JS (crawlers don't run JS).
+// Page — serves full HTML so crawlers see OG tags.
+// Real users are bounced instantly via JS (bots don't run JS).
 export default async function ProductPage({ params }) {
   const { slug }  = await params;
   const parts     = (slug || '').split('-');
@@ -111,7 +135,8 @@ export default async function ProductPage({ params }) {
   const p         = await getProduct(slug);
   const destUrl   = `${DOMAIN}/?p=${shortId}`;
 
-  const image     = p ? (p.image_urls?.[0] || p.image_url || '') : '';
+  const rawImage  = p ? (p.image_urls?.[0] || p.image_url || '') : '';
+  const image     = ogImageUrl(rawImage);
   const name      = p?.name || 'MSAMBWA Classic Wear';
   const inStock   = p ? p.in_stock !== false : true;
   const sizesLine = p && Array.isArray(p.sizes) && p.sizes.length > 0
@@ -120,22 +145,21 @@ export default async function ProductPage({ params }) {
   return (
     <html>
       <head>
-        {/* Client-side redirect — real users bounce instantly.
-            WhatsApp / Facebook crawlers don't execute JS so they
-            stay on this page and read the OG meta tags above.     */}
+        {/* Instant client-side redirect for real users.
+            Crawlers (FB, WhatsApp) ignore JS and read the OG
+            meta tags generated by generateMetadata() above.   */}
         <meta httpEquiv="refresh" content={`0;url=${destUrl}`} />
         <script dangerouslySetInnerHTML={{
           __html: `window.location.replace(${JSON.stringify(destUrl)});`
         }}/>
       </head>
       <body style={{ margin:0, fontFamily:'system-ui,sans-serif', background:'#fff' }}>
-        {/* Visible fallback for users with JS disabled */}
         <div style={{ maxWidth:480, margin:'60px auto', padding:'0 24px', textAlign:'center' }}>
           {image && (
             <img
               src={image}
               alt={name}
-              style={{ width:'100%', maxWidth:320, borderRadius:16, marginBottom:20 }}
+              style={{ width:'100%', maxWidth:360, borderRadius:16, marginBottom:20, aspectRatio:'1200/630', objectFit:'cover' }}
             />
           )}
           <h1 style={{ fontSize:22, fontWeight:700, margin:'0 0 8px' }}>{name}</h1>
