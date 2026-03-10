@@ -101,20 +101,30 @@ async function networkFirst(request, cacheName, timeoutMs = 4000) {
 
 // ── Notification helper ───────────────────────────────────────
 function showNotif(title, body, tag, url = '/') {
+  // Save to inbox so the app can show it even if user missed it
+  const entry = { id: Date.now(), title, body, tag, url, ts: Date.now(), read: false };
+  broadcastInbox(entry);
+
   return self.registration.showNotification(title, {
     body,
     tag,
-    // small icon (left side) — MUST be white on transparent for Android
     icon:    '/icons/notification-icon.png',
-    // badge = tiny icon in status bar — also monochrome
     badge:   '/icons/notification-icon.png',
-    // large icon (right side) — full color is fine here
-    // Android shows this as the big square on the right
-    // We don't set 'image' to avoid extra large banner
     vibrate: [120, 60, 120],
     data:    { url },
     requireInteraction: false,
   });
+}
+
+// Broadcast a new inbox entry to all open clients
+// Each client saves it to localStorage on receipt
+function broadcastInbox(entry) {
+  self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
+    .then(clientList => {
+      clientList.forEach(client => {
+        client.postMessage({ type: 'INBOX_ADD', entry });
+      });
+    });
 }
 
 // ── Message events from the app ───────────────────────────────
