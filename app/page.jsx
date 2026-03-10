@@ -129,6 +129,33 @@ function imgUrl(src, { width = 400, quality = 75 } = {}) {
   return `https://wsrv.nl/?url=${encoded}&w=${width}&q=${quality}&output=webp&we`;
 }
 
+
+/* ─── Local Notification helpers ────────────────────────────────
+   All notifications go through the service worker via postMessage.
+   SW handles the actual Notification API so it works even when
+   the app is in the background / closed.
+─────────────────────────────────────────────────────────────── */
+function getSW() {
+  return navigator.serviceWorker?.controller || null;
+}
+
+function swPost(type, payload = {}) {
+  const sw = getSW();
+  if (sw) sw.postMessage({ type, payload });
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+// Keys for localStorage
+const NOTIF_WELCOME_KEY  = 'msambwa_notif_welcomed';
+const NOTIF_ARRIVAL_KEY  = 'msambwa_notif_arrivals_started';
+
 const productUrl = (id) => {
   if (typeof window === "undefined") return "";
   return `${window.location.origin}${window.location.pathname}#product=${id}`;
@@ -769,6 +796,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
   const [guestEmail, setGuestEmail] = useState(buyerEmail);
 
   const submitOrder = async () => {
+    swPost('NOTIF_CART_CANCEL'); // order placed — cancel abandonment timer
     const finalName  = user ? buyerName  : guestName.trim();
     const finalEmail = user ? buyerEmail : guestEmail.trim();
     if (!phone.trim()) { setErr(t.cartPhoneLabel + " is required."); return; }
@@ -3068,6 +3096,36 @@ function PageInner() {
     return () => window.removeEventListener('msambwa:reload', handler);
   }, []);
 
+  // ── Notification setup on mount ───────────────────────────
+  useEffect(() => {
+    if (!('Notification' in window) || !navigator.serviceWorker) return;
+
+    // Ask permission after 8 seconds (user has seen the app)
+    const permTimer = setTimeout(async () => {
+      const granted = await requestNotifPermission();
+      if (!granted) return;
+
+      // Welcome — only once ever
+      try {
+        if (!localStorage.getItem(NOTIF_WELCOME_KEY)) {
+          localStorage.setItem(NOTIF_WELCOME_KEY, '1');
+          swPost('NOTIF_WELCOME');
+        }
+      } catch(_) {}
+
+      // New arrivals — start the 3-day timer (once per session)
+      try {
+        if (!localStorage.getItem(NOTIF_ARRIVAL_KEY)) {
+          localStorage.setItem(NOTIF_ARRIVAL_KEY, '1');
+        }
+        swPost('NOTIF_ARRIVALS_START');
+      } catch(_) {}
+
+    }, 8000);
+
+    return () => clearTimeout(permTimer);
+  }, []);
+
   /* ── Show sale modal after 2s — max once per 2 days ── */
   useEffect(() => {
     try {
@@ -3127,12 +3185,22 @@ function PageInner() {
     setCart(c => {
       const key = x => x.id + '|' + (x.sz||'');
       const ex = c.find(x => key(x) === key(item));
-      return ex ? c.map(x => key(x)===key(item) ? {...x,qty:x.qty+1} : x) : [...c,{...item,qty:1}];
+      const next = ex ? c.map(x => key(x)===key(item) ? {...x,qty:x.qty+1} : x) : [...c,{...item,qty:1}];
+      // Start cart abandonment timer — fires 1hr later if user doesn't checkout
+      if (Notification.permission === 'granted') {
+        swPost('NOTIF_CART_START', { count: next.reduce((s,i)=>s+i.qty,0) });
+      }
+      return next;
     });
   };
   const removeFromCart = item => {
     const key = x => x.id + '|' + (x.sz||'');
-    setCart(c => c.filter(x => key(x) !== key(item)));
+    setCart(c => {
+      const next = c.filter(x => key(x) !== key(item));
+      // Cancel timer if cart is now empty
+      if (next.length === 0) swPost('NOTIF_CART_CANCEL');
+      return next;
+    });
   };
   const updateQty = (item,qty) => {
     const key = x => x.id + '|' + (x.sz||'');
