@@ -223,7 +223,7 @@ const productUrl = (id) => {
 };
 const shareProduct = async (prod, e) => {
   e?.stopPropagation();
-  const url = productUrl(prod.id);
+  const url = productUrl(prod.id, prod.name);
   if (navigator?.share) {
     try { await navigator.share({ title: prod.name, text: `Check out ${prod.name} on MSAMBWA`, url }); } catch(_) {}
   } else {
@@ -3227,12 +3227,23 @@ function PageInner() {
         setProducts(prods);
         setLoading(false);
         try {
-          const m = window.location.hash.match(/^#product=([a-f0-9-]+)$/i);
-          if (m) {
-            const found = prods.find(pr => pr.id === m[1]);
+          // Old format: #product=UUID
+          const hashM = window.location.hash.match(/^#product=([a-f0-9-]+)$/i);
+          if (hashM) {
+            const found = prods.find(pr => pr.id === hashM[1]);
             if (found) {
-              window.history.replaceState({}, "", window.location.pathname + window.location.search);
-              setCurrent({ screen:"product", product: found });
+              window.history.replaceState({}, '', window.location.pathname);
+              setCurrent({ screen:'product', product: found });
+            }
+          }
+          // New format: ?p=last6 (set by /p/[slug] OG page redirect)
+          const params = new URLSearchParams(window.location.search);
+          const shortId = params.get('p');
+          if (shortId) {
+            const found = prods.find(pr => pr.id.replace(/-/g,'').endsWith(shortId));
+            if (found) {
+              window.history.replaceState({}, '', window.location.pathname);
+              setCurrent({ screen:'product', product: found });
             }
           }
         } catch(_) {}
