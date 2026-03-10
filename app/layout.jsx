@@ -25,7 +25,20 @@ export const metadata = {
     title:       'MSAMBWA Classic Wear',
     description: 'Shop refined fashion from MSAMBWA.',
     type:        'website',
-    siteName:    'MSAMBWA',
+    siteName:    'MSAMBWA Classic Wear',
+    url:         'https://msambwaclassicwear.com',
+    images: [{
+      url:    'https://msambwaclassicwear.com/icons/icon-512x512.png',
+      width:  512,
+      height: 512,
+      alt:    'MSAMBWA Classic Wear',
+    }],
+  },
+  twitter: {
+    card:        'summary_large_image',
+    title:       'MSAMBWA Classic Wear',
+    description: 'Shop refined fashion from MSAMBWA.',
+    images:      ['https://msambwaclassicwear.com/icons/icon-512x512.png'],
   },
   icons: {
     icon: [
