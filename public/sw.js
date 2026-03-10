@@ -103,9 +103,14 @@ async function networkFirst(request, cacheName, timeoutMs = 4000) {
 function showNotif(title, body, tag, url = '/') {
   return self.registration.showNotification(title, {
     body,
-    tag,                               // prevents duplicate stacking
-    icon:    '/icons/icon-192x192.png',
-    badge:   '/icons/icon-96x96.png',
+    tag,
+    // small icon (left side) — MUST be white on transparent for Android
+    icon:    '/icons/notification-icon.png',
+    // badge = tiny icon in status bar — also monochrome
+    badge:   '/icons/notification-icon.png',
+    // large icon (right side) — full color is fine here
+    // Android shows this as the big square on the right
+    // We don't set 'image' to avoid extra large banner
     vibrate: [120, 60, 120],
     data:    { url },
     requireInteraction: false,
