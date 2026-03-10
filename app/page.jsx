@@ -814,7 +814,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
               {cart.map(item=>(
                 <div key={`${item.id}-${item.sz}`} style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
                   <span style={{ fontSize:13,color:T.gray3,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:8 }}>
-                    {item.name}{item.sz?` · ${item.sz}`:""} ×{item.qty}
+                    {item.name || item.product_name || "Item"}{item.sz?` · ${item.sz}`:""} ×{item.qty}
                   </span>
                   <span style={{ fontSize:13,fontWeight:600,flexShrink:0 }}>{$p(Number(item.price)*Number(item.qty))}</span>
                 </div>
@@ -901,7 +901,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
               {cart.length===0
                 ? <EmptyState icon="bag" title={t.emptyBag} body={t.continueShopping}/>
                 : cart.map((item,i)=>(
-                  <div key={`${item.id}-${item.sz}`}>
+                  <div key={`${item.id}|${item.sz||""}`}>
                     <div style={{ padding:"16px 0",display:"flex",gap:14 }}>
                       <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
                         {(item.selectedImg || item.image_url)
@@ -909,7 +909,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
                           : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#e8e8ed" }}><Icon name="bag" size={24} color={T.gray5}/></div>}
                       </div>
                       <div style={{ flex:1,minWidth:0 }}>
-                        <p style={{ fontSize:15,fontWeight:600,marginBottom:2 }}>{item.name}</p>
+                        <p style={{ fontSize:15,fontWeight:600,marginBottom:2 }}>{item.name || item.product_name || "Item"}</p>
                         {item.sz&&<p style={{ fontSize:13,color:T.gray4,marginBottom:12 }}>{t.size}: {item.sz}</p>}
                         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
                           <div style={{ display:"flex",alignItems:"center",background:T.gray9,borderRadius:99 }}>
@@ -998,7 +998,13 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
     if (multiImg && !selectedImg) { setImgErr(true); return; }
     // Add one cart entry per selected size
     const toAdd = szs.length > 0 ? szs : [null];
-    toAdd.forEach(sz => onAdd({ ...p, sz, selectedImg: selectedImg || null }));
+    toAdd.forEach(sz => onAdd({
+      ...p,
+      sz,
+      image_url: selectedImg || images[0] || p.image_url || null,
+      selectedImg: selectedImg || images[0] || null,
+    }));
+    setSzs([]);  // clear size selection after adding
     setDone(true); setTimeout(() => setDone(false), 2200);
   };
 
@@ -3011,17 +3017,17 @@ function PageInner() {
   /* ── Cart ── */
   const addToCart = item => {
     setCart(c => {
-      const key = x => x.id + '|' + (x.sz||'') + '|' + (x.selectedImg||'');
+      const key = x => x.id + '|' + (x.sz||'');
       const ex = c.find(x => key(x) === key(item));
       return ex ? c.map(x => key(x)===key(item) ? {...x,qty:x.qty+1} : x) : [...c,{...item,qty:1}];
     });
   };
   const removeFromCart = item => {
-    const key = x => x.id + '|' + (x.sz||'') + '|' + (x.selectedImg||'');
+    const key = x => x.id + '|' + (x.sz||'');
     setCart(c => c.filter(x => key(x) !== key(item)));
   };
   const updateQty = (item,qty) => {
-    const key = x => x.id + '|' + (x.sz||'') + '|' + (x.selectedImg||'');
+    const key = x => x.id + '|' + (x.sz||'');
     if (qty <= 0) return removeFromCart(item);
     setCart(c => c.map(x => key(x)===key(item) ? {...x,qty} : x));
   };
