@@ -64,7 +64,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: 0, overscrollBehavior: 'none' }}>
+      <body style={{ margin: 0, padding: 0 }}>
         {children}
         <Script id="sw-register" strategy="afterInteractive">
           {`if ('serviceWorker' in navigator) {
