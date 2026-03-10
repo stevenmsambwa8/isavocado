@@ -217,10 +217,21 @@ function timeAgo(ts) {
   return Math.floor(h / 24) + 'd ago';
 }
 
-const productUrl = (id) => {
-  if (typeof window === "undefined") return "";
-  return `${window.location.origin}${window.location.pathname}#product=${id}`;
+const toSlug = (name = '', id = '') => {
+  const words = name.toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '').trim()
+    .split(/ +/).slice(0, 4).join('-');
+  const tail = id.replace(/-/g, '').slice(-6);
+  return words ? `${words}-${tail}` : tail;
 };
+
+const productUrl = (id, name) => {
+  const origin = typeof window !== 'undefined'
+    ? window.location.origin
+    : 'https://msambwaclassicwear.com';
+  return `${origin}/p/${toSlug(name, id)}`;
+};
+
 const shareProduct = async (prod, e) => {
   e?.stopPropagation();
   const url = productUrl(prod.id, prod.name);
