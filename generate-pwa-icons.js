@@ -207,6 +207,76 @@ const ICONS = [
   { size: 512, name: 'icon-512x512-maskable.png', maskable: true },
 ];
 
+
+// ── Monochrome notification icon ───────────────────────────────
+// Android small notification icons MUST be white on transparent.
+// Color icons appear as grey blobs — this generates the correct format.
+function makeNotifIcon(size) {
+  const pixels = new Uint8Array(size * size * 4); // all transparent
+
+  const pad  = Math.round(size * 0.12);
+  const s    = size - pad * 2;
+  const x0   = pad;
+  const y0   = pad;
+  const x1   = pad + s;
+  const midX = Math.round(size / 2);
+  const midY = Math.round(y0 + s * 0.52);
+  const lw   = Math.max(2, Math.round(s * 0.14));
+
+  const W = [255, 255, 255, 255]; // solid white
+
+  // Left stem
+  fillRect(pixels, size, x0, y0, lw, s, W);
+  // Right stem
+  fillRect(pixels, size, x1 - lw, y0, lw, s, W);
+
+  // Left diagonal: top-left → center-mid
+  fillTriangle(pixels, size,
+    x0, y0,
+    x0 + lw, y0,
+    midX + Math.round(lw / 2), midY,
+    W
+  );
+  fillTriangle(pixels, size,
+    x0, y0,
+    midX - Math.round(lw / 2), midY,
+    midX + Math.round(lw / 2), midY,
+    W
+  );
+
+  // Right diagonal: top-right → center-mid
+  fillTriangle(pixels, size,
+    x1, y0,
+    x1 - lw, y0,
+    midX - Math.round(lw / 2), midY,
+    W
+  );
+  fillTriangle(pixels, size,
+    x1, y0,
+    midX - Math.round(lw / 2), midY,
+    midX + Math.round(lw / 2), midY,
+    W
+  );
+
+  return encodePNG(pixels, size, size);
+}
+
+// Generate notification icons (white M on transparent)
+const NOTIF_SIZES = [72, 96];
+for (const sz of NOTIF_SIZES) {
+  try {
+    const buf = makeNotifIcon(sz);
+    fs.writeFileSync(path.join(OUT, 'notification-icon-' + sz + '.png'), buf);
+    if (sz === 96) {
+      // The one sw.js actually references
+      fs.writeFileSync(path.join(OUT, 'notification-icon.png'), buf);
+    }
+    console.log('  ✓  notification-icon-' + sz + '.png  (monochrome, ' + sz + '×' + sz + ')');
+  } catch(e) {
+    console.error('  ✗  notification-icon-' + sz + '.png: ' + e.message);
+  }
+}
+
 // ── Run ────────────────────────────────────────────────────────
 let ok = 0;
 for (const icon of ICONS) {
