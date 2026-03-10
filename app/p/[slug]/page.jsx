@@ -2,24 +2,24 @@
  * MSAMBWA — Product Open Graph page
  * Route: /p/[slug]
  * Deploy to: app/p/[slug]/page.jsx
+ *
+ * Key fix: NO server-side redirect() — crawlers (WhatsApp, FB, Twitter)
+ * follow redirects and read the destination page OG tags, not this page.
+ * Instead we serve a real HTML page with correct OG meta, and use a
+ * client-side <meta http-equiv="refresh"> + JS to redirect real users.
  */
 
-import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
 const DOMAIN = 'https://msambwaclassicwear.com';
 
-// ── Supabase client created INSIDE functions (not at module level)
-//    so it runs at request time, not at build time.
-//    Build-time execution has no env vars → "supabaseUrl is required" error.
 function getSB() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL       || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY  || ''
+    process.env.NEXT_PUBLIC_SUPABASE_URL      || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
   );
 }
 
-// ── Fetch product by the 6-char shortId tail of its UUID ──────
 async function getProduct(slug) {
   const parts   = (slug || '').split('-');
   const shortId = parts[parts.length - 1];
@@ -36,14 +36,14 @@ async function getProduct(slug) {
   ) || null;
 }
 
-// ── generateMetadata — server-side, feeds OG tags to crawlers ──
+// generateMetadata — crawlers read this
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const p = await getProduct(slug);
 
   if (!p) {
     return {
-      title:       'Product — MSAMBWA Classic Wear',
+      title:       'MSAMBWA Classic Wear',
       description: 'Shop refined fashion from MSAMBWA Classic Wear.',
       openGraph: {
         title:    'MSAMBWA Classic Wear',
@@ -59,7 +59,6 @@ export async function generateMetadata({ params }) {
   const sizesLine  = Array.isArray(p.sizes) && p.sizes.length > 0
     ? p.sizes.join(' · ') : null;
 
-  // No price — just sizes, stock, description, CTA
   const ogDesc = [
     sizesLine ? `Sizes: ${sizesLine}` : null,
     stockLabel,
@@ -103,10 +102,57 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ── Page — real users get redirected straight to the store ─────
+// Page component — serves real HTML so crawlers read OG tags above.
+// Real users are redirected client-side via JS (crawlers don't run JS).
 export default async function ProductPage({ params }) {
   const { slug }  = await params;
   const parts     = (slug || '').split('-');
   const shortId   = parts[parts.length - 1];
-  redirect(`/?p=${shortId}`);
+  const p         = await getProduct(slug);
+  const destUrl   = `${DOMAIN}/?p=${shortId}`;
+
+  const image     = p ? (p.image_urls?.[0] || p.image_url || '') : '';
+  const name      = p?.name || 'MSAMBWA Classic Wear';
+  const inStock   = p ? p.in_stock !== false : true;
+  const sizesLine = p && Array.isArray(p.sizes) && p.sizes.length > 0
+    ? p.sizes.join(' · ') : '';
+
+  return (
+    <html>
+      <head>
+        {/* Client-side redirect — real users bounce instantly.
+            WhatsApp / Facebook crawlers don't execute JS so they
+            stay on this page and read the OG meta tags above.     */}
+        <meta httpEquiv="refresh" content={`0;url=${destUrl}`} />
+        <script dangerouslySetInnerHTML={{
+          __html: `window.location.replace(${JSON.stringify(destUrl)});`
+        }}/>
+      </head>
+      <body style={{ margin:0, fontFamily:'system-ui,sans-serif', background:'#fff' }}>
+        {/* Visible fallback for users with JS disabled */}
+        <div style={{ maxWidth:480, margin:'60px auto', padding:'0 24px', textAlign:'center' }}>
+          {image && (
+            <img
+              src={image}
+              alt={name}
+              style={{ width:'100%', maxWidth:320, borderRadius:16, marginBottom:20 }}
+            />
+          )}
+          <h1 style={{ fontSize:22, fontWeight:700, margin:'0 0 8px' }}>{name}</h1>
+          {sizesLine && (
+            <p style={{ fontSize:14, color:'#666', margin:'0 0 6px' }}>Sizes: {sizesLine}</p>
+          )}
+          <p style={{ fontSize:14, color: inStock ? '#1a7a45' : '#c0392b', margin:'0 0 20px', fontWeight:600 }}>
+            {inStock ? 'In Stock' : 'Out of Stock'}
+          </p>
+          <a
+            href={destUrl}
+            style={{ display:'inline-block', background:'#1C7A8C', color:'#fff', borderRadius:12, padding:'14px 32px', fontSize:16, fontWeight:700, textDecoration:'none' }}
+          >
+            Order Now
+          </a>
+        </div>
+      </body>
+    </html>
+  );
 }
