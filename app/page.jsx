@@ -1557,7 +1557,7 @@ const HomeScreen = memo(function HomeScreen({ products, onSelect, onWishlist, wi
             <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>{t.newIn}</p>
             <button onClick={()=>onNavigate("shop")} style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:T.blue,fontWeight:500 }}>{t.seeAll}</button>
           </div>
-          <HScroll gap={12}>{newP.map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll>
+          <HScroll gap={12} px={16}>{newP.map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll>
         </div>
       )}
 
@@ -1673,7 +1673,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
       </div>
       {q.length<2 ? (
         products.length===0 ? <EmptyState icon="search" title={t.search} body={t.noProducts}/> : (
-          <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>{t.trending}</p><HScroll gap={10}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll></>
+          <><p style={{ fontSize:16,fontWeight:700,marginBottom:14 }}>{t.trending}</p><HScroll gap={10} px={16}>{products.slice(0,8).map(p=><ProductCard key={p.id} p={p} compact onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}</HScroll></>
         )
       ) : (
         <>
@@ -2615,6 +2615,91 @@ function Logo({ height=40 }) {
   );
 }
 
+
+/* ─── Pull to Refresh ────────────────────────────────────────
+   Native-feeling pull indicator. Attaches to window touch events.
+   Calls onRefresh() when user pulls down > 72px from top of page.
+─────────────────────────────────────────────────────────── */
+function PullToRefresh({ onRefresh }) {
+  const [pull, setPull]       = useState(0);   // px pulled
+  const [state, setState]     = useState("idle"); // idle | pulling | releasing | done
+  const startY                = useRef(null);
+  const THRESHOLD             = 72;
+
+  useEffect(() => {
+    const onStart = (e) => {
+      // Only start tracking if page is scrolled to top
+      if (window.scrollY > 4) return;
+      startY.current = e.touches[0].clientY;
+      setState("pulling");
+    };
+    const onMove = (e) => {
+      if (startY.current === null) return;
+      const dy = e.touches[0].clientY - startY.current;
+      if (dy <= 0) { startY.current = null; setPull(0); setState("idle"); return; }
+      // Dampen pull past threshold
+      const clamped = dy < THRESHOLD ? dy : THRESHOLD + (dy - THRESHOLD) * 0.25;
+      setPull(Math.min(clamped, THRESHOLD + 30));
+    };
+    const onEnd = async () => {
+      if (pull >= THRESHOLD) {
+        setState("releasing");
+        setPull(THRESHOLD);
+        await onRefresh();
+        setState("done");
+        setTimeout(() => { setPull(0); setState("idle"); }, 400);
+      } else {
+        setPull(0);
+        setState("idle");
+      }
+      startY.current = null;
+    };
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchmove",  onMove,  { passive: true });
+    window.addEventListener("touchend",   onEnd,   { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchmove",  onMove);
+      window.removeEventListener("touchend",   onEnd);
+    };
+  }, [pull, onRefresh]);
+
+  if (pull <= 0 && state === "idle") return null;
+
+  const progress = Math.min(pull / THRESHOLD, 1);
+  const spinning = state === "releasing" || state === "done";
+
+  return (
+    <div style={{
+      position: "fixed", top: 64, left: 0, right: 0, zIndex: 190,
+      display: "flex", justifyContent: "center",
+      transform: `translateY(${Math.min(pull, THRESHOLD + 30) - THRESHOLD}px)`,
+      transition: spinning ? "transform .3s cubic-bezier(.32,0,.28,1)" : "none",
+      pointerEvents: "none",
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: 18,
+        background: "#fff",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        {spinning ? (
+          <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: "spin .7s linear infinite" }}>
+            <circle cx="9" cy="9" r="7" fill="none" stroke={T.gray7} strokeWidth="2"/>
+            <path d="M9 2 A7 7 0 0 1 16 9" fill="none" stroke={T.blue} strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 18 18"
+            style={{ transform: `rotate(${progress * 180}deg)`, transition: "transform .1s" }}>
+            <path d="M9 3 L9 15 M4 10 L9 15 L14 10" fill="none" stroke={progress >= 1 ? T.blue : T.gray5}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Header ────────────────────────────────────────────────── */
 function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
   const { t, lang, setLang } = useLang();
@@ -2636,7 +2721,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
               <Icon name="back" size={20} color={T.blue} strokeWidth={2}/>
             </button>
           ) : (
-            <button onClick={()=>onNavigate("home")} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
+            <button onClick={()=>{ onNavigate("home"); if(typeof window!=="undefined") window.dispatchEvent(new Event("msambwa:reload")); }} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
               <Logo height={36}/>
             </button>
           )}
@@ -2977,6 +3062,11 @@ function PageInner() {
       });
   };
   useEffect(() => { loadProducts(); }, []);
+  useEffect(() => {
+    const handler = () => loadProducts();
+    window.addEventListener('msambwa:reload', handler);
+    return () => window.removeEventListener('msambwa:reload', handler);
+  }, []);
 
   /* ── Show sale modal after 2s — max once per 2 days ── */
   useEffect(() => {
@@ -3112,6 +3202,7 @@ function PageInner() {
     <LangCtx.Provider value={{ lang, setLang, t }}>
       <div style={{ maxWidth:480,margin:"0 auto",minHeight:"100vh",background:T.white,position:"relative" }}>
         <Header screen={current.screen} cartCount={cartCount} onCart={()=>setCartOpen(true)} onNavigate={navigate} canGoBack={canGoBack} onBack={goBack}/>
+        <PullToRefresh onRefresh={loadProducts}/>
         <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
