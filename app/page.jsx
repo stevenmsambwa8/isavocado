@@ -112,6 +112,23 @@ const T = {
 const shadow = { xs:"0 1px 4px rgba(0,0,0,.08)", xl:"0 16px 48px rgba(0,0,0,.14)", xxl:"0 24px 60px rgba(0,0,0,.18)" };
 const $p = v => `TZS ${Number(v).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 })}`;
 
+/* ─── Image URL optimizer (wsrv.nl — free, no account needed) ──
+   wsrv.nl is a free image CDN that resizes, compresses and
+   converts to WebP on the fly. Caches globally so repeat loads
+   are instant. No API key, no account, no cost.
+   - thumb  : 200px  — small thumbnails
+   - card   : 400px  — grid cards
+   - detail : 900px  — product detail
+─────────────────────────────────────────────────────────── */
+function imgUrl(src, { width = 400, quality = 75 } = {}) {
+  if (!src) return src;
+  // Already proxied — skip
+  if (src.includes('wsrv.nl')) return src;
+  // Encode the full URL and send through wsrv.nl proxy
+  const encoded = encodeURIComponent(src);
+  return `https://wsrv.nl/?url=${encoded}&w=${width}&q=${quality}&output=webp&we`;
+}
+
 const productUrl = (id) => {
   if (typeof window === "undefined") return "";
   return `${window.location.origin}${window.location.pathname}#product=${id}`;
@@ -289,13 +306,14 @@ function HomeSkeleton() {
 }
 
 /* ─── Lazy image with fade-in + native lazy loading ─────────── */
-function LazyImg({ src, alt="", style:st, ...rest }) {
+function LazyImg({ src, alt="", width=600, quality=75, style:st, ...rest }) {
   const [loaded, setLoaded] = useState(false);
+  const optimised = imgUrl(src, { width, quality });
   return (
     <div style={{ position:"relative", width:"100%", height:"100%", background:"#f2f2f7", ...st }}>
       {!loaded && <div className="sk" style={{ position:"absolute",inset:0,borderRadius:"inherit" }}/>}
       <img
-        src={src} alt={alt} loading="lazy" decoding="async"
+        src={optimised} alt={alt} loading="lazy" decoding="async"
         onLoad={() => setLoaded(true)}
         style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", opacity: loaded ? 1 : 0, transition:"opacity .25s", ...rest.imgStyle }}
         {...rest}
@@ -336,7 +354,7 @@ function CardImageSlider({ images, aspectRatio="3/4", borderRadius=20, badge, so
           <div className="card-slider" style={{ display:"flex", width:`${imgs.length * 100}%`, height:"100%", transition:"transform .45s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx * (100 / imgs.length)}%)` }}>
             {imgs.map((src, i) => (
               <div key={i} style={{ width:`${100 / imgs.length}%`, height:"100%", flexShrink:0 }}>
-                <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                <img src={imgUrl(src,{width:400,quality:72})} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
               </div>
             ))}
           </div>
@@ -423,7 +441,7 @@ function RelatedProducts({ currentProduct, products, onSelect, wishlist, onWishl
           <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ flexShrink:0,width:148,cursor:"pointer" }}>
             <div style={{ width:148,height:185,borderRadius:18,overflow:"hidden",background:"#f2f2f7",marginBottom:8,position:"relative" }}>
               {p.image_url
-                ? <img src={p.image_url} alt={p.name} loading="lazy" decoding="async" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+                ? <img src={imgUrl(p.image_url,{width:200,quality:70})} alt={p.name} loading="lazy" decoding="async" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
                 : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="bag" size={24} color={T.gray6}/></div>}
               {p.badge && <span style={{ position:"absolute",top:8,left:8,background:p.badge==="Sale"?T.red:T.black,color:"#fff",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:99 }}>{p.badge}</span>}
             </div>
@@ -632,7 +650,7 @@ function PurchaseModal({ product, onClose, sessionId, user }) {
 
             {/* Product summary */}
             <div style={{ display:'flex',gap:12,background:T.fill4,borderRadius:14,padding:14,marginBottom:22 }}>
-              {(selectedImg||product.image_url)&&<div style={{ width:60,height:72,borderRadius:10,overflow:'hidden',flexShrink:0 }}><img src={selectedImg||product.image_url} alt={product.name} style={{ width:'100%',height:'100%',objectFit:'cover' }}/></div>}
+              {(selectedImg||product.image_url)&&<div style={{ width:60,height:72,borderRadius:10,overflow:'hidden',flexShrink:0 }}><img src={imgUrl(selectedImg||product.image_url,{width:120,quality:65})} alt={product.name} style={{ width:'100%',height:'100%',objectFit:'cover' }}/></div>}
               <div style={{ flex:1 }}>
                 <p style={{ fontSize:15,fontWeight:700,margin:'0 0 4px' }}>{product.name}</p>
                 <p style={{ fontSize:16,fontWeight:700,color:T.black,margin:0 }}>{$p(product.price)}</p>
@@ -648,7 +666,7 @@ function PurchaseModal({ product, onClose, sessionId, user }) {
                   {images.map((src,i)=>(
                     <button key={i} onClick={()=>setSelectedImg(src)}
                       style={{ width:80,height:96,borderRadius:12,overflow:'hidden',padding:0,border:`2.5px solid ${selectedImg===src?T.black:T.gray8}`,cursor:'pointer',position:'relative',background:'#f2f2f7',flexShrink:0,boxShadow:selectedImg===src?`0 0 0 2px ${T.black}`:'none',transition:'border .18s, box-shadow .18s' }}>
-                      <img src={src} alt={`Option ${i+1}`} style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
+                      <img src={imgUrl(src,{width:120,quality:65})} alt={`Option ${i+1}`} style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
                       {selectedImg===src&&<div style={{ position:'absolute',inset:0,background:'rgba(0,0,0,0.18)',display:'flex',alignItems:'center',justifyContent:'center' }}><Icon name="check" size={18} color="#fff"/></div>}
                     </button>
                   ))}
@@ -905,7 +923,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
                     <div style={{ padding:"16px 0",display:"flex",gap:14 }}>
                       <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
                         {(item.selectedImg || item.image_url)
-                          ? <img src={item.selectedImg || item.image_url} alt={item.name} style={{ width:"100%",height:"100%",objectFit:"cover" }} loading="lazy"/>
+                          ? <img src={imgUrl(item.selectedImg || item.image_url,{width:160,quality:65})} alt={item.name} style={{ width:"100%",height:"100%",objectFit:"cover" }} loading="lazy"/>
                           : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#e8e8ed" }}><Icon name="bag" size={24} color={T.gray5}/></div>}
                       </div>
                       <div style={{ flex:1,minWidth:0 }}>
@@ -1045,7 +1063,7 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
                   onClick={() => setLB(i)}
                   style={{ minWidth:"100%", width:"100%", aspectRatio:"4/5", flexShrink:0, scrollSnapAlign:"start", cursor:"zoom-in", position:"relative", overflow:"hidden", background:"#f2f2f7" }}
                 >
-                  <img src={src} alt={`${p.name} ${i+1}`} loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                  <img src={imgUrl(src,{width:900,quality:80})} alt={`${p.name} ${i+1}`} loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
                 </div>
               ))}
             </div>
@@ -1091,7 +1109,7 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
               onClick={() => scrollTo(i)}
               style={{ width:60, height:72, borderRadius:12, overflow:"hidden", flexShrink:0, cursor:"pointer", border:`2px solid ${i===imgIdx?T.black:"transparent"}`, transition:"border .18s" }}
             >
-              <img src={src} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              <img src={imgUrl(src,{width:120,quality:65})} alt="" loading="lazy" decoding="async" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
             </div>
           ))}
         </div>
@@ -1180,7 +1198,7 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
                   transition:"border .18s, box-shadow .18s",
                 }}
               >
-                <img src={src} alt={`Option ${i+1}`} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
+                <img src={imgUrl(src,{width:120,quality:65})} alt={`Option ${i+1}`} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
                 {selectedImg===src && (
                   <div style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.22)",display:"flex",alignItems:"center",justifyContent:"center" }}>
                     <div style={{ width:22,height:22,borderRadius:11,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center" }}>
@@ -1349,7 +1367,7 @@ function ImageLightbox({ images, startIndex, onClose }) {
         style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}
       >
         <img
-          src={images[idx]}
+          src={imgUrl(images[idx],{width:1200,quality:85})}
           alt=""
           style={{
             maxWidth:"100%", maxHeight:"100%", objectFit:"contain",
@@ -1464,7 +1482,7 @@ function HeroSlider({ onNavigate, products }) {
               {hasImg && (
                 <>
                   <img
-                    src={sl.heroImg} alt=""
+                    src={imgUrl(sl.heroImg,{width:800,quality:78})} alt=""
                     loading={slides.indexOf(sl) === 0 ? "eager" : "lazy"}
                     decoding={slides.indexOf(sl) === 0 ? "sync" : "async"}
                     fetchpriority={slides.indexOf(sl) === 0 ? "high" : "low"}
@@ -1608,7 +1626,7 @@ const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wi
             grid ? <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/> : (
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex",gap:14,cursor:"pointer",background:T.fill4,borderRadius:18,padding:14 }}>
                 <div style={{ width:80,height:100,background:"#f2f2f7",borderRadius:14,flexShrink:0,overflow:"hidden" }}>
-                  {p.image_url?<img src={p.image_url} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}><Icon name="bag" size={22} color={T.gray6}/></div>}
+                  {p.image_url?<img src={imgUrl(p.image_url,{width:160,quality:65})} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>:<div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:"#f2f2f7" }}><Icon name="bag" size={22} color={T.gray6}/></div>}
                 </div>
                 <div style={{ flex:1,minWidth:0,paddingTop:2 }}>
                   <p style={{ fontSize:15,fontWeight:700,marginBottom:4 }}>{p.name}</p>
@@ -2224,7 +2242,7 @@ function LookbookScreen({ products, onSelect, t }) {
   const heroProds  = withImg.slice(0, 4);   // up to 4 for editorial mosaic
   const shopProds  = withImg.slice(0, 6);   // up to 6 for shop grid
 
-  const getImg = p => p.image_url || p.image_urls?.[0] || null;
+  const getImg = (p, w=600) => imgUrl(p.image_url || p.image_urls?.[0] || null, {width:w, quality:78});
 
   return (
     <div style={{ animation:"fadeIn .18s ease" }}>
@@ -2244,7 +2262,7 @@ function LookbookScreen({ products, onSelect, t }) {
             className="pressable"
             style={{ gridColumn:"1", gridRow:"1 / 3", borderRadius:20, overflow:"hidden", cursor:"pointer",
                      background:T.fill3, aspectRatio:"2/3", position:"relative" }}>
-            <img src={getImg(heroProds[0])} alt={heroProds[0].name}
+            <img src={getImg(heroProds[0], 900)} alt={heroProds[0].name}
                  loading="lazy" decoding="async"
                  style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
             <div style={{ position:"absolute",bottom:0,left:0,right:0,padding:"28px 12px 12px",
@@ -2260,7 +2278,7 @@ function LookbookScreen({ products, onSelect, t }) {
               className="pressable"
               style={{ gridColumn:"2", borderRadius:18, overflow:"hidden", cursor:"pointer",
                        background:T.fill3, aspectRatio:"3/4", position:"relative" }}>
-              <img src={getImg(p)} alt={p.name}
+              <img src={getImg(p, 400)} alt={p.name}
                    loading="lazy" decoding="async"
                    style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
               <div style={{ position:"absolute",bottom:0,left:0,right:0,padding:"18px 10px 8px",
@@ -2275,7 +2293,7 @@ function LookbookScreen({ products, onSelect, t }) {
         /* single product fallback */
         <div onClick={()=>onSelect(heroProds[0])} className="pressable"
           style={{ borderRadius:20,overflow:"hidden",marginBottom:24,aspectRatio:"4/3",background:T.fill3,cursor:"pointer" }}>
-          <img src={getImg(heroProds[0])} alt={heroProds[0].name}
+          <img src={getImg(heroProds[0], 900)} alt={heroProds[0].name}
                style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
         </div>
       ) : (
@@ -2295,7 +2313,7 @@ function LookbookScreen({ products, onSelect, t }) {
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
                 <div style={{ aspectRatio:"3/4",background:T.fill3,borderRadius:18,overflow:"hidden",marginBottom:8 }}>
                   {getImg(p)
-                    ? <img src={getImg(p)} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
+                    ? <img src={getImg(p, 300)} alt={p.name} style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
                     : <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center" }}><Icon name="bag" size={30} color={T.gray6}/></div>}
                 </div>
                 <p style={{ fontSize:13,fontWeight:600,margin:"0 0 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
