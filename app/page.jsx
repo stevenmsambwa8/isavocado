@@ -480,10 +480,10 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (compact) return (
     <div style={{ width:140, flexShrink:0, position:"relative" }}>
       <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-        <CardImageSlider images={images} aspectRatio="5/6" borderRadius={16} badge={p.badge} soldOut={p.in_stock===false}/>
+        <CardImageSlider images={images} aspectRatio="5/6" borderRadius={13} badge={p.badge} soldOut={p.in_stock===false}/>
       </div>
-      {/* Share icon top-left */}
-      <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:8,left:8,width:28,height:28,borderRadius:14,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+      {/* Share icon top-RIGHT — badge is top-left so no overlap */}
+      <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:8,right:8,width:28,height:28,borderRadius:8,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
         <Icon name="share" size={13} color={T.gray3}/>
       </button>
       <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
@@ -496,14 +496,14 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (grid) return (
     <div style={{ cursor:"pointer" }}>
       <div style={{ marginBottom:10 }} onClick={()=>onSelect(p)} className="pressable">
-        <CardImageSlider images={images} aspectRatio="3/4" borderRadius={20} badge={p.badge} soldOut={p.in_stock===false}>
-          {/* Share — BEFORE heart */}
-          <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:10,right:50,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
-            <Icon name="share" size={15} color={T.gray4}/>
+        <CardImageSlider images={images} aspectRatio="3/4" borderRadius={13} badge={p.badge} soldOut={p.in_stock===false}>
+          {/* Heart — top-right only */}
+          <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:8,right:8,width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+            <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray5}/>
           </button>
-          {/* Heart */}
-          <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:10,right:10,width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
-            <Icon name={wishlisted?"heart-fill":"heart"} size={16} color={wishlisted?T.red:T.gray5}/>
+          {/* Share — bottom-right, away from badge */}
+          <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",bottom:8,right:8,width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+            <Icon name="share" size={13} color={T.gray4}/>
           </button>
         </CardImageSlider>
       </div>
@@ -1573,64 +1573,63 @@ function HeroSlider({ onNavigate, products }) {
 
   return (
     <div
-      style={{ position:"relative", borderRadius:24, overflow:"hidden", marginBottom:24, userSelect:"none" }}
+      style={{ borderRadius:13, overflow:"hidden", marginBottom:24, userSelect:"none", background:"#111" }}
       onMouseDown={e=>onDragStart(e.clientX)}
       onMouseUp={e=>onDragEnd(e.clientX)}
       onTouchStart={e=>onDragStart(e.touches[0].clientX)}
       onTouchEnd={e=>onDragEnd(e.changedTouches[0].clientX)}
     >
-      {/* ── Image strip ── */}
+      {/* ── Slide strip — each slide is a LEFT TEXT / RIGHT IMAGE split ── */}
       <div style={{ display:"flex", width:`${N*100}%`, transition:"transform .45s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*(100/N)}%)` }}>
         {slides.map((s, si) => (
-          <div key={s.id} style={{ width:`${100/N}%`, flexShrink:0, position:"relative", aspectRatio:"4/5" }}>
-            <img
-              src={imgUrl(s.img, { width:800, quality:80 })}
-              alt={s.title}
-              loading={si===0?"eager":"lazy"}
-              decoding={si===0?"sync":"async"}
-              style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
-            />
-            {/* Clean bottom fade — no colored tint */}
-            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.78) 100%)" }}/>
+          <div key={s.id} style={{ width:`${100/N}%`, flexShrink:0, display:"flex", height:260, background:"#111" }}>
+
+            {/* LEFT — text column */}
+            <div style={{ width:"48%", display:"flex", flexDirection:"column", justifyContent:"space-between", padding:"22px 0 22px 18px" }}>
+              {/* Top: tag + title */}
+              <div>
+                <p style={{ margin:"0 0 8px", fontSize:9, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.5)" }}>
+                  {s.tag}
+                </p>
+                <h2 style={{ margin:0, fontSize:21, fontWeight:800, color:"#fff", lineHeight:1.2, letterSpacing:"-0.3px" }}>
+                  {s.title}
+                </h2>
+              </div>
+              {/* Bottom: CTA + dots */}
+              <div>
+                <button
+                  onClick={() => onNavigate(s.nav)}
+                  style={{ display:"block", background:"#fff", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", marginBottom:14, whiteSpace:"nowrap" }}
+                >
+                  {s.cta} →
+                </button>
+                <div style={{ display:"flex", gap:5 }}>
+                  {slides.map((_,i) => (
+                    <button
+                      key={i}
+                      onClick={e => { e.stopPropagation(); go(i); resetTimer(); }}
+                      style={{ width:i===idx?16:5, height:4, borderRadius:2, background:i===idx?"#fff":"rgba(255,255,255,0.3)", border:"none", cursor:"pointer", padding:0, transition:"width .25s" }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT — product photo */}
+            <div style={{ width:"52%", position:"relative", overflow:"hidden" }}>
+              <img
+                src={imgUrl(s.img, { width:600, quality:80 })}
+                alt={s.title}
+                loading={si===0?"eager":"lazy"}
+                decoding={si===0?"sync":"async"}
+                style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
+              />
+              {/* Left edge fade so photo blends into dark bg */}
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right, #111 0%, transparent 30%)" }}/>
+            </div>
+
           </div>
         ))}
-      </div>
-
-      {/* ── Overlay content ── */}
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"20px 20px 24px", zIndex:2 }}>
-
-        {/* Tag — small, uppercase, refined */}
-        <p style={{ margin:"0 0 6px", fontSize:10, fontWeight:600, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.65)" }}>
-          {sl.tag}
-        </p>
-
-        {/* Title — large, clean, white */}
-        <h2 style={{ margin:"0 0 16px", fontSize:28, fontWeight:800, color:"#fff", lineHeight:1.15, letterSpacing:"-0.5px" }}>
-          {sl.title}
-        </h2>
-
-        {/* Bottom row — CTA link + dots */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-
-          {/* CTA — outlined, no filled colour button */}
-          <button
-            onClick={() => onNavigate(sl.nav)}
-            style={{ background:"transparent", color:"#fff", border:"1.5px solid rgba(255,255,255,0.8)", borderRadius:99, padding:"10px 20px", fontSize:13, fontWeight:600, cursor:"pointer", letterSpacing:"0.02em", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
-          >
-            {sl.cta} →
-          </button>
-
-          {/* Dots */}
-          <div style={{ display:"flex", gap:5 }}>
-            {slides.map((_,i) => (
-              <button
-                key={i}
-                onClick={e => { e.stopPropagation(); go(i); resetTimer(); }}
-                style={{ width:i===idx?20:5, height:5, borderRadius:3, background:i===idx?"#fff":"rgba(255,255,255,0.35)", border:"none", cursor:"pointer", padding:0, transition:"width .28s, background .25s" }}
-              />
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
