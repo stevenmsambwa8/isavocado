@@ -555,6 +555,8 @@ function ProductsPanel() {
     return sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
   };
 
+  const [lastSaved, setLastSaved] = useState(null); // { id, name } for warm cache
+
   const handleSave = async ({ form, slots }) => {
     setSaving(true);
     try {
@@ -586,6 +588,7 @@ function ProductsPanel() {
       }
       await sb.from('products').update({ image_url: urls[0]||null, image_urls: urls }).eq('id', id);
       showToast(editing?.id ? 'Product updated' : 'Product added');
+      setLastSaved({ id, name: form.name.trim() });
       setEditing(null);
       load();
     } catch(e) { showToast(e.message, 'error'); }
@@ -786,6 +789,32 @@ function ProductsPanel() {
           <ProductForm initial={editing} onSave={handleSave} onCancel={()=>setEditing(null)} saving={saving}/>
         </Sheet>
       )}
+
+      {/* ── Warm Cache banner — appears after saving a product ── */}
+      {lastSaved && (() => {
+        const shareUrl = productShareUrl(lastSaved.id, lastSaved.name);
+        return (
+          <div style={{ position:'fixed', bottom:88, left:16, right:16, zIndex:500, background:'#1a1a1a', borderRadius:16, padding:'14px 16px', display:'flex', alignItems:'center', gap:12, boxShadow:'0 8px 32px rgba(0,0,0,0.3)', animation:'fadeUp .25s ease' }}>
+            <div style={{ fontSize:22 }}>🔥</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ margin:0, fontSize:13, fontWeight:700, color:'#fff' }}>Warm share preview</p>
+              <p style={{ margin:'1px 0 0', fontSize:11, color:'rgba(255,255,255,0.55)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lastSaved.name}</p>
+            </div>
+            <button
+              onClick={() => { window.open(warmCacheUrl(shareUrl), '_blank'); }}
+              style={{ flexShrink:0, background:T.teal, color:'#fff', border:'none', borderRadius:10, padding:'8px 14px', fontSize:13, fontWeight:700, cursor:'pointer' }}
+            >
+              Warm now
+            </button>
+            <button
+              onClick={() => setLastSaved(null)}
+              style={{ flexShrink:0, background:'rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.7)', border:'none', borderRadius:8, width:28, height:28, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}
+            >
+              ×
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -818,8 +847,26 @@ function OrdersPanel() {
     await sb.from('purchase_requests').update({status}).eq('id', id);
     setSel(o => ({...o, status}));
     setOrders(os => os.map(o => o.id===id ? {...o,status} : o));
-    setToast({ msg:'Status updated' });
+    setToast({ msg:'Status updated — tap WhatsApp to notify customer' });
     setUpdating(false);
+  };
+
+  // Build a pre-filled WhatsApp message for a given status
+  const waNotifyUrl = (order, status) => {
+    if (!order?.buyer_phone) return null;
+    const phone = order.buyer_phone.replace(/[^0-9]/g,'');
+    const name  = order.buyer_name || 'Customer';
+    const prod  = order.product_name || 'your order';
+    const ref   = order.order_ref   ? ` (Ref: ${order.order_ref})` : '';
+    const msgs  = {
+      confirmed: `Hi ${name}, your order for *${prod}*${ref} has been *confirmed* ✅. We are preparing it now. Thank you for shopping at MSAMBWA Classic Wear!`,
+      shipped:   `Hi ${name}, great news! Your order for *${prod}*${ref} has been *shipped* 🚚. You should receive it soon. Thank you for shopping at MSAMBWA Classic Wear!`,
+      delivered: `Hi ${name}, your order for *${prod}*${ref} has been *delivered* 📦. We hope you love it! Feel free to visit us again at msambwaclassicwear.com`,
+      cancelled: `Hi ${name}, unfortunately your order for *${prod}*${ref} has been *cancelled*. Please contact us if you have any questions. MSAMBWA Classic Wear.`,
+    };
+    const text = msgs[status];
+    if (!text) return null;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   };
 
   const deleteOne = async () => {
@@ -976,6 +1023,17 @@ function OrdersPanel() {
               </div>
             ))}
           </Card>
+          {/* WhatsApp notify button */}
+          {sel.buyer_phone && waNotifyUrl(sel, sel.status) && (
+            <button
+              onClick={() => window.open(waNotifyUrl(sel, sel.status), '_blank')}
+              style={{ width:'100%', padding:'14px', background:'#25D366', color:'#fff', border:'none', borderRadius:14, fontSize:15, fontWeight:600, cursor:'pointer', marginTop:4, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}
+            >
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.115 1.535 5.845L.057 23.5l5.824-1.527A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.005-1.368l-.359-.214-3.724.977.995-3.635-.233-.373A9.818 9.818 0 0112 2.182c5.424 0 9.818 4.394 9.818 9.818 0 5.423-4.394 9.818-9.818 9.818z"/></svg>
+              Notify customer on WhatsApp
+            </button>
+          )}
+
           {/* Delete this request */}
           <button onClick={()=>setConfirm('one')} style={{ width:'100%',padding:'14px',background:`${T.red}10`,color:T.red,border:`1px solid ${T.red}30`,borderRadius:14,fontSize:15,fontWeight:600,cursor:'pointer',marginTop:4,display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
             <Ic n="trash" size={16} color={T.red} w={2}/> Delete request
@@ -1153,13 +1211,14 @@ function SettingsPanel() {
   );
 }
 
-/* ─── FEEDBACK PANEL ─────────────────────────────────────────── */
+/* ─── REVIEWS PANEL ──────────────────────────────────────────── */
 function FeedbackPanel() {
-  const [items,   setItems]  = useState([]);
-  const [loading, setLoad]   = useState(true);
-  const [sel,     setSel]    = useState(null);
-  const [deleting,setDel]    = useState(false);
-  const [toast,   setToast]  = useState(null);
+  const [items,    setItems]   = useState([]);
+  const [loading,  setLoad]    = useState(true);
+  const [sel,      setSel]     = useState(null);
+  const [deleting, setDel]     = useState(false);
+  const [toast,    setToast]   = useState(null);
+  const [filter,   setFilter]  = useState('all'); // 'all' | '5'|'4'|'3'|'2'|'1'
 
   const load = async () => {
     setLoad(true);
@@ -1174,14 +1233,27 @@ function FeedbackPanel() {
     await sb.from('site_feedback').delete().eq('id',id);
     setItems(is=>is.filter(i=>i.id!==id));
     setSel(null);
-    setToast({ msg:'Deleted' });
+    setToast({ msg:'Review deleted' });
     setDel(false);
   };
 
-  const stars = n => Array.from({length:5}, (_,i) => (
-    <Ic key={i} n={i<n?'review':'review'} size={14} color={i<n?'#f59a0e':'#D1D1D6'} w={i<n?0:1.8}/>
-  ));
-  const avg = items.length ? (items.reduce((s,i)=>s+(i.rating||0),0)/items.length).toFixed(1) : '—';
+  const Stars = ({ n, size=14 }) => (
+    <div style={{ display:'flex', gap:2 }}>
+      {Array.from({length:5},(_,i)=>(
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+            fill={i<n?'#f59a0e':'#E5E5EA'} stroke="none"/>
+        </svg>
+      ))}
+    </div>
+  );
+
+  const avg       = items.length ? (items.reduce((s,i)=>s+(i.rating||0),0)/items.length).toFixed(1) : '—';
+  const fiveCount = items.filter(i=>(i.rating||0)===5).length;
+  const visible   = filter==='all' ? items : items.filter(i=>String(i.rating||0)===filter);
+
+  // Rating bar widths
+  const barW = (n) => items.length ? `${Math.round(items.filter(i=>(i.rating||0)===n).length/items.length*100)}%` : '0%';
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',paddingTop:80}}><Spin size={30}/></div>;
 
@@ -1189,70 +1261,111 @@ function FeedbackPanel() {
     <div style={{ animation:'fadeUp .28s ease' }}>
       {toast && <Toast msg={toast.msg} type={toast.type||'success'} onDone={()=>setToast(null)}/>}
 
-      {/* Summary */}
-      <Card style={{ marginBottom:20 }}>
-        <div style={{ padding:'18px 16px', display:'flex', gap:24 }}>
-          <div style={{ textAlign:'center' }}>
-            <p style={{ fontSize:36,fontWeight:700,color:T.label,margin:0 }}>{avg}</p>
-            <p style={{ fontSize:13,color:T.label3,margin:'2px 0 0' }}>Avg rating</p>
+      {/* Summary card */}
+      <Card style={{ marginBottom:16 }}>
+        <div style={{ padding:'18px 16px', display:'flex', gap:20, alignItems:'center' }}>
+          {/* Big avg */}
+          <div style={{ textAlign:'center', flexShrink:0 }}>
+            <p style={{ fontSize:48,fontWeight:700,color:T.label,margin:0,lineHeight:1 }}>{avg}</p>
+            <Stars n={Math.round(parseFloat(avg)||0)} size={16}/>
+            <p style={{ fontSize:12,color:T.label3,margin:'4px 0 0' }}>{items.length} review{items.length!==1?'s':''}</p>
           </div>
-          <div style={{ textAlign:'center' }}>
-            <p style={{ fontSize:36,fontWeight:700,color:T.label,margin:0 }}>{items.length}</p>
-            <p style={{ fontSize:13,color:T.label3,margin:'2px 0 0' }}>Responses</p>
-          </div>
-          <div style={{ textAlign:'center' }}>
-            <p style={{ fontSize:36,fontWeight:700,color:T.label,margin:0 }}>{items.filter(i=>i.message).length}</p>
-            <p style={{ fontSize:13,color:T.label3,margin:'2px 0 0' }}>With message</p>
+          {/* Rating bars */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:4 }}>
+            {[5,4,3,2,1].map(n=>(
+              <button key={n} onClick={()=>setFilter(filter===String(n)?'all':String(n))}
+                style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                <span style={{ fontSize:11, color:T.label3, width:8, textAlign:'right', flexShrink:0 }}>{n}</span>
+                <div style={{ flex:1, height:6, borderRadius:3, background:T.fill2, overflow:'hidden' }}>
+                  <div style={{ width:barW(n), height:'100%', background: filter===String(n)?T.blue:'#f59a0e', borderRadius:3, transition:'width .3s' }}/>
+                </div>
+                <span style={{ fontSize:11, color:T.label4, width:20, textAlign:'left', flexShrink:0 }}>
+                  {items.filter(i=>(i.rating||0)===n).length}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
+        {/* 5-star highlight */}
+        {items.length > 0 && (
+          <div style={{ borderTop:`1px solid ${T.sep}`, padding:'10px 16px', display:'flex', gap:16 }}>
+            <p style={{ margin:0, fontSize:13, color:T.label3 }}>
+              ⭐ <strong style={{ color:T.label }}>{fiveCount}</strong> five-star review{fiveCount!==1?'s':''}
+              {' · '}
+              <strong style={{ color:T.label }}>{items.filter(i=>i.message).length}</strong> with comment{items.filter(i=>i.message).length!==1?'s':''}
+            </p>
+          </div>
+        )}
       </Card>
 
       {items.length === 0 ? (
         <div style={{ textAlign:'center',paddingTop:72 }}>
-          <p style={{ fontSize:48,margin:'0 0 12px' }}>💬</p>
-          <p style={{ fontSize:20,fontWeight:700,color:T.label,margin:'0 0 8px' }}>No feedback yet</p>
-          <p style={{ fontSize:15,color:T.label3 }}>Customer feedback will appear here.</p>
+          <p style={{ fontSize:48,margin:'0 0 12px' }}>⭐</p>
+          <p style={{ fontSize:20,fontWeight:700,color:T.label,margin:'0 0 8px' }}>No reviews yet</p>
+          <p style={{ fontSize:15,color:T.label3,lineHeight:1.5,maxWidth:260,margin:'0 auto' }}>Customer reviews submitted from the store will appear here.</p>
         </div>
       ) : (
-        <Card title={`${items.length} response${items.length!==1?'s':''}`}>
-          {items.map((item,i)=>(
-            <div key={item.id}>
-              <button onClick={()=>setSel(item)} className="rowbtn" style={{ width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:T.white,border:'none',cursor:'pointer',textAlign:'left' }}>
-                <div style={{ flex:1,minWidth:0 }}>
-                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:2 }}>
-                    <div style={{ display:'flex',gap:2 }}>{stars(item.rating||0)}</div>
-                    {item.email&&<span style={{ fontSize:12,color:T.label3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.email}</span>}
-                  </div>
-                  {item.message&&<p style={{ fontSize:13,color:T.label3,margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.message}</p>}
-                </div>
-                <p style={{ fontSize:11,color:T.label4,margin:0,flexShrink:0 }}>{fmtDate(item.created_at)}</p>
+        <>
+          {filter !== 'all' && (
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+              <button onClick={()=>setFilter('all')} style={{ fontSize:13, color:T.blue, background:'none', border:'none', cursor:'pointer', padding:0, fontWeight:600 }}>
+                ← All reviews
               </button>
-              {i<items.length-1&&<Sep/>}
+              <span style={{ fontSize:13, color:T.label3 }}>Showing {filter}-star only ({visible.length})</span>
             </div>
-          ))}
-        </Card>
+          )}
+          <Card title={`${visible.length} review${visible.length!==1?'s':''}`}>
+            {visible.map((item,i)=>(
+              <div key={item.id}>
+                <button onClick={()=>setSel(item)} className="rowbtn" style={{ width:'100%',display:'flex',alignItems:'flex-start',gap:12,padding:'13px 16px',background:T.white,border:'none',cursor:'pointer',textAlign:'left' }}>
+                  {/* Avatar initial */}
+                  <div style={{ width:36,height:36,borderRadius:18,background:`${T.teal}20`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1 }}>
+                    <span style={{ fontSize:15,fontWeight:700,color:T.teal }}>{(item.email||'A')[0].toUpperCase()}</span>
+                  </div>
+                  <div style={{ flex:1,minWidth:0 }}>
+                    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:3 }}>
+                      <Stars n={item.rating||0}/>
+                      <span style={{ fontSize:11,color:T.label4,flexShrink:0,marginLeft:8 }}>{fmtDate(item.created_at)}</span>
+                    </div>
+                    {item.email && <p style={{ fontSize:12,color:T.label3,margin:'0 0 3px',fontWeight:500 }}>{item.email}</p>}
+                    {item.product_name && <p style={{ fontSize:12,color:T.blue,margin:'0 0 3px',fontWeight:600 }}>{item.product_name}</p>}
+                    {item.message && <p style={{ fontSize:13,color:T.label,margin:0,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden' }}>{item.message}</p>}
+                  </div>
+                </button>
+                {i<visible.length-1&&<Sep/>}
+              </div>
+            ))}
+          </Card>
+        </>
       )}
 
       {sel && (
-        <Sheet title="Feedback" onClose={()=>setSel(null)}>
+        <Sheet title="Review" onClose={()=>setSel(null)}>
           <Card title="Rating">
-            <div style={{ padding:'14px 16px' }}>
-              <div style={{ display:'flex',gap:3,marginBottom:4 }}>{stars(sel.rating||0)}</div>
-              <p style={{ fontSize:13,color:T.label3,margin:0 }}>{sel.rating}/5 stars</p>
+            <div style={{ padding:'14px 16px', display:'flex', alignItems:'center', gap:10 }}>
+              <Stars n={sel.rating||0} size={20}/>
+              <span style={{ fontSize:15,fontWeight:700,color:T.label }}>{sel.rating}/5</span>
             </div>
           </Card>
-          {sel.message&&(
-            <Card title="Message">
+          {sel.product_name && (
+            <Card title="Product reviewed">
+              <div style={{ padding:'14px 16px' }}>
+                <p style={{ fontSize:15,color:T.label,margin:0,fontWeight:600 }}>{sel.product_name}</p>
+              </div>
+            </Card>
+          )}
+          {sel.message && (
+            <Card title="Comment">
               <div style={{ padding:'14px 16px' }}>
                 <p style={{ fontSize:15,color:T.label,margin:0,lineHeight:1.6 }}>{sel.message}</p>
               </div>
             </Card>
           )}
-          <Card title="Contact">
+          <Card title="Customer">
             <Row label={sel.email||'Anonymous'} sub={fmtDate(sel.created_at)} last/>
           </Card>
           <button onClick={()=>del(sel.id)} disabled={deleting} style={{ width:'100%',padding:'14px',background:`${T.red}10`,color:T.red,border:`1px solid ${T.red}30`,borderRadius:14,fontSize:15,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
-            <Ic n="trash" size={16} color={T.red} w={2}/> {deleting?'Deleting…':'Delete response'}
+            <Ic n="trash" size={16} color={T.red} w={2}/> {deleting?'Deleting…':'Delete review'}
           </button>
         </Sheet>
       )}
@@ -1261,10 +1374,22 @@ function FeedbackPanel() {
 }
 
 /* ─── ROOT DASHBOARD ────────────────────────────────────────── */
+/* ─── Slug helper (mirrors store.jsx) ───────────────────────── */
+const toSlug = (name = '', id = '') => {
+  const words = name.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim().split(/ +/).slice(0,4).join('-');
+  const tail  = id.replace(/-/g,'').slice(-6);
+  return words ? `${words}-${tail}` : tail;
+};
+const productShareUrl = (id, name) =>
+  `https://msambwaclassicwear.com/p/${toSlug(name, id)}`;
+const warmCacheUrl = (shareUrl) =>
+  `https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(shareUrl)}`;
+
 const TABS = [
   { id:'overview', label:'Overview',  icon:'chart'  },
   { id:'products', label:'Products',  icon:'box'    },
   { id:'orders',   label:'Orders',    icon:'orders' },
+  { id:'reviews',  label:'Reviews',   icon:'review' },
   { id:'notify',   label:'Notify',    icon:'bell'   },
   { id:'settings', label:'Settings',  icon:'gear'   },
 ];
@@ -1440,7 +1565,7 @@ export default function Dashboard() {
         {tab==='overview'  && <Overview/>}
         {tab==='products'  && <ProductsPanel/>}
         {tab==='orders'    && <OrdersPanel/>}
-        {tab==='feedback'  && <FeedbackPanel/>}
+        {tab==='reviews'   && <FeedbackPanel/>}
         {tab==='notify'    && <NotifyPanel/>}
         {tab==='settings'  && <SettingsPanel/>}
       </div>
