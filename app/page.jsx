@@ -1595,27 +1595,19 @@ function HeroSlider({ onNavigate, products }) {
                   {s.title}
                 </h2>
               </div>
-              {/* Bottom: CTA + dots */}
-              <div>
-                <button
-                  onClick={() => onNavigate(s.nav)}
-                  style={{ display:"block", background:"#fff", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", marginBottom:14, whiteSpace:"nowrap" }}
-                >
-                  {s.cta} →
-                </button>
-                <div style={{ display:"flex", gap:5 }}>
-                  {slides.map((_,i) => (
-                    <button
-                      key={i}
-                      onClick={e => { e.stopPropagation(); go(i); resetTimer(); }}
-                      style={{ width:i===idx?16:5, height:4, borderRadius:2, background:i===idx?"#fff":"rgba(255,255,255,0.3)", border:"none", cursor:"pointer", padding:0, transition:"width .25s" }}
-                    />
-                  ))}
-                </div>
+              {/* Bottom: dots only — CTA is on the photo */}
+              <div style={{ display:"flex", gap:5 }}>
+                {slides.map((_,i) => (
+                  <button
+                    key={i}
+                    onClick={e => { e.stopPropagation(); go(i); resetTimer(); }}
+                    style={{ width:i===idx?16:5, height:4, borderRadius:2, background:i===idx?"#fff":"rgba(255,255,255,0.3)", border:"none", cursor:"pointer", padding:0, transition:"width .25s" }}
+                  />
+                ))}
               </div>
             </div>
 
-            {/* RIGHT — product photo */}
+            {/* RIGHT — product photo, hard edge no fade */}
             <div style={{ width:"52%", position:"relative", overflow:"hidden" }}>
               <img
                 src={imgUrl(s.img, { width:600, quality:80 })}
@@ -1624,8 +1616,13 @@ function HeroSlider({ onNavigate, products }) {
                 decoding={si===0?"sync":"async"}
                 style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
               />
-              {/* Left edge fade so photo blends into dark bg */}
-              <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right, #111 0%, transparent 30%)" }}/>
+              {/* CTA pinned to bottom-right of photo */}
+              <button
+                onClick={() => onNavigate(s.nav)}
+                style={{ position:"absolute", bottom:16, right:14, background:"#fff", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", boxShadow:"0 2px 12px rgba(0,0,0,0.25)" }}
+              >
+                {s.cta}
+              </button>
             </div>
 
           </div>
@@ -1884,7 +1881,7 @@ function AccountScreen({ onNavigate, user, onLogin, onLogout, onFeedback, t, inb
     { icon:"box",      label:t.myOrders,      sub:"Track your purchases",      go:"orders"       },
     { icon:"heart",    label:t.wishlist,       sub:"Your saved items",          go:"wishlist"     },
     { icon:"share",    label:t.ourStory,       sub:"Who we are",                go:"our-story"    },
-    { icon:"truck",    label:t.returns,        sub:"30-day easy returns",       go:"returns"      },
+    { icon:"truck",    label:t.returns,        sub:"3–5 day returns",       go:"returns"      },
     { icon:"gift",     label:t.sustainability, sub:"Our commitment",            go:"sustainability"},
     { icon:"grid",     label:t.lookbook,       sub:"SS26 Collection",           go:"lookbook"     },
   ];
