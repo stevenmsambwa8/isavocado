@@ -89,6 +89,15 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
     img { content-visibility:auto; }
     .slide-panel { will-change:transform; }
     .card-slider  { will-change:transform; }
+    /* Scroll containers — GPU composited, no layout thrash */
+    .hscroll { will-change:scroll-position; -webkit-overflow-scrolling:touch; scroll-behavior:auto; }
+    /* Contain card grids so browser only repaints changed cards */
+    .product-grid { contain:layout style; }
+    /* Images decode off main thread */
+    img { content-visibility:auto; image-rendering:auto; }
+    /* Remove tap highlight delay */
+    * { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+    button, a { touch-action:manipulation; }
   `;
   document.head.appendChild(el);
 }
@@ -253,7 +262,7 @@ function Spin({ size=24 }) {
   );
 }
 
-function Icon({ name, size=20, color=T.black, strokeWidth=2 }) {
+const Icon = memo(function Icon({ name, size=20, color=T.black, strokeWidth=2 }) {
   const s = { width:size, height:size, flexShrink:0 };
   const p = { fill:"none", stroke:color, strokeWidth, strokeLinecap:"round", strokeLinejoin:"round" };
   const icons = {
@@ -290,6 +299,7 @@ function Icon({ name, size=20, color=T.black, strokeWidth=2 }) {
   return icons[name] || <svg {...s} viewBox="0 0 24 24"/>;
 }
 
+});
 function IconBtn({ icon, onClick, size=44, color=T.black, bg="none", style:st }) {
   return (
     <button onClick={onClick} style={{ width:size,height:size,borderRadius:size/2,background:bg,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,...st }}>
@@ -324,7 +334,7 @@ function RatingStars({ rating, size=12 }) {
   );
 }
 
-function PriceLine({ price, was, user, onLoginPrompt }) {
+const PriceLine = memo(function PriceLine({ price, was, user, onLoginPrompt }) {
   const { t } = useLang();
   if (!user) return (
     <button
@@ -342,14 +352,16 @@ function PriceLine({ price, was, user, onLoginPrompt }) {
   );
 }
 
-function HScroll({ children, gap=12, px=0 }) {
+});
+const HScroll = memo(function HScroll({ children, gap=12, px=0 }) {
   return (
-    <div style={{ display:"flex",gap,overflowX:"auto",paddingLeft:px,paddingRight:px,scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch" }}>
+    <div className="hscroll" style={{ display:"flex",gap,overflowX:"auto",paddingLeft:px,paddingRight:px,scrollbarWidth:"none",msOverflowStyle:"none",touchAction:"pan-x" }}>
       {children}
     </div>
   );
 }
 
+});
 function EmptyState({ icon, title, body, action }) {
   return (
     <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px",gap:16,textAlign:"center" }}>
@@ -392,7 +404,7 @@ function HomeSkeleton() {
       <Sk h={100} r={20} style={{ marginBottom:28 }}/>
       {/* Trending grid */}
       <Sk w={160} h={22} r={8} style={{ marginBottom:16 }}/>
-      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+      <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
         {[1,2,3,4].map(i=>(
           <div key={i}>
             <Sk h={220} r={20} style={{ marginBottom:8 }}/>
@@ -536,7 +548,7 @@ function RelatedProducts({ currentProduct, products, onSelect, wishlist, onWishl
   return (
     <div style={{ marginTop:32 }}>
       <p style={{ fontSize:18,fontWeight:700,letterSpacing:"-0.4px",marginBottom:16 }}>You may also like</p>
-      <div style={{ display:"flex",gap:12,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4,WebkitOverflowScrolling:"touch" }}>
+      <div style={{ display:"flex",gap:12,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4,touchAction:"pan-x" }}>
         {related.map(p => (
           <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ flexShrink:0,width:148,cursor:"pointer" }}>
             <div style={{ width:148,height:185,borderRadius:18,overflow:"hidden",background:"#f2f2f7",marginBottom:8,position:"relative" }}>
@@ -1156,7 +1168,7 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
             <div
               ref={scrollRef}
               onScroll={onScroll}
-              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", WebkitOverflowScrolling:"touch", borderRadius:24, width:"100%" }}
+              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", touchAction:"pan-x", borderRadius:24, width:"100%" }}
             >
               {images.map((src, i) => (
                 <div
@@ -1535,7 +1547,7 @@ function textOnRgb({ r,g,b }) {
   return lum > 140 ? '#111' : '#fff';
 }
 
-function HeroSlider({ onNavigate, products }) {
+const HeroSlider = memo(function HeroSlider({ onNavigate, products }) {
   const { t } = useLang();
   const [idx,    setIdx]    = useState(0);
   const [drag,   setDrag]   = useState(null);
@@ -1612,7 +1624,8 @@ function HeroSlider({ onNavigate, products }) {
                 alt={s.title}
                 crossOrigin="anonymous"
                 loading={si===0?"eager":"lazy"}
-                decoding={si===0?"sync":"async"}
+                decoding="async"
+                fetchPriority={si===0?"high":"low"}
                 onLoad={e => onImgLoad(s.id, e.currentTarget)}
                 style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
               />
@@ -1647,7 +1660,7 @@ function HeroSlider({ onNavigate, products }) {
               {/* ── CTA pinned bottom-right of photo ── */}
               <button
                 onClick={() => onNavigate(s.nav)}
-                style={{ position:"absolute", bottom:16, right:14, zIndex:3, background:"rgba(255,255,255,0.92)", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", boxShadow:"0 2px 16px rgba(0,0,0,0.22)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
+                style={{ position:"absolute", bottom:16, right:14, zIndex:3, background:"rgba(255,255,255,0.92)", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", boxShadow:"0 2px 16px rgba(0,0,0,0.22)",  }}
               >
                 {s.cta}
               </button>
@@ -1659,6 +1672,7 @@ function HeroSlider({ onNavigate, products }) {
     </div>
   );
 }
+});
 const HomeScreen = memo(function HomeScreen({ products, onSelect, onWishlist, wishlist, onNavigate, user, onLoginPrompt }) {
   const { t } = useLang();
   const newP  = useMemo(() => products.filter(p=>p.badge==='New').slice(0,8), [products]);
@@ -1693,7 +1707,7 @@ const HomeScreen = memo(function HomeScreen({ products, onSelect, onWishlist, wi
       {trend.length>0&&(
         <div style={{ marginBottom:32 }}>
           <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",marginBottom:16 }}>{t.trendingNow}</p>
-          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
             {trend.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
           </div>
         </div>
@@ -1764,7 +1778,7 @@ const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wi
 });
 
 /* ─── Search ────────────────────────────────────────────────── */
-function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt, searchQ="", setSearchQ }) {
+const SearchScreen = memo(function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt, searchQ="", setSearchQ }) {
   const { t } = useLang();
   const [q,  setQ]  = useState(searchQ);
   const [dq, setDq] = useState(searchQ);
@@ -1802,7 +1816,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
         <>
           <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} {res.length!==1?t.noResults:t.noResults} for "{q}"</p>
           {res.length===0 ? <EmptyState icon="search" title={t.noResults} body={`${t.nothingMatched} "${q}".`}/> : (
-            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+            <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
               {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
             </div>
           )}
@@ -1813,6 +1827,7 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
 }
 
 /* ─── Wishlist ──────────────────────────────────────────────── */
+});
 function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLoginPrompt }) {
   const { t } = useLang();
   const items = products.filter(p=>wishlist.includes(p.id));
@@ -1820,7 +1835,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLogi
     <div style={{ animation:"fadeIn 0.18s ease" }}>
       <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} {t.savedItems}</p>
       {items.length===0 ? <EmptyState icon="heart" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
-        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+        <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
           {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true} user={user} onLoginPrompt={onLoginPrompt}/>)}
         </div>
       )}
@@ -2518,7 +2533,7 @@ function LookbookScreen({ products, onSelect, t }) {
       {shopProds.length > 0 && (
         <>
           <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>Shop the Look</p>
-          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
             {shopProds.map(p=>(
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
                 <div style={{ aspectRatio:"3/4",background:T.fill3,borderRadius:18,overflow:"hidden",marginBottom:8 }}>
@@ -2988,7 +3003,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
   };
   const title = titles[screen] || "";
   return (
-    <header style={{ background:"rgba(255,255,255,0.94)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none" }}>
+    <header style={{ background:"#fff",borderBottom:"1px solid rgba(0,0,0,0.07)",position:"sticky",top:0,zIndex:200,userSelect:"none",transform:"translateZ(0)",WebkitTransform:"translateZ(0)" }}>
       <div style={{ height:64,display:"flex",alignItems:"center",padding:"0 8px",position:"relative" }}>
         <div style={{ display:"flex",alignItems:"center",minWidth:100,flexShrink:0 }}>
           {canGoBack ? (
@@ -3055,7 +3070,7 @@ function BottomNav({ screen, onNavigate }) {
     { id:"account",  icon:"person", label:t.account },
   ];
   return (
-    <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",paddingTop:8,paddingBottom:"max(8px,env(safe-area-inset-bottom))",zIndex:300 }}>
+    <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"#fff",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",paddingTop:8,paddingBottom:"max(8px,env(safe-area-inset-bottom))",zIndex:300 }}>
       {tabs.map(tab=>{
         const active = screen===tab.id;
         return (
@@ -3432,18 +3447,17 @@ function PageInner() {
   }, [showSale]);
 
   /* ── Navigation ── */
-  const navigate = (screen, data={}) => {
+  const navigate = useCallback((screen, data={}) => {
     setHistory(h=>[...h,current]);
     setCurrent({ screen, ...data });
     window.scrollTo(0,0);
-    // Persist screen so page reload returns here (skip product — no data to restore)
     if (screen !== "product") {
       try { localStorage.setItem("msambwa_screen", screen); } catch(_) {}
     }
     window.history.pushState({ screen, ...data }, "");
-  };
+  }, [current]);
 
-  const goBack = () => {
+  const goBack = useCallback(() => {
     const prev = history[history.length-1];
     if (prev) {
       setHistory(h=>h.slice(0,-1));
@@ -3453,7 +3467,7 @@ function PageInner() {
         try { localStorage.setItem("msambwa_screen", prev.screen); } catch(_) {}
       }
     }
-  };
+  }, [history]);
 
   // Listen to the phone/browser back button (popstate fires when user swipes back)
   useEffect(() => {
@@ -3470,40 +3484,37 @@ function PageInner() {
   }, []);
 
   /* ── Cart ── */
-  const addToCart = item => {
+  const addToCart = useCallback(item => {
     setCart(c => {
       const key = x => x.id + '|' + (x.sz||'');
       const ex = c.find(x => key(x) === key(item));
       const next = ex ? c.map(x => key(x)===key(item) ? {...x,qty:x.qty+1} : x) : [...c,{...item,qty:1}];
-      // Start cart abandonment timer — fires 1hr later if user doesn't checkout
       if (Notification.permission === 'granted') {
         swPost('NOTIF_CART_START', { count: next.reduce((s,i)=>s+i.qty,0) });
       }
       return next;
     });
-  };
-  const removeFromCart = item => {
+  }, []);
+  const removeFromCart = useCallback(item => {
     const key = x => x.id + '|' + (x.sz||'');
     setCart(c => {
       const next = c.filter(x => key(x) !== key(item));
-      // Cancel timer if cart is now empty
       if (next.length === 0) swPost('NOTIF_CART_CANCEL');
       return next;
     });
-  };
-  const updateQty = (item,qty) => {
+  }, []);
+  const updateQty = useCallback((item,qty) => {
     const key = x => x.id + '|' + (x.sz||'');
     if (qty <= 0) return removeFromCart(item);
     setCart(c => c.map(x => key(x)===key(item) ? {...x,qty} : x));
-  };
+  }, [removeFromCart]);
 
   /* ── Wishlist (synced to Supabase) ── */
   const [wishToast, setWishToast] = useState(null);
   const wishToastKey = useRef(0);
-  const toggleWishlist = async id => {
+  const toggleWishlist = useCallback(async id => {
     const has = wishlist.includes(id);
     setWishlist(w => has ? w.filter(x=>x!==id) : [...w,id]);
-    // Show brief toast
     wishToastKey.current += 1;
     setWishToast(has ? "Removed from saved" : "Saved to wishlist");
     clearTimeout(window.__wishToastTimer);
@@ -3514,7 +3525,7 @@ function PageInner() {
     } else {
       await sb.from('wishlists').upsert({ session_id:sessionId, product_id:id });
     }
-  };
+  }, [wishlist, sessionId]);
 
   const cartCount  = useMemo(() => cart.reduce((s,i)=>s+i.qty, 0), [cart]);
   const canGoBack  = history.length > 0;
