@@ -1600,7 +1600,7 @@ function HeroSlider({ onNavigate, products }) {
           const bgColor  = col ? darkenRgb(col) : '#1a1a1a';
           const txtColor = col ? textOnRgb({ r:col.r*0.45, g:col.g*0.45, b:col.b*0.45 }) : '#fff';
           // Fade from extracted bg color into transparent so photo shows through
-          const fadeGrad = `linear-gradient(to right, ${bgColor} 0%, ${bgColor} 55%, transparent 100%)`;
+          const fadeGrad = `linear-gradient(to right, ${bgColor} 0%, ${bgColor} 40%, rgba(0,0,0,0) 100%)`;
 
           return (
             <div key={s.id} style={{ width:`${100/N}%`, flexShrink:0, position:"relative", height:260, overflow:"hidden" }}>
@@ -1617,7 +1617,7 @@ function HeroSlider({ onNavigate, products }) {
               />
 
               {/* ── Color fade overlay — left extracted color fading to transparent ── */}
-              <div style={{ position:"absolute", inset:0, background:fadeGrad, transition:"background 0.6s ease" }}/>
+              <div style={{ position:"absolute", inset:0, background:fadeGrad, opacity:0.82, transition:"background 0.6s ease, opacity 0.4s ease" }}/>
 
               {/* ── Text on left — floats over the fade ── */}
               <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", justifyContent:"space-between", padding:"20px 0 18px 18px", zIndex:2 }}>
@@ -1763,13 +1763,14 @@ const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wi
 });
 
 /* ─── Search ────────────────────────────────────────────────── */
-function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
+function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt, searchQ="", setSearchQ }) {
   const { t } = useLang();
-  const [q, setQ] = useState("");
-  const [dq, setDq] = useState("");
+  const [q,  setQ]  = useState(searchQ);
+  const [dq, setDq] = useState(searchQ);
   const debRef = useRef(null);
   const onSearchChange = (v) => {
     setQ(v);
+    if (setSearchQ) setSearchQ(v);
     clearTimeout(debRef.current);
     debRef.current = setTimeout(() => setDq(v), 180);
   };
@@ -2826,26 +2827,24 @@ function Logo({ height=40 }) {
    Native-feeling pull indicator. Attaches to window touch events.
    Calls onRefresh() when user pulls down > 72px from top of page.
 ─────────────────────────────────────────────────────────── */
-function PullToRefresh({ onRefresh }) {
-  const [pull, setPull]       = useState(0);   // px pulled
-  const [state, setState]     = useState("idle"); // idle | pulling | releasing | done
-  const startY                = useRef(null);
-  const THRESHOLD             = 72;
+function PullToRefresh({ onRefresh, screen }) {
+  const [pull,  setPull]  = useState(0);
+  const [state, setState] = useState("idle"); // idle | pulling | ready | releasing | done
+  const startY            = useRef(null);
+  const THRESHOLD         = 80;
 
   useEffect(() => {
     const onStart = (e) => {
-      // Only start tracking if page is scrolled to top
       if (window.scrollY > 4) return;
       startY.current = e.touches[0].clientY;
-      setState("pulling");
     };
     const onMove = (e) => {
       if (startY.current === null) return;
       const dy = e.touches[0].clientY - startY.current;
       if (dy <= 0) { startY.current = null; setPull(0); setState("idle"); return; }
-      // Dampen pull past threshold
-      const clamped = dy < THRESHOLD ? dy : THRESHOLD + (dy - THRESHOLD) * 0.25;
-      setPull(Math.min(clamped, THRESHOLD + 30));
+      const clamped = dy < THRESHOLD ? dy : THRESHOLD + (dy - THRESHOLD) * 0.2;
+      setPull(Math.min(clamped, THRESHOLD + 40));
+      setState(clamped >= THRESHOLD ? "ready" : "pulling");
     };
     const onEnd = async () => {
       if (pull >= THRESHOLD) {
@@ -2853,7 +2852,7 @@ function PullToRefresh({ onRefresh }) {
         setPull(THRESHOLD);
         await onRefresh();
         setState("done");
-        setTimeout(() => { setPull(0); setState("idle"); }, 400);
+        setTimeout(() => { setPull(0); setState("idle"); }, 600);
       } else {
         setPull(0);
         setState("idle");
@@ -2872,35 +2871,99 @@ function PullToRefresh({ onRefresh }) {
 
   if (pull <= 0 && state === "idle") return null;
 
-  const progress = Math.min(pull / THRESHOLD, 1);
-  const spinning = state === "releasing" || state === "done";
+  const progress  = Math.min(pull / THRESHOLD, 1);
+  const releasing = state === "releasing" || state === "done";
+  const ready     = state === "ready";
+
+  // Page label shown while pulling
+  const pageLabel = {
+    home: "Home", shop: "Shop", search: "Search",
+    wishlist: "Saved", account: "Account",
+  }[screen] || "Page";
+
+  // Pill slides down from top, starts 20px below header (top:64)
+  // translateY goes from -100% (hidden) to 0 as user pulls
+  const pillY = releasing
+    ? 0
+    : Math.max(-60, (pull / THRESHOLD) * 60 - 60); // -60 → 0
 
   return (
     <div style={{
-      position: "fixed", top: 64, left: 0, right: 0, zIndex: 190,
-      display: "flex", justifyContent: "center",
-      transform: `translateY(${Math.min(pull, THRESHOLD + 30) - THRESHOLD}px)`,
-      transition: spinning ? "transform .3s cubic-bezier(.32,0,.28,1)" : "none",
+      position: "fixed",
+      top: 64,
+      left: 0, right: 0,
+      zIndex: 190,
+      display: "flex",
+      justifyContent: "center",
       pointerEvents: "none",
+      transform: `translateY(${pillY}px)`,
+      transition: releasing ? "transform .35s cubic-bezier(.32,0,.28,1)" : "none",
     }}>
       <div style={{
-        width: 36, height: 36, borderRadius: 18,
-        background: "#fff",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
-        display: "flex", alignItems: "center", justifyContent: "center",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        background: ready || releasing ? T.blue : "rgba(255,255,255,0.96)",
+        borderRadius: 99,
+        padding: "8px 16px 8px 10px",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+        transition: "background .2s ease",
+        marginTop: 20,
       }}>
-        {spinning ? (
-          <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: "spin .7s linear infinite" }}>
-            <circle cx="9" cy="9" r="7" fill="none" stroke={T.gray7} strokeWidth="2"/>
-            <path d="M9 2 A7 7 0 0 1 16 9" fill="none" stroke={T.blue} strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 18 18"
-            style={{ transform: `rotate(${progress * 180}deg)`, transition: "transform .1s" }}>
-            <path d="M9 3 L9 15 M4 10 L9 15 L14 10" fill="none" stroke={progress >= 1 ? T.blue : T.gray5}
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
+        {/* Icon */}
+        <div style={{
+          width: 26, height: 26, borderRadius: 13,
+          background: ready || releasing ? "rgba(255,255,255,0.2)" : T.fill,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          {releasing ? (
+            // Spinning dots — cooler than a spinner
+            <svg width="16" height="16" viewBox="0 0 16 16" style={{ animation: "spin .7s linear infinite" }}>
+              {[0,60,120,180,240,300].map((deg, i) => (
+                <circle key={deg}
+                  cx={8 + 5 * Math.cos((deg - 90) * Math.PI/180)}
+                  cy={8 + 5 * Math.sin((deg - 90) * Math.PI/180)}
+                  r={1.5}
+                  fill="white"
+                  opacity={0.3 + (i/6)*0.7}
+                />
+              ))}
+            </svg>
+          ) : ready ? (
+            // Release icon — upward arrow in brand color
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 11 L7 3 M3 7 L7 3 L11 7"
+                stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            // Pull progress arc
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke={T.gray7} strokeWidth="1.5"/>
+              <path
+                d={`M8 2 A6 6 0 ${progress > 0.5 ? 1 : 0} 1 ${
+                  8 + 6*Math.sin(progress*2*Math.PI)
+                } ${8 - 6*Math.cos(progress*2*Math.PI)}`}
+                stroke={T.blue} strokeWidth="1.5" strokeLinecap="round"
+              />
+            </svg>
+          )}
+        </div>
+
+        {/* Label */}
+        <span style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: ready || releasing ? "#fff" : T.label,
+          letterSpacing: "-0.1px",
+          transition: "color .2s ease",
+        }}>
+          {releasing
+            ? `Refreshing ${pageLabel}…`
+            : ready
+            ? `Release to refresh`
+            : `Pull to refresh`}
+        </span>
       </div>
     </div>
   );
@@ -3153,6 +3216,7 @@ function PageInner() {
 
   /* Navigation */
   const [current,  setCurrent]  = useState({ screen:"home" });
+  const [searchQ,  setSearchQ]  = useState(""); // lifted so pull-refresh preserves query
   const [history,  setHistory]  = useState([]);
 
   /* Cart — stored in localStorage keyed by sessionId */
@@ -3451,7 +3515,7 @@ function PageInner() {
     switch (current.screen) {
       case "home":         return <HomeScreen {...screenProps}/>;
       case "shop":         return <ShopScreen {...screenProps}/>;
-      case "search":       return <SearchScreen {...screenProps}/>;
+      case "search":       return <SearchScreen {...screenProps} searchQ={searchQ} setSearchQ={setSearchQ}/>;
       case "wishlist":     return <WishlistScreen {...screenProps}/>;
       case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} onFeedback={()=>setShowFeedback(true)} t={t} inbox={inbox}/>;
       case "orders":       return <MyOrdersScreen sessionId={sessionId}/>;
@@ -3473,7 +3537,7 @@ function PageInner() {
     <LangCtx.Provider value={{ lang, setLang, t }}>
       <div style={{ maxWidth:480,margin:"0 auto",minHeight:"100vh",background:T.white,position:"relative" }}>
         <Header screen={current.screen} cartCount={cartCount} onCart={()=>setCartOpen(true)} onNavigate={navigate} canGoBack={canGoBack} onBack={goBack}/>
-        <PullToRefresh onRefresh={loadProducts}/>
+        <PullToRefresh onRefresh={loadProducts} screen={current.screen}/>
         <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
