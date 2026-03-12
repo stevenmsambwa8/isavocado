@@ -1503,11 +1503,44 @@ function ImageLightbox({ images, startIndex, onClose }) {
 }
 
 /* ─── Hero Slider ───────────────────────────────────────────── */
+// ── Extract dominant color from left edge of an image via canvas ──
+// crossOrigin="anonymous" + Supabase public bucket CORS = works fine
+function extractLeftEdgeColor(imgEl) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 8; c.height = 60;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(imgEl, 0, 0, 8, 60);
+    const d = ctx.getImageData(0, 0, 8, 60).data;
+    let r=0,g=0,b=0,n=0;
+    for (let i=0;i<d.length;i+=4) {
+      // Skip very bright pixels (white backgrounds) and very dark
+      const lum = (d[i]+d[i+1]+d[i+2])/3;
+      if (lum < 240 && lum > 10) { r+=d[i];g+=d[i+1];b+=d[i+2];n++; }
+    }
+    if (!n) return null;
+    return { r:Math.round(r/n), g:Math.round(g/n), b:Math.round(b/n) };
+  } catch(_) { return null; }
+}
+
+// Darken a color so text stays readable
+function darkenRgb({ r,g,b }, factor=0.45) {
+  return `rgb(${Math.round(r*factor)},${Math.round(g*factor)},${Math.round(b*factor)})`;
+}
+
+// Decide text color (white or black) based on luminance
+function textOnRgb({ r,g,b }) {
+  const lum = 0.299*r + 0.587*g + 0.114*b;
+  return lum > 140 ? '#111' : '#fff';
+}
+
 function HeroSlider({ onNavigate, products }) {
   const { t } = useLang();
-  const [idx,  setIdx]  = useState(0);
-  const [drag, setDrag] = useState(null);
-  const timerRef        = useRef(null);
+  const [idx,    setIdx]    = useState(0);
+  const [drag,   setDrag]   = useState(null);
+  const [colors, setColors] = useState({}); // { [slideId]: { r,g,b } }
+  const timerRef            = useRef(null);
+  const imgRefs             = useRef({});   // { [slideId]: imgElement }
 
   const imgOf = (list) => {
     for (const p of list) {
@@ -1522,111 +1555,105 @@ function HeroSlider({ onNavigate, products }) {
     const hotP  = products.filter(p => ["Hot","hot","Trending","trending"].includes(p.badge));
     const saleP = products.filter(p => p.badge === "Sale");
     return [
-      {
-        id:1,
-        tag:   t.heroNewLabel,
-        title: t.heroNewTitle,
-        sub:   t.heroNewSub,
-        cta:   t.heroNewCta,
-        nav:   "shop",
-        img:   imgOf(newP) || imgOf(products),
-      },
-      {
-        id:2,
-        tag:   t.heroHotLabel,
-        title: t.heroHotTitle,
-        sub:   t.heroHotSub,
-        cta:   t.heroHotCta,
-        nav:   "shop",
-        img:   imgOf(hotP.length ? hotP : products),
-      },
-      {
-        id:3,
-        tag:   t.heroSaleLabel,
-        title: t.heroSaleTitle,
-        sub:   t.heroSaleSub,
-        cta:   t.heroSaleCta,
-        nav:   "shop",
-        img:   imgOf(saleP) || imgOf(products),
-      },
+      { id:1, tag:t.heroNewLabel,  title:t.heroNewTitle,  cta:t.heroNewCta,  nav:"shop", img:imgOf(newP)||imgOf(products) },
+      { id:2, tag:t.heroHotLabel,  title:t.heroHotTitle,  cta:t.heroHotCta,  nav:"shop", img:imgOf(hotP.length?hotP:products) },
+      { id:3, tag:t.heroSaleLabel, title:t.heroSaleTitle, cta:t.heroSaleCta, nav:"shop", img:imgOf(saleP)||imgOf(products) },
     ].filter(sl => sl.img);
   }, [products, t]);
 
   const N = slides.length || 1;
-  const go = (i) => { setIdx((i + N) % N); };
+  const go = (i) => setIdx((i+N)%N);
   const resetTimer = () => {
     clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setIdx(i => (i+1) % N), 5000);
+    timerRef.current = setInterval(() => setIdx(i=>(i+1)%N), 5000);
   };
-  useEffect(() => { resetTimer(); return () => clearInterval(timerRef.current); }, [N]);
+  useEffect(() => { resetTimer(); return ()=>clearInterval(timerRef.current); }, [N]);
 
   const onDragStart = (x) => setDrag({ x });
   const onDragEnd   = (x) => {
     if (!drag) return;
     const dx = drag.x - x;
-    if (Math.abs(dx) > 44) { go(idx + (dx > 0 ? 1 : -1)); resetTimer(); }
+    if (Math.abs(dx) > 44) { go(idx+(dx>0?1:-1)); resetTimer(); }
     setDrag(null);
   };
 
+  // Extract color when image loads
+  const onImgLoad = (slideId, imgEl) => {
+    imgRefs.current[slideId] = imgEl;
+    const col = extractLeftEdgeColor(imgEl);
+    if (col) setColors(prev => ({ ...prev, [slideId]: col }));
+  };
+
   if (!slides.length) return null;
-  const sl = slides[idx];
 
   return (
     <div
-      style={{ borderRadius:13, overflow:"hidden", marginBottom:24, userSelect:"none", background:"#111" }}
+      style={{ borderRadius:13, overflow:"hidden", marginBottom:24, userSelect:"none" }}
       onMouseDown={e=>onDragStart(e.clientX)}
       onMouseUp={e=>onDragEnd(e.clientX)}
       onTouchStart={e=>onDragStart(e.touches[0].clientX)}
       onTouchEnd={e=>onDragEnd(e.changedTouches[0].clientX)}
     >
-      {/* ── Slide strip — each slide is a LEFT TEXT / RIGHT IMAGE split ── */}
       <div style={{ display:"flex", width:`${N*100}%`, transition:"transform .45s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*(100/N)}%)` }}>
-        {slides.map((s, si) => (
-          <div key={s.id} style={{ width:`${100/N}%`, flexShrink:0, display:"flex", height:260, background:"#111" }}>
+        {slides.map((s, si) => {
+          const col      = colors[s.id];
+          const bgColor  = col ? darkenRgb(col) : '#1a1a1a';
+          const txtColor = col ? textOnRgb({ r:col.r*0.45, g:col.g*0.45, b:col.b*0.45 }) : '#fff';
+          // Fade from extracted bg color into transparent so photo shows through
+          const fadeGrad = `linear-gradient(to right, ${bgColor} 0%, ${bgColor} 55%, transparent 100%)`;
 
-            {/* LEFT — text column */}
-            <div style={{ width:"48%", display:"flex", flexDirection:"column", justifyContent:"space-between", padding:"22px 0 22px 18px" }}>
-              {/* Top: tag + title */}
-              <div>
-                <p style={{ margin:"0 0 8px", fontSize:9, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.5)" }}>
-                  {s.tag}
-                </p>
-                <h2 style={{ margin:0, fontSize:21, fontWeight:800, color:"#fff", lineHeight:1.2, letterSpacing:"-0.3px" }}>
-                  {s.title}
-                </h2>
-              </div>
-              {/* Bottom: dots only — CTA is on the photo */}
-              <div style={{ display:"flex", gap:5 }}>
-                {slides.map((_,i) => (
-                  <button
-                    key={i}
-                    onClick={e => { e.stopPropagation(); go(i); resetTimer(); }}
-                    style={{ width:i===idx?16:5, height:4, borderRadius:2, background:i===idx?"#fff":"rgba(255,255,255,0.3)", border:"none", cursor:"pointer", padding:0, transition:"width .25s" }}
-                  />
-                ))}
-              </div>
-            </div>
+          return (
+            <div key={s.id} style={{ width:`${100/N}%`, flexShrink:0, position:"relative", height:260, overflow:"hidden" }}>
 
-            {/* RIGHT — product photo, hard edge no fade */}
-            <div style={{ width:"52%", position:"relative", overflow:"hidden" }}>
+              {/* ── Full bleed photo behind everything ── */}
               <img
-                src={imgUrl(s.img, { width:600, quality:80 })}
+                src={imgUrl(s.img, { width:800, quality:80 })}
                 alt={s.title}
+                crossOrigin="anonymous"
                 loading={si===0?"eager":"lazy"}
                 decoding={si===0?"sync":"async"}
-                style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
+                onLoad={e => onImgLoad(s.id, e.currentTarget)}
+                style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
               />
-              {/* CTA pinned to bottom-right of photo */}
+
+              {/* ── Color fade overlay — left extracted color fading to transparent ── */}
+              <div style={{ position:"absolute", inset:0, background:fadeGrad, transition:"background 0.6s ease" }}/>
+
+              {/* ── Text on left — floats over the fade ── */}
+              <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", justifyContent:"space-between", padding:"20px 0 18px 18px", zIndex:2 }}>
+                {/* Top: tag + title */}
+                <div style={{ maxWidth:"52%" }}>
+                  <p style={{ margin:"0 0 7px", fontSize:9, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color: txtColor==='#fff'?"rgba(255,255,255,0.6)":"rgba(0,0,0,0.5)" }}>
+                    {s.tag}
+                  </p>
+                  <h2 style={{ margin:0, fontSize:22, fontWeight:800, color:txtColor, lineHeight:1.2, letterSpacing:"-0.3px" }}>
+                    {s.title}
+                  </h2>
+                </div>
+
+                {/* Bottom: dots */}
+                <div style={{ display:"flex", gap:5 }}>
+                  {slides.map((_,i) => (
+                    <button
+                      key={i}
+                      onClick={e=>{ e.stopPropagation(); go(i); resetTimer(); }}
+                      style={{ width:i===idx?16:5, height:4, borderRadius:2, background:i===idx?txtColor:`${txtColor}44`, border:"none", cursor:"pointer", padding:0, transition:"width .25s" }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* ── CTA pinned bottom-right of photo ── */}
               <button
                 onClick={() => onNavigate(s.nav)}
-                style={{ position:"absolute", bottom:16, right:14, background:"#fff", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", boxShadow:"0 2px 12px rgba(0,0,0,0.25)" }}
+                style={{ position:"absolute", bottom:16, right:14, zIndex:3, background:"rgba(255,255,255,0.92)", color:"#111", border:"none", borderRadius:99, padding:"9px 16px", fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", boxShadow:"0 2px 16px rgba(0,0,0,0.22)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
               >
                 {s.cta}
               </button>
-            </div>
 
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
