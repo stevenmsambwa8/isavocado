@@ -76,6 +76,8 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
   const el = document.createElement("style");
   el.id = "__store_anim";
   el.textContent = `
+    /* Kill native browser pull-to-refresh — we have our own */
+    html, body { overscroll-behavior-y: none; }
     @keyframes slideUp  { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
     @keyframes scaleIn  { from { transform:scale(0.88); opacity:0; } to { transform:scale(1); opacity:1; } }
     @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
@@ -85,7 +87,6 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
     .pressable:active { transform:scale(0.97); transition:transform .1s; }
     .sk { background:linear-gradient(90deg,#eef8fa 25%,#dff0f3 50%,#eef8fa 75%); background-size:800px 100%; animation:shimmer 1.4s infinite linear; border-radius:10px; }
     img { content-visibility:auto; }
-    /* GPU-composited layers for animated elements */
     .slide-panel { will-change:transform; }
     .card-slider  { will-change:transform; }
   `;
@@ -1771,6 +1772,8 @@ function SearchScreen({ products, onSelect, onWishlist, wishlist, user, onLoginP
   const onSearchChange = (v) => {
     setQ(v);
     if (setSearchQ) setSearchQ(v);
+    // Persist search query so it survives reload
+    try { localStorage.setItem("msambwa_searchQ", v); } catch(_) {}
     clearTimeout(debRef.current);
     debRef.current = setTimeout(() => setDq(v), 180);
   };
@@ -2852,7 +2855,7 @@ function PullToRefresh({ onRefresh, screen }) {
         setPull(THRESHOLD);
         await onRefresh();
         setState("done");
-        setTimeout(() => { setPull(0); setState("idle"); }, 600);
+        setTimeout(() => { setPull(0); setState("idle"); }, 700);
       } else {
         setPull(0);
         setState("idle");
@@ -2881,21 +2884,25 @@ function PullToRefresh({ onRefresh, screen }) {
     wishlist: "Saved", account: "Account",
   }[screen] || "Page";
 
-  // Pill slides down from top, starts 20px below header (top:64)
-  // translateY goes from -100% (hidden) to 0 as user pulls
+  // Pill starts at -44px (fully hidden above header bottom edge)
+  // lands at +40px (40px below header). Total 84px travel over THRESHOLD pull.
+  const PILL_START = -44;
+  const PILL_END   = 40;
   const pillY = releasing
-    ? 0
-    : Math.max(-60, (pull / THRESHOLD) * 60 - 60); // -60 → 0
+    ? PILL_END
+    : Math.max(PILL_START, (pull / THRESHOLD) * (PILL_END - PILL_START) + PILL_START);
 
   return (
     <div style={{
       position: "fixed",
-      top: 64,
+      top: 64,          // flush to bottom of header
       left: 0, right: 0,
       zIndex: 190,
       display: "flex",
       justifyContent: "center",
+      alignItems: "flex-start",
       pointerEvents: "none",
+      // pill travels from -44px (hidden) to +40px (40px below header)
       transform: `translateY(${pillY}px)`,
       transition: releasing ? "transform .35s cubic-bezier(.32,0,.28,1)" : "none",
     }}>
@@ -2908,7 +2915,6 @@ function PullToRefresh({ onRefresh, screen }) {
         padding: "8px 16px 8px 10px",
         boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
         transition: "background .2s ease",
-        marginTop: 20,
       }}>
         {/* Icon */}
         <div style={{
@@ -2990,7 +2996,7 @@ function Header({ screen, cartCount, onCart, onNavigate, canGoBack, onBack }) {
               <Icon name="back" size={20} color={T.blue} strokeWidth={2}/>
             </button>
           ) : (
-            <button onClick={()=>{ onNavigate("home"); if(typeof window!=="undefined") window.dispatchEvent(new Event("msambwa:reload")); }} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
+            <button onClick={()=>{ if(typeof window!=="undefined") window.dispatchEvent(new Event("msambwa:reload")); }} style={{ background:"none",border:"none",cursor:"pointer",padding:"8px 10px" }}>
               <Logo height={36}/>
             </button>
           )}
@@ -3215,8 +3221,18 @@ function PageInner() {
   };
 
   /* Navigation */
-  const [current,  setCurrent]  = useState({ screen:"home" });
-  const [searchQ,  setSearchQ]  = useState(""); // lifted so pull-refresh preserves query
+  // Restore last screen from localStorage (persists across reloads)
+  const [current, setCurrent] = useState(() => {
+    try {
+      const s = localStorage.getItem("msambwa_screen");
+      const allowed = ["home","shop","search","wishlist","account","settings","our-story","returns","sustainability","lookbook","orders","notifications","addresses"];
+      return { screen: allowed.includes(s) ? s : "home" };
+    } catch(_) { return { screen: "home" }; }
+  });
+  const [searchQ, setSearchQ] = useState(() => {
+    // Also restore search query if last screen was search
+    try { return localStorage.getItem("msambwa_searchQ") || ""; } catch(_) { return ""; }
+  });
   const [history,  setHistory]  = useState([]);
 
   /* Cart — stored in localStorage keyed by sessionId */
@@ -3420,7 +3436,10 @@ function PageInner() {
     setHistory(h=>[...h,current]);
     setCurrent({ screen, ...data });
     window.scrollTo(0,0);
-    // Push a browser history entry so the phone's back gesture works
+    // Persist screen so page reload returns here (skip product — no data to restore)
+    if (screen !== "product") {
+      try { localStorage.setItem("msambwa_screen", screen); } catch(_) {}
+    }
     window.history.pushState({ screen, ...data }, "");
   };
 
@@ -3430,6 +3449,9 @@ function PageInner() {
       setHistory(h=>h.slice(0,-1));
       setCurrent(prev);
       window.scrollTo(0,0);
+      if (prev.screen !== "product") {
+        try { localStorage.setItem("msambwa_screen", prev.screen); } catch(_) {}
+      }
     }
   };
 
