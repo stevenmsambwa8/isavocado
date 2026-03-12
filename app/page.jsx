@@ -1505,136 +1505,132 @@ function ImageLightbox({ images, startIndex, onClose }) {
 /* ─── Hero Slider ───────────────────────────────────────────── */
 function HeroSlider({ onNavigate, products }) {
   const { t } = useLang();
-  const [idx, setIdx]   = useState(0);
+  const [idx,  setIdx]  = useState(0);
   const [drag, setDrag] = useState(null);
   const timerRef        = useRef(null);
 
-  // Build slides dynamically from products — translated
+  const imgOf = (list) => {
+    for (const p of list) {
+      const src = p.image_urls?.[0] || p.image_url;
+      if (src) return src;
+    }
+    return null;
+  };
+
   const slides = useMemo(() => {
-    const newP  = products.filter(p=>p.badge==="New");
-    const hotP  = products.filter(p=>["Hot","hot","Trending","trending"].includes(p.badge));
-    const saleP = products.filter(p=>p.badge==="Sale");
-
-    const imgOf = (list) => {
-      for (const p of list) {
-        const src = p.image_urls?.[0] || p.image_url;
-        if (src) return src;
-      }
-      return null;
-    };
-
+    const newP  = products.filter(p => p.badge === "New");
+    const hotP  = products.filter(p => ["Hot","hot","Trending","trending"].includes(p.badge));
+    const saleP = products.filter(p => p.badge === "Sale");
     return [
       {
-        id:1, accentColor:"#00C2CB",
-        label: t.heroNewLabel, title: t.heroNewTitle, sub: t.heroNewSub, cta: t.heroNewCta,
-        bg:"linear-gradient(160deg,#0f1923 0%,#1a2e3b 100%)",
-        heroImg: imgOf(newP),
+        id:1,
+        tag:   t.heroNewLabel,
+        title: t.heroNewTitle,
+        sub:   t.heroNewSub,
+        cta:   t.heroNewCta,
+        nav:   "shop",
+        img:   imgOf(newP) || imgOf(products),
       },
       {
-        id:2, accentColor:"#FF6B35",
-        label: t.heroHotLabel, title: t.heroHotTitle, sub: t.heroHotSub, cta: t.heroHotCta,
-        bg:"linear-gradient(160deg,#0d1117 0%,#1a1025 100%)",
-        heroImg: imgOf(hotP.length ? hotP : products),
+        id:2,
+        tag:   t.heroHotLabel,
+        title: t.heroHotTitle,
+        sub:   t.heroHotSub,
+        cta:   t.heroHotCta,
+        nav:   "shop",
+        img:   imgOf(hotP.length ? hotP : products),
       },
       {
-        id:3, accentColor:"#FF3B30",
-        label: t.heroSaleLabel, title: t.heroSaleTitle, sub: t.heroSaleSub, cta: t.heroSaleCta,
-        bg:"linear-gradient(160deg,#1a0808 0%,#2d0f0f 100%)",
-        heroImg: imgOf(saleP),
+        id:3,
+        tag:   t.heroSaleLabel,
+        title: t.heroSaleTitle,
+        sub:   t.heroSaleSub,
+        cta:   t.heroSaleCta,
+        nav:   "shop",
+        img:   imgOf(saleP) || imgOf(products),
       },
-    ];
+    ].filter(sl => sl.img);
   }, [products, t]);
 
-  const SLIDE_COUNT = slides.length;
-  const go = (i) => setIdx((i + SLIDE_COUNT) % SLIDE_COUNT);
+  const N = slides.length || 1;
+  const go = (i) => { setIdx((i + N) % N); };
   const resetTimer = () => {
     clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setIdx(i => (i + 1) % SLIDE_COUNT), 4500);
+    timerRef.current = setInterval(() => setIdx(i => (i+1) % N), 5000);
   };
-  useEffect(() => { resetTimer(); return () => clearInterval(timerRef.current); }, [SLIDE_COUNT]);
+  useEffect(() => { resetTimer(); return () => clearInterval(timerRef.current); }, [N]);
 
-  const onDragStart = (x) => setDrag({ startX: x });
+  const onDragStart = (x) => setDrag({ x });
   const onDragEnd   = (x) => {
     if (!drag) return;
-    const dx = drag.startX - x;
+    const dx = drag.x - x;
     if (Math.abs(dx) > 44) { go(idx + (dx > 0 ? 1 : -1)); resetTimer(); }
     setDrag(null);
   };
 
-  const s = slides[idx];
+  if (!slides.length) return null;
+  const sl = slides[idx];
 
   return (
     <div
-      style={{ position:"relative", borderRadius:28, overflow:"hidden", marginBottom:28, userSelect:"none", height:380 }}
+      style={{ position:"relative", borderRadius:24, overflow:"hidden", marginBottom:24, userSelect:"none" }}
       onMouseDown={e=>onDragStart(e.clientX)}
       onMouseUp={e=>onDragEnd(e.clientX)}
       onTouchStart={e=>onDragStart(e.touches[0].clientX)}
       onTouchEnd={e=>onDragEnd(e.changedTouches[0].clientX)}
     >
-      {/* ── Slide strip ── */}
-      <div className="slide-panel" style={{ display:"flex", width:`${SLIDE_COUNT*100}%`, height:"100%", transition:"transform .38s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*(100/SLIDE_COUNT)}%)` }}>
-        {slides.map((sl) => {
-          const hasImg = !!sl.heroImg;
-          return (
-            <div key={sl.id} style={{ width:`${100/SLIDE_COUNT}%`, height:"100%", position:"relative", background:sl.bg, flexShrink:0, overflow:"hidden" }}>
+      {/* ── Image strip ── */}
+      <div style={{ display:"flex", width:`${N*100}%`, transition:"transform .45s cubic-bezier(.32,0,.28,1)", transform:`translateX(-${idx*(100/N)}%)` }}>
+        {slides.map((s, si) => (
+          <div key={s.id} style={{ width:`${100/N}%`, flexShrink:0, position:"relative", aspectRatio:"4/5" }}>
+            <img
+              src={imgUrl(s.img, { width:800, quality:80 })}
+              alt={s.title}
+              loading={si===0?"eager":"lazy"}
+              decoding={si===0?"sync":"async"}
+              style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
+            />
+            {/* Clean bottom fade — no colored tint */}
+            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.78) 100%)" }}/>
+          </div>
+        ))}
+      </div>
 
-              {/* Full-bleed product photo */}
-              {hasImg && (
-                <>
-                  <img
-                    src={imgUrl(sl.heroImg,{width:800,quality:78})} alt=""
-                    loading={slides.indexOf(sl) === 0 ? "eager" : "lazy"}
-                    decoding={slides.indexOf(sl) === 0 ? "sync" : "async"}
-                    fetchpriority={slides.indexOf(sl) === 0 ? "high" : "low"}
-                    style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }}
-                  />
-                  {/* Multi-layer gradient for text legibility */}
-                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0.72) 70%, rgba(0,0,0,0.92) 100%)" }}/>
-                  {/* Subtle color tint matching brand accent */}
-                  <div style={{ position:"absolute", inset:0, background:`linear-gradient(135deg, ${sl.accentColor}22 0%, transparent 60%)` }}/>
-                </>
-              )}
+      {/* ── Overlay content ── */}
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"20px 20px 24px", zIndex:2 }}>
 
-              {/* ── Text block pinned to bottom ── */}
-              <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"0 22px 22px", zIndex:2 }}>
-                {/* Label pill */}
-                <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:`${sl.accentColor}22`, border:`1px solid ${sl.accentColor}55`, borderRadius:99, padding:"5px 12px", marginBottom:12 }}>
-                  <span style={{ width:6, height:6, borderRadius:3, background:sl.accentColor, display:"inline-block", flexShrink:0 }}/>
-                  <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:sl.accentColor }}>{sl.label}</span>
-                </div>
+        {/* Tag — small, uppercase, refined */}
+        <p style={{ margin:"0 0 6px", fontSize:10, fontWeight:600, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.65)" }}>
+          {sl.tag}
+        </p>
 
-                {/* Title */}
-                <h2 style={{ fontSize:32, fontWeight:900, color:"#fff", letterSpacing:"-1px", lineHeight:1.1, marginBottom:8, whiteSpace:"pre-line", textShadow:"0 2px 20px rgba(0,0,0,0.5)" }}>{sl.title}</h2>
+        {/* Title — large, clean, white */}
+        <h2 style={{ margin:"0 0 16px", fontSize:28, fontWeight:800, color:"#fff", lineHeight:1.15, letterSpacing:"-0.5px" }}>
+          {sl.title}
+        </h2>
 
-                {/* Subtitle */}
-                <p style={{ fontSize:13, color:"rgba(255,255,255,0.62)", marginBottom:20, lineHeight:1.5 }}>{sl.sub}</p>
+        {/* Bottom row — CTA link + dots */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
 
-                {/* CTA row */}
-                <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                  <button
-                    onClick={() => onNavigate("shop")}
-                    style={{ background:sl.accentColor, color:"#fff", border:"none", borderRadius:99, padding:"12px 22px", fontSize:14, fontWeight:700, cursor:"pointer", letterSpacing:"-0.1px", boxShadow:`0 4px 20px ${sl.accentColor}55` }}
-                  >{sl.cta}</button>
+          {/* CTA — outlined, no filled colour button */}
+          <button
+            onClick={() => onNavigate(sl.nav)}
+            style={{ background:"transparent", color:"#fff", border:"1.5px solid rgba(255,255,255,0.8)", borderRadius:99, padding:"10px 20px", fontSize:13, fontWeight:600, cursor:"pointer", letterSpacing:"0.02em", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
+          >
+            {sl.cta} →
+          </button>
 
-                  {/* Dot nav inline */}
-                  <div style={{ display:"flex", gap:5, marginLeft:"auto" }}>
-                    {slides.map((_,i) => (
-                      <button
-                        key={i}
-                        onClick={e=>{ e.stopPropagation(); go(i); resetTimer(); }}
-                        style={{ width:i===idx?22:6, height:6, borderRadius:3, background:i===idx?"#fff":"rgba(255,255,255,0.3)", border:"none", cursor:"pointer", padding:0, transition:"width .28s, background .28s" }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Left/right arrows — subtle */}
-              <button onClick={e=>{e.stopPropagation();go(slides.indexOf(sl)-1);resetTimer();}} style={{ position:"absolute",left:10,top:"40%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.42)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:99,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:20,zIndex:3 }}>‹</button>
-              <button onClick={e=>{e.stopPropagation();go(slides.indexOf(sl)+1);resetTimer();}} style={{ position:"absolute",right:10,top:"40%",transform:"translateY(-50%)",background:"rgba(0,0,0,0.42)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:99,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:20,zIndex:3 }}>›</button>
-            </div>
-          );
-        })}
+          {/* Dots */}
+          <div style={{ display:"flex", gap:5 }}>
+            {slides.map((_,i) => (
+              <button
+                key={i}
+                onClick={e => { e.stopPropagation(); go(i); resetTimer(); }}
+                style={{ width:i===idx?20:5, height:5, borderRadius:3, background:i===idx?"#fff":"rgba(255,255,255,0.35)", border:"none", cursor:"pointer", padding:0, transition:"width .28s, background .25s" }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -2967,7 +2963,7 @@ function BottomNav({ screen, onNavigate }) {
     { id:"account",  icon:"person", label:t.account },
   ];
   return (
-    <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.94)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",padding:"8px 0 20px",zIndex:300 }}>
+    <nav style={{ position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${T.gray8}`,display:"flex",justifyContent:"space-around",paddingTop:8,paddingBottom:"max(8px,env(safe-area-inset-bottom))",zIndex:300 }}>
       {tabs.map(tab=>{
         const active = screen===tab.id;
         return (
