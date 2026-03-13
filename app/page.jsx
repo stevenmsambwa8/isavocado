@@ -95,9 +95,9 @@ if (typeof document !== "undefined" && !document.getElementById("__store_anim"))
     .product-grid { contain:layout style; }
     /* Images decode off main thread */
     img { content-visibility:auto; image-rendering:auto; }
-    /* Remove tap highlight delay */
-    * { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-    button, a { touch-action:manipulation; }
+    /* Remove tap delay on interactive elements only — never on * (breaks scroll) */
+    * { -webkit-tap-highlight-color:transparent; }
+    button, a, [role=button] { touch-action:manipulation; }
   `;
   document.head.appendChild(el);
 }
@@ -351,7 +351,7 @@ const PriceLine = memo(function PriceLine({ price, was, user, onLoginPrompt }) {
 });
 const HScroll = memo(function HScroll({ children, gap=12, px=0 }) {
   return (
-    <div className="hscroll" style={{ display:"flex",gap,overflowX:"auto",paddingLeft:px,paddingRight:px,scrollbarWidth:"none",msOverflowStyle:"none",touchAction:"pan-x" }}>
+    <div className="hscroll" style={{ display:"flex",gap,overflowX:"auto",paddingLeft:px,paddingRight:px,scrollbarWidth:"none",msOverflowStyle:"none",touchAction:"pan-x pan-y pinch-zoom" }}>
       {children}
     </div>
   );
@@ -542,7 +542,7 @@ function RelatedProducts({ currentProduct, products, onSelect, wishlist, onWishl
   return (
     <div style={{ marginTop:32 }}>
       <p style={{ fontSize:18,fontWeight:700,letterSpacing:"-0.4px",marginBottom:16 }}>You may also like</p>
-      <div style={{ display:"flex",gap:12,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4,touchAction:"pan-x" }}>
+      <div style={{ display:"flex",gap:12,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4,touchAction:"pan-x pan-y pinch-zoom" }}>
         {related.map(p => (
           <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ flexShrink:0,width:148,cursor:"pointer" }}>
             <div style={{ width:148,height:185,borderRadius:18,overflow:"hidden",background:"#f2f2f7",marginBottom:8,position:"relative" }}>
@@ -1162,7 +1162,7 @@ const ProductDetail = memo(function ProductDetail({ p, onBack, onNavigateProduct
             <div
               ref={scrollRef}
               onScroll={onScroll}
-              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", touchAction:"pan-x", borderRadius:24, width:"100%" }}
+              style={{ display:"flex", overflowX:"auto", scrollSnapType:"x mandatory", scrollbarWidth:"none", touchAction:"pan-x pan-y pinch-zoom", borderRadius:24, width:"100%" }}
             >
               {images.map((src, i) => (
                 <div
@@ -2839,24 +2839,53 @@ function Logo({ height=40 }) {
 ─────────────────────────────────────────────────────────── */
 function PullToRefresh({ onRefresh, screen }) {
   const [pull,  setPull]  = useState(0);
-  const [state, setState] = useState("idle"); // idle | pulling | ready | releasing | done
-  const startY            = useRef(null);
-  const THRESHOLD         = 80;
+  const [state, setState] = useState("idle");
+  const startY    = useRef(null);
+  const startX    = useRef(null);
+  const pulling   = useRef(false); // true = we own this gesture
+  const THRESHOLD = 80;
 
   useEffect(() => {
     const onStart = (e) => {
       if (window.scrollY > 4) return;
-      startY.current = e.touches[0].clientY;
+      startY.current   = e.touches[0].clientY;
+      startX.current   = e.touches[0].clientX;
+      pulling.current  = false;
     };
+
     const onMove = (e) => {
       if (startY.current === null) return;
       const dy = e.touches[0].clientY - startY.current;
-      if (dy <= 0) { startY.current = null; setPull(0); setState("idle"); return; }
-      const clamped = dy < THRESHOLD ? dy : THRESHOLD + (dy - THRESHOLD) * 0.2;
-      setPull(Math.min(clamped, THRESHOLD + 40));
-      setState(clamped >= THRESHOLD ? "ready" : "pulling");
+      const dx = Math.abs(e.touches[0].clientX - startX.current);
+
+      // Ignore horizontal swipes (card sliders, HScroll)
+      if (!pulling.current && dx > dy) {
+        startY.current = null;
+        return;
+      }
+      // Only downward pull from top of page
+      if (dy <= 0) {
+        startY.current = null;
+        setPull(0);
+        setState("idle");
+        return;
+      }
+
+      pulling.current = true;
+      // Non-passive: we can now call preventDefault to block native scroll
+      e.preventDefault();
+
+      const clamped = dy < THRESHOLD
+        ? dy
+        : THRESHOLD + (dy - THRESHOLD) * 0.18;
+      const next = Math.min(clamped, THRESHOLD + 40);
+      setPull(next);
+      setState(next >= THRESHOLD ? "ready" : "pulling");
     };
+
     const onEnd = async () => {
+      if (!pulling.current) return;
+      pulling.current = false;
       if (pull >= THRESHOLD) {
         setState("releasing");
         setPull(THRESHOLD);
@@ -2868,9 +2897,13 @@ function PullToRefresh({ onRefresh, screen }) {
         setState("idle");
       }
       startY.current = null;
+      startX.current = null;
     };
+
+    // passive:true for start (no blocking needed)
+    // passive:false for move so we can preventDefault during pull
     window.addEventListener("touchstart", onStart, { passive: true });
-    window.addEventListener("touchmove",  onMove,  { passive: true });
+    window.addEventListener("touchmove",  onMove,  { passive: false });
     window.addEventListener("touchend",   onEnd,   { passive: true });
     return () => {
       window.removeEventListener("touchstart", onStart);
