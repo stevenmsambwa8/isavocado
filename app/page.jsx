@@ -150,16 +150,26 @@ function getSW() {
 }
 
 function swPost(type, payload = {}) {
-  const sw = getSW();
-  if (sw) sw.postMessage({ type, payload });
+  try {
+    const sw = getSW();
+    if (sw) sw.postMessage({ type, payload });
+  } catch(_) {}
+}
+
+// Safe — Facebook Lite, Instagram, WeChat in-app browsers throw on Notification
+function notifPermission() {
+  try { return (typeof Notification !== 'undefined') ? Notification.permission : 'denied'; }
+  catch(_) { return 'denied'; }
 }
 
 async function requestNotifPermission() {
-  if (!('Notification' in window)) return false;
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
-  return result === 'granted';
+  try {
+    if (typeof Notification === 'undefined') return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    const result = await Notification.requestPermission();
+    return result === 'granted';
+  } catch(_) { return false; }
 }
 
 // Keys for localStorage
@@ -875,7 +885,7 @@ function CartDrawer({ cart, onClose, onRemove, onQty, sessionId, user, storeSett
   const [guestEmail, setGuestEmail] = useState(buyerEmail);
 
   const submitOrder = async () => {
-    swPost('NOTIF_CART_CANCEL'); // order placed — cancel abandonment timer
+    try { swPost('NOTIF_CART_CANCEL'); } catch(_) {} // order placed
     const finalName  = user ? buyerName  : guestName.trim();
     const finalEmail = user ? buyerEmail : guestEmail.trim();
     if (!phone.trim()) { setErr(t.cartPhoneLabel + " is required."); return; }
@@ -3421,7 +3431,7 @@ function PageInner() {
 
   // ── Notification setup on mount ───────────────────────────
   useEffect(() => {
-    if (!('Notification' in window) || !navigator.serviceWorker) return;
+    if (typeof Notification === 'undefined' || !navigator.serviceWorker) return;
 
     // Ask permission after 8 seconds (user has seen the app)
     const permTimer = setTimeout(async () => {
@@ -3514,7 +3524,7 @@ function PageInner() {
       const key = x => x.id + '|' + (x.sz||'');
       const ex = c.find(x => key(x) === key(item));
       const next = ex ? c.map(x => key(x)===key(item) ? {...x,qty:x.qty+1} : x) : [...c,{...item,qty:1}];
-      if (Notification.permission === 'granted') {
+      if (notifPermission() === 'granted') {
         swPost('NOTIF_CART_START', { count: next.reduce((s,i)=>s+i.qty,0) });
       }
       return next;
@@ -3524,7 +3534,7 @@ function PageInner() {
     const key = x => x.id + '|' + (x.sz||'');
     setCart(c => {
       const next = c.filter(x => key(x) !== key(item));
-      if (next.length === 0) swPost('NOTIF_CART_CANCEL');
+      if (next.length === 0) { try { swPost('NOTIF_CART_CANCEL'); } catch(_) {} }
       return next;
     });
   }, []);
