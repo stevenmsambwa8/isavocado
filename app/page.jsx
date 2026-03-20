@@ -408,7 +408,7 @@ function HomeSkeleton() {
       <Sk h={100} r={20} style={{ marginBottom:28 }}/>
       {/* Trending grid */}
       <Sk w={160} h={22} r={8} style={{ marginBottom:16 }}/>
-      <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+      <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
         {[1,2,3,4].map(i=>(
           <div key={i}>
             <Sk h={220} r={20} style={{ marginBottom:8 }}/>
@@ -511,22 +511,20 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   );
 
   if (grid) return (
-    <div style={{ cursor:"pointer" }}>
-      <div style={{ marginBottom:10 }} onClick={()=>onSelect(p)} className="pressable">
+    <div style={{ cursor:"pointer", display:"flex", flexDirection:"column" }}>
+      <div style={{ marginBottom:8, flexShrink:0 }} onClick={()=>onSelect(p)} className="pressable">
         <CardImageSlider images={images} aspectRatio="3/4" borderRadius={13} badge={p.badge} soldOut={p.in_stock===false}>
-          {/* Heart — top-right only */}
           <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:8,right:8,width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
             <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray5}/>
           </button>
-          {/* Share — bottom-right, away from badge */}
           <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",bottom:8,right:8,width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
             <Icon name="share" size={13} color={T.gray4}/>
           </button>
         </CardImageSlider>
       </div>
-      <div onClick={()=>onSelect(p)} className="pressable">
-        <p style={{ fontSize:13,fontWeight:700,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
-        <p style={{ fontSize:11,color:T.gray4,marginBottom:5 }}>{p.category}</p>
+      <div onClick={()=>onSelect(p)} className="pressable" style={{ flex:1 }}>
+        <p style={{ fontSize:13,fontWeight:700,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
+        <p style={{ fontSize:11,color:T.gray4,marginBottom:4 }}>{p.category}</p>
         <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
       </div>
     </div>
@@ -1707,14 +1705,117 @@ const HomeScreen = memo(function HomeScreen({ products, onSelect, onWishlist, wi
         </div>
       )}
 
+      {/* ── WhatsApp CTA banner ── */}
+      <a href="https://wa.me/255614003543?text=Hello%20MSAMBWA%2C%20I%20need%20help%20with%20my%20order" target="_blank" rel="noopener noreferrer"
+        style={{ display:"flex",alignItems:"center",gap:12,background:"#f0fdf4",border:"1.5px solid #bbf7d0",borderRadius:13,padding:"13px 16px",marginBottom:24,textDecoration:"none" }}>
+        <div style={{ width:36,height:36,borderRadius:10,background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.555 4.122 1.526 5.854L0 24l6.302-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.919 9.919 0 01-5.068-1.389l-.362-.215-3.759.986.999-3.671-.237-.376A9.911 9.911 0 012.106 12C2.106 6.533 6.533 2.106 12 2.106S21.894 6.533 21.894 12 17.467 21.894 12 21.894z"/></svg>
+        </div>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:13,fontWeight:700,color:"#14532d",margin:"0 0 1px" }}>Can't find what you need?</p>
+          <p style={{ fontSize:12,color:"#166534",margin:0 }}>Chat with us on WhatsApp →</p>
+        </div>
+      </a>
+
       {trend.length>0&&(
         <div style={{ marginBottom:32 }}>
           <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",marginBottom:16 }}>{t.trendingNow}</p>
-          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
             {trend.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
           </div>
         </div>
       )}
+
+      {/* ── Shop by Category ── */}
+      <CategoryStrip products={products} onNavigate={onNavigate}/>
+
+    </div>
+  );
+});
+
+/* ── Category Strip — dynamic from real product data ── */
+const CATEGORY_ICONS = {
+  "Dresses":   { icon:"👗", color:"#fdf2f8", border:"#f9a8d4" },
+  "Tops":      { icon:"👕", color:"#eff6ff", border:"#93c5fd" },
+  "Footwear":  { icon:"👟", color:"#fefce8", border:"#fde047" },
+  "Shoes":     { icon:"👠", color:"#fefce8", border:"#fde047" },
+  "Trousers":  { icon:"👖", color:"#f0fdf4", border:"#86efac" },
+  "Jackets":   { icon:"🧥", color:"#fff7ed", border:"#fdba74" },
+  "Suits":     { icon:"🤵", color:"#f5f3ff", border:"#c4b5fd" },
+  "Bags":      { icon:"👜", color:"#fdf4ff", border:"#e879f9" },
+  "Skirts":    { icon:"🩱", color:"#fdf2f8", border:"#f9a8d4" },
+  "Shirts":    { icon:"👔", color:"#eff6ff", border:"#93c5fd" },
+  "default":   { icon:"🛍️", color:"#f8fafc", border:"#cbd5e1" },
+};
+
+const CategoryStrip = memo(function CategoryStrip({ products, onNavigate }) {
+  // Build unique categories with cover image + count from real products
+  const cats = useMemo(() => {
+    const map = {};
+    for (const p of products) {
+      if (!p.category) continue;
+      if (!map[p.category]) {
+        const img = p.image_urls?.[0] || p.image_url || null;
+        map[p.category] = { name: p.category, img, count: 0 };
+      }
+      map[p.category].count++;
+    }
+    return Object.values(map).sort((a,b) => b.count - a.count);
+  }, [products]);
+
+  if (cats.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom:32 }}>
+      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16 }}>
+        <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",margin:0 }}>Shop by Category</p>
+        <button onClick={()=>onNavigate("shop")} style={{ background:"none",border:"none",cursor:"pointer",fontSize:14,color:T.blue,fontWeight:500 }}>See All</button>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px" }}>
+        {cats.map((cat, i) => {
+          const style = CATEGORY_ICONS[cat.name] || CATEGORY_ICONS["default"];
+          return (
+            <button
+              key={cat.name}
+              onClick={() => onNavigate("shop")}
+              className="pressable"
+              style={{
+                position:"relative", overflow:"hidden",
+                borderRadius:13, border:`1.5px solid ${style.border}`,
+                background: cat.img ? "transparent" : style.color,
+                height: i === 0 ? 140 : 110,
+                // First card spans full width
+                gridColumn: i === 0 ? "1 / -1" : "auto",
+                cursor:"pointer", padding:0, textAlign:"left",
+              }}
+            >
+              {/* Cover image */}
+              {cat.img && (
+                <>
+                  <img
+                    src={imgUrl(cat.img, { width:400, quality:70 })}
+                    alt={cat.name}
+                    loading="lazy"
+                    decoding="async"
+                    style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top" }}
+                  />
+                  {/* Dark gradient so text is readable */}
+                  <div style={{ position:"absolute",inset:0,background:"linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)" }}/>
+                </>
+              )}
+              {/* Text */}
+              <div style={{ position:"absolute",bottom:0,left:0,right:0,padding:"10px 14px" }}>
+                <p style={{ margin:0,fontSize: i===0 ? 18 : 15,fontWeight:800,color: cat.img ? "#fff" : T.black,letterSpacing:"-0.3px",lineHeight:1.2 }}>{cat.name}</p>
+                <p style={{ margin:"2px 0 0",fontSize:11,color: cat.img ? "rgba(255,255,255,0.75)" : T.gray4 }}>{cat.count} item{cat.count!==1?"s":""}</p>
+              </div>
+              {/* Emoji fallback when no image */}
+              {!cat.img && (
+                <span style={{ position:"absolute",top:12,right:14,fontSize:28 }}>{style.icon}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 });
@@ -1819,7 +1920,7 @@ const SearchScreen = memo(function SearchScreen({ products, onSelect, onWishlist
         <>
           <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} {res.length!==1?t.noResults:t.noResults} for "{q}"</p>
           {res.length===0 ? <EmptyState icon="search" title={t.noResults} body={`${t.nothingMatched} "${q}".`}/> : (
-            <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+            <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
               {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
             </div>
           )}
@@ -1837,7 +1938,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLogi
     <div style={{ animation:"fadeIn 0.18s ease" }}>
       <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} {t.savedItems}</p>
       {items.length===0 ? <EmptyState icon="heart" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
-        <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+        <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
           {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true} user={user} onLoginPrompt={onLoginPrompt}/>)}
         </div>
       )}
@@ -2535,7 +2636,7 @@ function LookbookScreen({ products, onSelect, t }) {
       {shopProds.length > 0 && (
         <>
           <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>Shop the Look</p>
-          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px" }}>
+          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
             {shopProds.map(p=>(
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
                 <div style={{ aspectRatio:"3/4",background:T.fill3,borderRadius:18,overflow:"hidden",marginBottom:8 }}>
@@ -3293,7 +3394,6 @@ function PageInner() {
   const [wishlist, setWishlist] = useState([]);
 
   const [cartOpen,    setCartOpen]    = useState(false);
-  const [showSale,    setShowSale]    = useState(false);
   const [showCookies, setShowCookies] = useState(false);
   const [showFeedback,setShowFeedback]= useState(false);
 
@@ -3459,27 +3559,12 @@ function PageInner() {
     return () => clearTimeout(permTimer);
   }, []);
 
-  /* ── Show sale modal after 2s — max once per 2 days ── */
-  useEffect(() => {
-    try {
-      const last = localStorage.getItem('msambwa_sale_ts');
-      const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
-      if (last && Date.now() - Number(last) < TWO_DAYS_MS) return; // shown within last 2 days, skip
-    } catch(_) {}
-    const t = setTimeout(() => {
-      setShowSale(true);
-      try { localStorage.setItem('msambwa_sale_ts', String(Date.now())); } catch(_) {}
-    }, 2000);
-    return () => clearTimeout(t);
-  }, []);
-
   /* ── Cookie banner — show only once ever ── */
   useEffect(() => {
-    if (showSale) return;
     try { if (localStorage.getItem('msambwa_cookies_ok')) return; } catch(_) {}
     const t = setTimeout(() => setShowCookies(true), 800);
     return () => clearTimeout(t);
-  }, [showSale]);
+  }, []);
 
   /* ── Navigation ── */
   const navigate = useCallback((screen, data={}) => {
@@ -3609,13 +3694,34 @@ function PageInner() {
         <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
+        {/* ── Floating WhatsApp button — above bottom nav ── */}
+        <a
+          href="https://wa.me/255614003543?text=Hello%20MSAMBWA%2C%20I%20need%20help"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            position:"fixed", bottom:"calc(env(safe-area-inset-bottom,0px) + 66px)",
+            left:"50%", transform:"translateX(-50%)",
+            zIndex:299,
+            display:"flex", alignItems:"center", gap:8,
+            background:"#25D366", color:"#fff",
+            borderRadius:99, padding:"8px 18px 8px 12px",
+            boxShadow:"0 4px 20px rgba(37,211,102,0.35)",
+            textDecoration:"none", whiteSpace:"nowrap",
+            fontSize:13, fontWeight:700,
+            animation:"slideUp .4s cubic-bezier(.32,0,.28,1)",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.555 4.122 1.526 5.854L0 24l6.302-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.919 9.919 0 01-5.068-1.389l-.362-.215-3.759.986.999-3.671-.237-.376A9.911 9.911 0 012.106 12C2.106 6.533 6.533 2.106 12 2.106S21.894 6.533 21.894 12 17.467 21.894 12 21.894z"/></svg>
+          Chat with us
+        </a>
+
         {cartOpen&&<CartDrawer cart={cart} onClose={()=>setCartOpen(false)} onRemove={removeFromCart} onQty={updateQty} sessionId={sessionId} user={user} storeSettings={storeSettings}/>}
 
         {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={u=>{ if(u&&!u.is_anonymous) setUser(u); setShowAuth(false); }} t={t}/>}
 
         {showFeedback&&<HelpFeedback onClose={()=>setShowFeedback(false)}/>}
 
-        {showSale&&!cartOpen&&<SaleModal onClose={()=>setShowSale(false)} onShop={()=>{setShowSale(false);navigate("shop");}}/>}
 
         {wishToast && (
           <div key={wishToastKey.current} style={{ position:"fixed",bottom:84,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"rgba(28,28,30,0.97)",color:"#fff",padding:"11px 18px",borderRadius:99,fontSize:13,fontWeight:600,whiteSpace:"nowrap",boxShadow:"0 4px 24px rgba(0,0,0,0.25)",animation:"fadeIn .18s ease",pointerEvents:"none",display:"flex",alignItems:"center",gap:7 }}>
@@ -3623,7 +3729,7 @@ function PageInner() {
           </div>
         )}
 
-        {!showSale&&showCookies&&(
+        {showCookies&&(
           <div style={{ position:"fixed",bottom:80,left:12,right:12,zIndex:700,background:"rgba(12,28,31,0.98)",borderRadius:20,padding:"18px 20px",animation:"slideUp .36s cubic-bezier(.32,0,.28,1)",maxWidth:560,margin:"0 auto" }}>
             <div style={{ display:"flex",gap:14,alignItems:"flex-start" }}>
               <div style={{ width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
