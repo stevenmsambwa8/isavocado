@@ -497,7 +497,7 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (compact) return (
     <div style={{ width:140, flexShrink:0, position:"relative" }}>
       <div onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
-        <CardImageSlider images={images} aspectRatio="5/6" borderRadius={13} badge={p.badge} soldOut={p.in_stock===false}/>
+        <CardImageSlider images={images} aspectRatio="1/1" borderRadius={13} badge={p.badge} soldOut={p.in_stock===false}/>
       </div>
       {/* Share icon top-RIGHT — badge is top-left so no overlap */}
       <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",top:8,right:8,width:28,height:28,borderRadius:8,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
@@ -513,7 +513,7 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (grid) return (
     <div style={{ cursor:"pointer" }}>
       {/* Fixed-height image box — same on every card regardless of content below */}
-      <div style={{ position:"relative", width:"100%", paddingTop:"125%", borderRadius:13, overflow:"hidden", background:"#f2f2f7", marginBottom:8, flexShrink:0 }} onClick={()=>onSelect(p)} className="pressable">
+      <div style={{ position:"relative", width:"100%", paddingTop:"100%", borderRadius:13, overflow:"hidden", background:"#f2f2f7", marginBottom:8, flexShrink:0 }} onClick={()=>onSelect(p)} className="pressable">
         {images.length > 0 && (
           <img
             src={imgUrl(images[0], { width:400, quality:75 })}
