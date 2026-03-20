@@ -408,7 +408,7 @@ function HomeSkeleton() {
       <Sk h={100} r={20} style={{ marginBottom:28 }}/>
       {/* Trending grid */}
       <Sk w={160} h={22} r={8} style={{ marginBottom:16 }}/>
-      <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
+      <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",width:"100%",overflow:"hidden" }}>
         {[1,2,3,4].map(i=>(
           <div key={i}>
             <Sk h={220} r={20} style={{ marginBottom:8 }}/>
@@ -511,18 +511,28 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   );
 
   if (grid) return (
-    <div style={{ cursor:"pointer", display:"flex", flexDirection:"column" }}>
-      <div style={{ marginBottom:8, flexShrink:0 }} onClick={()=>onSelect(p)} className="pressable">
-        <CardImageSlider images={images} aspectRatio="3/4" borderRadius={13} badge={p.badge} soldOut={p.in_stock===false}>
-          <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:8,right:8,width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.9)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
-            <Icon name={wishlisted?"heart-fill":"heart"} size={15} color={wishlisted?T.red:T.gray5}/>
-          </button>
-          <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",bottom:8,right:8,width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
-            <Icon name="share" size={13} color={T.gray4}/>
-          </button>
-        </CardImageSlider>
+    <div style={{ cursor:"pointer" }}>
+      {/* Fixed-height image box — same on every card regardless of content below */}
+      <div style={{ position:"relative", width:"100%", paddingTop:"125%", borderRadius:13, overflow:"hidden", background:"#f2f2f7", marginBottom:8, flexShrink:0 }} onClick={()=>onSelect(p)} className="pressable">
+        {images.length > 0 && (
+          <img
+            src={imgUrl(images[0], { width:400, quality:75 })}
+            alt={p.name}
+            loading="lazy"
+            decoding="async"
+            style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top" }}
+          />
+        )}
+        {p.badge && <span style={{ position:"absolute",top:8,left:8,background:p.badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:99,zIndex:2 }}>{p.badge}</span>}
+        {p.in_stock===false && <div style={{ position:"absolute",inset:0,background:"rgba(255,255,255,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3 }}><span style={{ background:"rgba(0,0,0,0.65)",color:"#fff",fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:99 }}>Sold Out</span></div>}
+        <button onClick={e=>{e.stopPropagation();onWishlist(p.id);}} style={{ position:"absolute",top:8,right:8,width:28,height:28,borderRadius:7,background:"rgba(255,255,255,0.92)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+          <Icon name={wishlisted?"heart-fill":"heart"} size={14} color={wishlisted?T.red:T.gray5}/>
+        </button>
+        <button onClick={e=>shareProduct(p,e)} style={{ position:"absolute",bottom:8,right:8,width:28,height:28,borderRadius:7,background:"rgba(255,255,255,0.88)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2 }}>
+          <Icon name="share" size={12} color={T.gray4}/>
+        </button>
       </div>
-      <div onClick={()=>onSelect(p)} className="pressable" style={{ flex:1 }}>
+      <div onClick={()=>onSelect(p)} className="pressable">
         <p style={{ fontSize:13,fontWeight:700,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.name}</p>
         <p style={{ fontSize:11,color:T.gray4,marginBottom:4 }}>{p.category}</p>
         <PriceLine price={p.price} was={p.was} user={user} onLoginPrompt={onLoginPrompt}/>
@@ -1720,7 +1730,7 @@ const HomeScreen = memo(function HomeScreen({ products, onSelect, onWishlist, wi
       {trend.length>0&&(
         <div style={{ marginBottom:32 }}>
           <p style={{ fontSize:20,fontWeight:700,letterSpacing:"-0.5px",marginBottom:16 }}>{t.trendingNow}</p>
-          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
+          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",width:"100%",overflow:"hidden" }}>
             {trend.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
           </div>
         </div>
@@ -1777,7 +1787,7 @@ const CategoryStrip = memo(function CategoryStrip({ products, onNavigate }) {
           return (
             <button
               key={cat.name}
-              onClick={() => onNavigate("shop")}
+              onClick={() => onNavigate("shop", { shopCat: cat.name })}
               className="pressable"
               style={{
                 position:"relative", overflow:"hidden",
@@ -1821,9 +1831,9 @@ const CategoryStrip = memo(function CategoryStrip({ products, onNavigate }) {
 });
 
 /* ─── Shop ──────────────────────────────────────────────────── */
-const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt }) {
+const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wishlist, user, onLoginPrompt, initialCat="All" }) {
   const { t } = useLang();
-  const [cat,setCat]   = useState("All");
+  const [cat,setCat]   = useState(initialCat);
   const [sort,setSort] = useState("featured");
   const [grid,setGrid] = useState(true);
 
@@ -1859,7 +1869,7 @@ const ShopScreen = memo(function ShopScreen({ products, onSelect, onWishlist, wi
         </div>
       </div>
       {filtered.length===0 ? <EmptyState icon="search" title={`No ${cat} ${t.items}`} body={t.tryCategory}/> : (
-        <div style={{ display:"grid",gridTemplateColumns:grid?"1fr 1fr":"1fr",gap:grid?"16px 10px":"12px" }}>
+        <div style={{ display:"grid",gridTemplateColumns:grid?"1fr 1fr":"1fr",gap:grid?"16px 10px":"12px",width:"100%",overflow:"hidden" }}>
           {filtered.map(p=>(
             grid ? <ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/> : (
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ display:"flex",gap:14,cursor:"pointer",background:T.fill4,borderRadius:18,padding:14 }}>
@@ -1920,7 +1930,7 @@ const SearchScreen = memo(function SearchScreen({ products, onSelect, onWishlist
         <>
           <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{res.length} {res.length!==1?t.noResults:t.noResults} for "{q}"</p>
           {res.length===0 ? <EmptyState icon="search" title={t.noResults} body={`${t.nothingMatched} "${q}".`}/> : (
-            <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
+            <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",width:"100%",overflow:"hidden" }}>
               {res.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={wishlist.includes(p.id)} user={user} onLoginPrompt={onLoginPrompt}/>)}
             </div>
           )}
@@ -1938,7 +1948,7 @@ function WishlistScreen({ products, wishlist, onSelect, onWishlist, user, onLogi
     <div style={{ animation:"fadeIn 0.18s ease" }}>
       <p style={{ fontSize:14,color:T.gray4,marginBottom:20 }}>{items.length} {t.savedItems}</p>
       {items.length===0 ? <EmptyState icon="heart" title={t.wishlistEmpty} body={t.wishlistEmptyBody}/> : (
-        <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
+        <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",width:"100%",overflow:"hidden" }}>
           {items.map(p=><ProductCard key={p.id} p={p} grid onSelect={onSelect} onWishlist={onWishlist} wishlisted={true} user={user} onLoginPrompt={onLoginPrompt}/>)}
         </div>
       )}
@@ -2636,7 +2646,7 @@ function LookbookScreen({ products, onSelect, t }) {
       {shopProds.length > 0 && (
         <>
           <p style={{ fontSize:18,fontWeight:700,marginBottom:16,letterSpacing:"-0.4px" }}>Shop the Look</p>
-          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",alignItems:"start" }}>
+          <div className="product-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px 10px",width:"100%",overflow:"hidden" }}>
             {shopProds.map(p=>(
               <div key={p.id} onClick={()=>onSelect(p)} className="pressable" style={{ cursor:"pointer" }}>
                 <div style={{ aspectRatio:"3/4",background:T.fill3,borderRadius:18,overflow:"hidden",marginBottom:8 }}>
@@ -3667,7 +3677,7 @@ function PageInner() {
     );
     switch (current.screen) {
       case "home":         return <HomeScreen {...screenProps}/>;
-      case "shop":         return <ShopScreen {...screenProps}/>;
+      case "shop":         return <ShopScreen {...screenProps} initialCat={current.shopCat||"All"}/>;
       case "search":       return <SearchScreen {...screenProps} searchQ={searchQ} setSearchQ={setSearchQ}/>;
       case "wishlist":     return <WishlistScreen {...screenProps}/>;
       case "account":      return <AccountScreen onNavigate={navigate} user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout} onFeedback={()=>setShowFeedback(true)} t={t} inbox={inbox}/>;
@@ -3691,25 +3701,25 @@ function PageInner() {
       <div style={{ maxWidth:480,margin:"0 auto",minHeight:"100vh",background:T.white,position:"relative" }}>
         <Header screen={current.screen} cartCount={cartCount} onCart={()=>setCartOpen(true)} onNavigate={navigate} canGoBack={canGoBack} onBack={goBack}/>
         <PullToRefresh onRefresh={loadProducts} screen={current.screen}/>
-        <main style={{ padding:"20px 16px 100px" }}>{renderScreen()}</main>
+        <main style={{ padding:"20px 16px 100px", overflowX:"hidden", width:"100%" }}>{renderScreen()}</main>
         <BottomNav screen={current.screen} onNavigate={navigate}/>
 
-        {/* ── Floating WhatsApp button — above bottom nav ── */}
+        {/* ── Floating WhatsApp button — bottom right, above nav ── */}
         <a
           href="https://wa.me/255614003543?text=Hello%20MSAMBWA%2C%20I%20need%20help"
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            position:"fixed", bottom:"calc(env(safe-area-inset-bottom,0px) + 66px)",
-            left:"50%", transform:"translateX(-50%)",
+            position:"fixed",
+            bottom:"calc(env(safe-area-inset-bottom,0px) + 68px)",
+            right:16,
             zIndex:299,
-            display:"flex", alignItems:"center", gap:8,
+            display:"flex", alignItems:"center", gap:7,
             background:"#25D366", color:"#fff",
-            borderRadius:99, padding:"8px 18px 8px 12px",
-            boxShadow:"0 4px 20px rgba(37,211,102,0.35)",
+            borderRadius:99, padding:"7px 14px 7px 10px",
+            boxShadow:"0 3px 14px rgba(37,211,102,0.4)",
             textDecoration:"none", whiteSpace:"nowrap",
-            fontSize:13, fontWeight:700,
-            animation:"slideUp .4s cubic-bezier(.32,0,.28,1)",
+            fontSize:12, fontWeight:700,
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.555 4.122 1.526 5.854L0 24l6.302-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.919 9.919 0 01-5.068-1.389l-.362-.215-3.759.986.999-3.671-.237-.376A9.911 9.911 0 012.106 12C2.106 6.533 6.533 2.106 12 2.106S21.894 6.533 21.894 12 17.467 21.894 12 21.894z"/></svg>
