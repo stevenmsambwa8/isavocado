@@ -513,14 +513,14 @@ const ProductCard = memo(function ProductCard({ p, grid, compact, onSelect, onWi
   if (grid) return (
     <div style={{ cursor:"pointer" }}>
       {/* Fixed-height image box — same on every card regardless of content below */}
-      <div style={{ position:"relative", width:"100%", paddingTop:"100%", borderRadius:13, overflow:"hidden", background:"#f2f2f7", marginBottom:8, flexShrink:0 }} onClick={()=>onSelect(p)} className="pressable">
+      <div style={{ width:"100%", height:180, borderRadius:13, overflow:"hidden", background:"#f2f2f7", marginBottom:8, flexShrink:0, position:"relative" }} onClick={()=>onSelect(p)} className="pressable">
         {images.length > 0 && (
           <img
             src={imgUrl(images[0], { width:400, quality:75 })}
             alt={p.name}
             loading="lazy"
             decoding="async"
-            style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top" }}
+            style={{ width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top",display:"block" }}
           />
         )}
         {p.badge && <span style={{ position:"absolute",top:8,left:8,background:p.badge==="Sale"?T.red:T.black,color:"#fff",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:99,zIndex:2 }}>{p.badge}</span>}
